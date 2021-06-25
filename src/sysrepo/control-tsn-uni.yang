@@ -1,0 +1,116 @@
+module control-tsn-uni {
+    yang-version 1.1;
+    namespace "urn:isw:controltsn";
+    prefix control-tsn-uni;
+
+    import ieee802-dot1q-tsn-types {
+        prefix tsn;
+    }
+
+    organization "Institute for Control Engineering of Machine Tools and Manufacturing Units - University of Stuttgart";
+
+    description "YANG Module for storing Data in the ControlTSN Framework";
+
+    revision 2021-06-25 {
+        description "Initial Revision for ControlTSN Framework";
+    }
+
+
+    // =============================================================
+    // ===  Groupings
+    // =============================================================
+    grouping configuration {
+        uses tsn:group-status-stream;
+        container talker {
+            uses tsn:group-status-talker-listener;
+        }
+        container listener-list {
+            list listener {
+                key "index";
+                leaf index {
+                    type uint16;
+                }
+                uses tsn:group-status-talker-listener;
+            }
+        }
+    }
+
+    grouping request {
+        container talker {
+            uses tsn:group-talker;
+        }
+        container listener-list {
+            list listener {
+                key "index";
+                leaf index {
+                    type uint16;
+                }
+                uses tsn:group-listener;
+            }
+        }
+    }
+
+    grouping stream {
+        leaf stream-id {
+            type tsn:stream-id-type;    // XX-XX-XX-XX-XX-XX:XX-XX
+        }
+        container request {
+            uses request;
+
+            /*
+            // === Actions
+            action compute-request {
+                output {
+                    container configuration {
+                        uses configuration;
+                    }
+                }
+            }
+            */
+        }
+
+        container configuration {
+            uses configuration;
+
+            /*
+            // === Actions
+            action deploy-configuration {
+                output {
+                    container configuration {
+                        uses configuration;
+                    }
+                }
+            }
+            action undeploy-configuration { }
+            action delete-configuration { }
+            */
+        }
+    }
+
+
+    // =============================================================
+    // ===  Root
+    // =============================================================
+    container tsn-uni {
+        description "The root of the yang module.";
+        
+        container stream-list {
+            list stream {
+                key "stream-id";
+                uses stream;
+            }
+        }
+
+        /*
+
+        // Actions should be implemented and callable in the CNC!! 
+
+        // === Actions
+        // (Difference between compute and deploy is the status of the stream in the response)
+        action compute-all-requests { }
+        action deploy-all-configurations { }
+        action undeploy-all-configurations { }
+        action delete-all-configurations { }
+        */
+    }
+}
