@@ -1,0 +1,1 @@
+/usr/bin/cc    CMakeFiles/ControlTSN_2.dir/src/core.c.o  -o ControlTSN_2  -lsysrepo 

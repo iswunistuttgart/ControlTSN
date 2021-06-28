@@ -1,0 +1,28 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/ac134726/projects/ControlTSN2/src/core.c
+core.h
+/home/ac134726/projects/ControlTSN2/src/core.h
+
+/home/ac134726/projects/ControlTSN2/src/core.h
+stdio.h
+-
+type_definitions.h
+/home/ac134726/projects/ControlTSN2/src/type_definitions.h
+
+/home/ac134726/projects/ControlTSN2/src/ieee802_tsn_types.h
+stdint.h
+-
+
+/home/ac134726/projects/ControlTSN2/src/type_definitions.h
+stdint.h
+-
+ieee802_tsn_types.h
+/home/ac134726/projects/ControlTSN2/src/ieee802_tsn_types.h
+
