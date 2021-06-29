@@ -95,8 +95,26 @@ sysrepo_stop_listening()
 // -------------------------------------------------------- //
 //  CRUD methods
 // -------------------------------------------------------- //
-int sysrepo_get_root(TSN_Uni **root);
+int 
+sysrepo_get_root(TSN_Uni **root)
+{
 
-int sysrepo_write_stream(TSN_Stream stream);
-int sysrepo_read_stream(char *stream_id, TSN_Stream **stream);
-int sysrepo_delete_stream(char *stream_id);
+}
+
+int 
+sysrepo_write_stream(TSN_Stream stream)
+{
+
+}
+
+int 
+sysrepo_read_stream(char *stream_id, TSN_Stream **stream)
+{
+
+}
+
+int 
+sysrepo_delete_stream(char *stream_id)
+{
+    
+}
