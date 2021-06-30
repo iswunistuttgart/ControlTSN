@@ -2,7 +2,7 @@
 #define __SYSREPO_CLIENT_H__
 
 #include <sysrepo.h>
-#include "type_definitions.h"
+#include "../type_definitions.h"
 
 #define EXIT_SUCCESS 0
 #define EXIT_FAILURE 1
@@ -14,6 +14,7 @@ int sysrepo_connect();
 int sysrepo_disconnect();
 int sysrepo_start_listening();
 int sysrepo_stop_listening();
+int sysrepo_save_to_startup();
 
 // -------------------------------------------------------- //
 //  Callbacks
@@ -28,10 +29,13 @@ void sysrepo_init_callbacks(
 // -------------------------------------------------------- //
 //  CRUD methods
 // -------------------------------------------------------- //
+// The yang module root containing the stream-list
 int sysrepo_get_root(TSN_Uni **root);
 
+// Stream
 int sysrepo_write_stream(TSN_Stream stream);
 int sysrepo_read_stream(char *stream_id, TSN_Stream **stream);
 int sysrepo_delete_stream(char *stream_id);
+
 
 #endif // __SYSREPO_CLIENT_H__

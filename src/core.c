@@ -1,6 +1,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include "core.h"
+#include "./sysrepo/sysrepo_client.h"
+
+int ret;
 
 // ----------------------------------------------
 // Module organization & orchestration
@@ -76,13 +79,47 @@ TSN_Module
 }
 
 
+// ----------------------------------------------
+// Core initialization and shutdown
+// ----------------------------------------------
+static int 
+_core_init()
+{
+    // Establish Sysrepo Connection
+    ret = sysrepo_connect();
+    if (ret == EXIT_FAILURE) {
+        return ret;
+    }
 
-void test(int x) {
-    printf("CB: %d\n", x);
+    // Start the subscription for notification from sysrepo
+    ret = sysrepo_start_listening();
+
+    return ret;
 }
+
+static int
+_core_shutdown()
+{
+    // Stop the sysrepo subscription
+    ret = sysrepo_stop_listening();
+    if (ret == EXIT_FAILURE) {
+        return ret;
+    }
+
+    // Disconnect from sysrepo
+    ret = sysrepo_disconnect();
+
+    return ret;
+}
+
+
 // ----------------------------------------------
 // MAIN
 // ----------------------------------------------
+void test_cb(int x) {
+    printf("CB: %d\n", x);
+}
+
 int
 main(void)
 {
@@ -90,7 +127,7 @@ main(void)
     int m_id2 = module_register("Hallo2", "DescriptionModule2", NULL, NULL, NULL);
     int m_id3 = module_register("Hallo3", "DescriptionModule3", NULL, NULL, NULL);
     int m_id4 = module_register("Hallo4", "DescriptionModule4", NULL, NULL, NULL);
-    int m_id5 = module_register("Hallo5", "DescriptionModule5", NULL, NULL, test);
+    int m_id5 = module_register("Hallo5", "DescriptionModule5", NULL, NULL, test_cb);
 
     // Print Modules list
     printf("ALL Modules (%d): \n", modules_count);

@@ -7,5 +7,6 @@ project(ControlTSN_2)
 #set(CMAKE_CXX_EXTENSIONS ON)
 #add_compile_options(-fms-extensions)
 
-add_executable(ControlTSN_2 src/core.c)
+add_executable(ControlTSN_2 src/core.c
+                            src/sysrepo/sysrepo_client.c)
 target_link_libraries(ControlTSN_2 sysrepo)

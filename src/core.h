@@ -5,6 +5,14 @@
 #include "type_definitions.h"
 
 // ----------------------------------------------
+// Events
+// ----------------------------------------------
+#define EVENT_STREAM_REQUESTED  0x0001
+#define EVENT_STREAM_CONFIGURED 0x0002
+/// ...
+#define EVENT_ERROR             0x0200
+
+// ----------------------------------------------
 // Module organization & orchestration
 // ----------------------------------------------
 typedef struct TSN_Module
@@ -16,7 +24,7 @@ typedef struct TSN_Module
     void (*cb_stream_requested)(TSN_Stream *);  // Callback for a requested stream
     void (*cb_stream_configured)(TSN_Stream *); // Callback for a configured stream
     // ...
-    void (*cb_error)(int)  ;                    // Callback for a occured error
+    void (*cb_error)(int);                      // Callback for a occured error
 } TSN_Module;
 
 /**
@@ -33,6 +41,7 @@ int module_register(char *name, char *description,
     void (*cb_stream_configured)(TSN_Stream *),
     // ...
     void (*cb_error)(int));
+
 /**
  * @brief Unregisters a module from the core.
  * @param module_id The id of the module.
