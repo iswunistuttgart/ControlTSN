@@ -11,7 +11,7 @@ typedef struct TSN_Talker {
 
     // ieee802-dot1q-tsn-types -> group-talker
     IEEE_StreamRank stream_rank;
-    IEEE_GroupInterfaceId *end_station_interfaces;
+    IEEE_InterfaceId *end_station_interfaces;
     IEEE_DataFrameSpecification *data_frame_specification;
     IEEE_TrafficSpecification traffic_specification;
     IEEE_UserToNetworkRequirements user_to_network_requirements;
@@ -23,7 +23,7 @@ typedef struct TSN_Listener {
     uint16_t count_end_station_interfaces;
 
     // ieee802-dot1q-tsn-types -> group-listener
-    IEEE_GroupInterfaceId *end_station_interfaces;
+    IEEE_InterfaceId *end_station_interfaces;
     IEEE_UserToNetworkRequirements user_to_network_requirements;
     IEEE_InterfaceCapabilities interface_capabilities;
 } TSN_Listener;
@@ -51,7 +51,7 @@ typedef struct TSN_Configuration {
 
     // ieee802-dot1q-tsn-types -> group-status-stream
     IEEE_StatusInfo status_info;
-    IEEE_GroupInterfaceId *failed_interfaces;
+    IEEE_InterfaceId *failed_interfaces;
 } TSN_Configuration;
 
 typedef struct TSN_Request {

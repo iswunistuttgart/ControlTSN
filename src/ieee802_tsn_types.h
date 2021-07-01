@@ -23,10 +23,16 @@ typedef struct IEEE_StatusInfo {
     uint8_t failure_code;
 } IEEE_StatusInfo;
 
-typedef struct IEEE_GroupInterfaceId {
+typedef struct IEEE_StatusStream
+{
+    IEEE_StatusInfo status_info;
+    IEEE_InterfaceId *failed_interfaces;
+} IEEE_StatusStream;
+
+typedef struct IEEE_InterfaceId {
     char *mac_address;
     char *interface_name;
-} IEEE_GroupInterfaceId;
+} IEEE_InterfaceId;
 
 typedef struct IEEE_MacAddresses {
     char *destination_mac_address;
@@ -87,7 +93,7 @@ typedef struct IEEE_DataFrameSpecification {
     uint8_t index;
     union field {
         IEEE_MacAddresses ieee802_mac_addresses;
-        IEEE_VlanTag ieee802_VlanTag;
+        IEEE_VlanTag ieee802_vlan_tag;
         IEEE_IPv4Tuple ipv4_tuple;
         IEEE_IPv6Tuple ipv6_tuple;
     } field;
@@ -121,6 +127,9 @@ typedef struct IEEE_InterfaceCapabilities {
     bool vlan_tag_capable;
     uint32_t *cb_stream_iden_type_list;
     uint32_t *cb_sequence_type_list;
+
+    uint16_t count_cb_stream_iden_types;
+    uint16_t count_cb_sequence_types;
 } IEEE_InterfaceCapabilities;
 
 
