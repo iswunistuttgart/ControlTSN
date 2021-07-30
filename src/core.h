@@ -15,32 +15,63 @@
 // ----------------------------------------------
 // Module organization & orchestration
 // ----------------------------------------------
+/**
+ * @brief Data for the event of a requested stream
+ */
+typedef struct TSN_Event_Data_Stream_Requested
+{
+    char *stream_id;
+} TSN_Event_Data_Stream_Requested;
+
+/**
+ * @brief Data for the event of a configured stream
+ */
+typedef struct TSN_Event_Data_Stream_Configured
+{
+    char *stream_id;
+} TSN_Event_Data_Stream_Configured;
+
+/**
+ * @brief Data for the event of an occured error
+ */
+typedef struct TSN_Event_Data_Error
+{
+    int error_code;
+    char *error_msg;
+} TSN_Event_Data_Error;
+
+/**
+ * @brief Union containing the data for the various events
+ */
+typedef union TSN_Event_CB_Data
+{
+    TSN_Event_Data_Stream_Requested stream_requested;
+    TSN_Event_Data_Stream_Configured stream_configured;
+    TSN_Event_Data_Error error;
+} TSN_Event_CB_Data;
+
+
 typedef struct TSN_Module
 {
     int id;             // Module ID
     char *name;         // Module Name
     char *description;  // Module Description
-
-    void (*cb_stream_requested)(TSN_Stream *);  // Callback for a requested stream
-    void (*cb_stream_configured)(TSN_Stream *); // Callback for a configured stream
-    // ...
-    void (*cb_error)(int);                      // Callback for a occured error
+    int subscribed_events_mask;     // Mask describing the relevant events for this module
+    void (*cb_event)(int event_id, TSN_Event_CB_Data data);     // Generic callback method for events
 } TSN_Module;
 
 /**
  * @brief Registers a module in the core.
  * @param name The name of the module.
  * @param description The description of the module.
- * @param cb_stream_requested Callback for a requested stream.
- * @param cb_stream_requested Callback for a configured stream.
- * @param cb_stream_requested Callback for a occured error.
+ * @param subscribed_events_mask The mask describing subscribed events
+ * @param cb_event Generic callback method
  * @return The assigned ID for the registered module.
  */
-int module_register(char *name, char *description, 
-    void (*cb_stream_requested)(TSN_Stream *),
-    void (*cb_stream_configured)(TSN_Stream *),
-    // ...
-    void (*cb_error)(int));
+int module_register(char *name, 
+    char *description, 
+    int subscribed_events_mask,
+    void (*cb_event)(int event_id, TSN_Event_CB_Data event_data));
 
 /**
  * @brief Unregisters a module from the core.

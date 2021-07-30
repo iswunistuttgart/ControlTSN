@@ -13,11 +13,10 @@ static int modules_count;
 static TSN_Module *modules;
 
 int 
-module_register(char *name, char *description, 
-    void (*cb_stream_requested)(TSN_Stream *),
-    void (*cb_stream_configured)(TSN_Stream *),
-    // ...
-    void (*cb_error)(int))
+module_register(char *name, 
+    char *description, 
+    int subscribed_events_mask,
+    void (*cb_event)(int event_id, TSN_Event_CB_Data event_data))
 {
     modules_id_counter += 1;
 
@@ -25,10 +24,7 @@ module_register(char *name, char *description,
     mod->name = strdup(name);
     mod->description = strdup(description);
     mod->id = modules_id_counter;
-    mod->cb_stream_requested = cb_stream_requested;
-    mod->cb_stream_configured = cb_stream_configured;
-    // ...
-    mod->cb_error = cb_error;
+    mod->cb_event = cb_event;
 
     modules_count += 1;
     if (modules_count == 1) {
@@ -78,6 +74,14 @@ TSN_Module
     return modules;
 }
 
+// ----------------------------------------------
+// Core callback methods
+// ----------------------------------------------
+static void
+cb_stream_requested(TSN_Stream *stream)
+{
+    printf("[CORE][CALLBACK] Stream requested (%s)\n", stream->stream_id);
+}
 
 // ----------------------------------------------
 // Core initialization and shutdown
@@ -90,6 +94,11 @@ _core_init()
     if (ret == EXIT_FAILURE) {
         return ret;
     }
+
+    // Init the callbacks in sysrepo
+    sysrepo_init_callbacks(cb_stream_requested, 
+        NULL,
+        NULL);
 
     // Start the subscription for notification from sysrepo
     ret = sysrepo_start_listening();
@@ -116,18 +125,19 @@ _core_shutdown()
 // ----------------------------------------------
 // MAIN
 // ----------------------------------------------
-void test_cb(int x) {
+void test_cb(int x, TSN_Event_CB_Data data) {
     printf("CB: %d\n", x);
 }
 
 int
 main(void)
 {
-    int m_id = module_register("Hallo", "DescriptionModule", NULL, NULL, NULL);
-    int m_id2 = module_register("Hallo2", "DescriptionModule2", NULL, NULL, NULL);
-    int m_id3 = module_register("Hallo3", "DescriptionModule3", NULL, NULL, NULL);
-    int m_id4 = module_register("Hallo4", "DescriptionModule4", NULL, NULL, NULL);
-    int m_id5 = module_register("Hallo5", "DescriptionModule5", NULL, NULL, test_cb);
+    int m_id = module_register("Hallo", "DescriptionModule", 0, NULL);
+    int m_id2 = module_register("Hallo2", "DescriptionModule2", 0, NULL);
+    int m_id3 = module_register("Hallo3", "DescriptionModule3", 0, NULL);
+    int m_id4 = module_register("Hallo4", "DescriptionModule4", 0, NULL);
+    int subscribed_events = EVENT_STREAM_REQUESTED | EVENT_STREAM_CONFIGURED | EVENT_ERROR;
+    int m_id5 = module_register("Hallo5", "DescriptionModule5", subscribed_events, test_cb);
 
     // Print Modules list
     printf("ALL Modules (%d): \n", modules_count);

@@ -23,16 +23,16 @@ typedef struct IEEE_StatusInfo {
     uint8_t failure_code;
 } IEEE_StatusInfo;
 
+typedef struct IEEE_InterfaceId {
+    char *mac_address;
+    char *interface_name;
+} IEEE_InterfaceId;
+
 typedef struct IEEE_StatusStream
 {
     IEEE_StatusInfo status_info;
     IEEE_InterfaceId *failed_interfaces;
 } IEEE_StatusStream;
-
-typedef struct IEEE_InterfaceId {
-    char *mac_address;
-    char *interface_name;
-} IEEE_InterfaceId;
 
 typedef struct IEEE_MacAddresses {
     char *destination_mac_address;

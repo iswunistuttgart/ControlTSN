@@ -748,7 +748,7 @@ _read_talker(char *xpath, TSN_Talker **talker)
     // Read Traffic Specification
     _create_xpath(xpath, "/traffic-specification", &xpath_traffic_specification);
     IEEE_TrafficSpecification *ts = malloc(sizeof(IEEE_TrafficSpecification));
-    rc = 
+    rc = _read_traffic_specification(xpath_traffic_specification, &ts);
     if (rc != SR_ERR_OK) {
         goto cleanup;
     }
@@ -771,12 +771,15 @@ _read_talker(char *xpath, TSN_Talker **talker)
         goto cleanup;
     }
     (*talker)->interface_capabilities = *ic;
-
+    
 cleanup:
-    sr_free_val(val_priority_code_point);
-    sr_free_val(val_vlan_id);
-    free(xpath_priority_code_point);
-    free(xpath_vlan_id);
+    sr_free_val(val_end_station_interfaces);
+    sr_free_val(val_data_frame_specification);
+    free(xpath_end_station_interfaces);
+    free(xpath_data_frame_specification);
+    free(xpath_traffic_specification);
+    free(xpath_user_to_network_requirements);
+    free(xpath_interface_capabilities);
 
     return rc;
 }

@@ -6,7 +6,7 @@
 // ----------------------------------------------
 // Module initialization
 // ----------------------------------------------
-TSN_Module tsn_module;
+TSN_Module this_module;
 
 // ----------------------------------------------
 // Module data handling
