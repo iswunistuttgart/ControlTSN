@@ -54,6 +54,8 @@ typedef union TSN_Event_CB_Data
 typedef struct TSN_Module
 {
     int id;             // Module ID
+    int p_id;           // Module Process ID
+    char *path;         // Path to the modules executable       (???)
     char *name;         // Module Name
     char *description;  // Module Description
     int subscribed_events_mask;     // Mask describing the relevant events for this module
@@ -66,9 +68,9 @@ typedef struct TSN_Module
  * @param description The description of the module.
  * @param subscribed_events_mask The mask describing subscribed events
  * @param cb_event Generic callback method
- * @return The assigned ID for the registered module.
+ * @return The created struct of the module.
  */
-int module_register(char *name, 
+TSN_Module module_register(char *name, 
     char *description, 
     int subscribed_events_mask,
     void (*cb_event)(int event_id, TSN_Event_CB_Data event_data));
@@ -82,6 +84,16 @@ int module_unregister(int module_id);
 TSN_Module *module_get(int module_id);
 TSN_Module *module_get_all(int *count);
 
+/**
+ * @brief Method to start a module by executing it in a process
+ */
+int module_start(TSN_Module module);
+
+
+// ----------------------------------------------
+// Helpers
+// ----------------------------------------------
+void print_module(TSN_Module mod);
 
 // ----------------------------------------------
 // Sysrepo interface

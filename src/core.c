@@ -12,14 +12,14 @@ static int modules_id_counter;
 static int modules_count;
 static TSN_Module *modules;
 
-int 
-module_register(char *name, 
-    char *description, 
-    int subscribed_events_mask,
-    void (*cb_event)(int event_id, TSN_Event_CB_Data event_data))
+TSN_Module module_register(char *name,
+                    char *description,
+                    int subscribed_events_mask,
+                    void (*cb_event)(int event_id, TSN_Event_CB_Data event_data))
 {
     modules_id_counter += 1;
 
+    /*
     TSN_Module *mod = malloc(sizeof(TSN_Module));
     mod->name = strdup(name);
     mod->description = strdup(description);
@@ -27,39 +27,63 @@ module_register(char *name,
     mod->cb_event = cb_event;
 
     modules_count += 1;
-    if (modules_count == 1) {
-        modules = (TSN_Module *) malloc(1 * sizeof(TSN_Module));
+    if (modules_count == 1)
+    {
+        modules = (TSN_Module *)malloc(1 * sizeof(TSN_Module));
     }
-    else {
-        modules = (TSN_Module *) realloc(modules, modules_count * sizeof(TSN_Module));
+    else
+    {
+        modules = (TSN_Module *)realloc(modules, modules_count * sizeof(TSN_Module));
     }
-    modules[modules_count-1] = *mod;
+    modules[modules_count - 1] = *mod;
 
     return modules_id_counter;
+    */
+
+    TSN_Module mod;
+    mod.name = strdup(name);
+    mod.description = strdup(description);
+    mod.id = modules_id_counter;
+    mod.cb_event = cb_event;
+
+    modules_count += 1;
+    if (modules_count == 1) {
+        modules = (TSN_Module *) malloc(1 * sizeof(TSN_Module));
+    } else {
+        modules = (TSN_Module *)realloc(modules, modules_count * sizeof(TSN_Module));
+    }
+    modules[modules_count - 1] = mod;
+
+    return mod;
 }
 
-int
-module_unregister(int module_id)
+int module_unregister(int module_id)
 {
-    for (int i=0; i<modules_count; ++i) {
-        if (modules[i].id == module_id) {
+    for (int i = 0; i < modules_count; ++i)
+    {
+        if (modules[i].id == module_id)
+        {
             // Remove element
             modules_count -= 1;
-            for (int j=i; j<modules_count; ++j) {
-                modules[j] = modules[j+1];
+            for (int j = i; j < modules_count; ++j)
+            {
+                modules[j] = modules[j + 1];
             }
-            modules = (TSN_Module *) realloc(modules, modules_count * sizeof(TSN_Module));
+            modules = (TSN_Module *)realloc(modules, modules_count * sizeof(TSN_Module));
             return (modules == NULL) ? EXIT_FAILURE : EXIT_SUCCESS;
         }
     }
     return EXIT_FAILURE;
 }
 
-TSN_Module 
-*module_get(int module_id)
+TSN_Module
+    *
+    module_get(int module_id)
 {
-    for (int i=0; i<modules_count; ++i) {
-        if (modules[i].id == module_id) {
+    for (int i = 0; i < modules_count; ++i)
+    {
+        if (modules[i].id == module_id)
+        {
             return &modules[i];
         }
     }
@@ -67,8 +91,9 @@ TSN_Module
     return NULL;
 }
 
-TSN_Module 
-*module_get_all(int *count)
+TSN_Module
+    *
+    module_get_all(int *count)
 {
     (*count) = modules_count;
     return modules;
@@ -86,19 +111,20 @@ cb_stream_requested(TSN_Stream *stream)
 // ----------------------------------------------
 // Core initialization and shutdown
 // ----------------------------------------------
-static int 
+static int
 _core_init()
 {
     // Establish Sysrepo Connection
     ret = sysrepo_connect();
-    if (ret == EXIT_FAILURE) {
+    if (ret == EXIT_FAILURE)
+    {
         return ret;
     }
 
     // Init the callbacks in sysrepo
-    sysrepo_init_callbacks(cb_stream_requested, 
-        NULL,
-        NULL);
+    sysrepo_init_callbacks(cb_stream_requested,
+                           NULL,
+                           NULL);
 
     // Start the subscription for notification from sysrepo
     ret = sysrepo_start_listening();
@@ -111,7 +137,8 @@ _core_shutdown()
 {
     // Stop the sysrepo subscription
     ret = sysrepo_stop_listening();
-    if (ret == EXIT_FAILURE) {
+    if (ret == EXIT_FAILURE)
+    {
         return ret;
     }
 
@@ -121,17 +148,31 @@ _core_shutdown()
     return ret;
 }
 
+// ----------------------------------------------
+// Helpers
+// ----------------------------------------------
+void print_module(TSN_Module mod)
+{
+    printf("----- MODULE -----\n");
+    printf("Name:        %s\n", mod.name);
+    printf("Description: %s\n", mod.description);
+    printf("ID:          %d\n", mod.id);
+    printf("P_ID:        %d\n", mod.p_id);
+    printf("Path:        %s\n", mod.path);
+    printf("Events Mask: %d\n", mod.subscribed_events_mask);
+}
 
 // ----------------------------------------------
 // MAIN
 // ----------------------------------------------
-void test_cb(int x, TSN_Event_CB_Data data) {
+void test_cb(int x, TSN_Event_CB_Data data)
+{
     printf("CB: %d\n", x);
 }
 
-int
-main(void)
+int main(void)
 {
+    /*
     int m_id = module_register("Hallo", "DescriptionModule", 0, NULL);
     int m_id2 = module_register("Hallo2", "DescriptionModule2", 0, NULL);
     int m_id3 = module_register("Hallo3", "DescriptionModule3", 0, NULL);
@@ -174,4 +215,8 @@ main(void)
     for (int i=0; i<count; ++i) {
         printf("%s - %s - %d\n", list[i].name, list[i].description, list[i].id);
     }
+    */
+
+    TSN_Module module_rest;
+    module_rest = module_register("Rest Module", "exposes a rest interface", 515, NULL);
 }
