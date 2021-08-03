@@ -1,5 +1,8 @@
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>     // fork
+#include <sys/types.h>  // pid_t
+#include <sys/wait.h>   // wait
 #include "core.h"
 #include "./sysrepo/sysrepo_client.h"
 
@@ -12,10 +15,12 @@ static int modules_id_counter;
 static int modules_count;
 static TSN_Module *modules;
 
-TSN_Module module_register(char *name,
-                    char *description,
-                    int subscribed_events_mask,
-                    void (*cb_event)(int event_id, TSN_Event_CB_Data event_data))
+TSN_Module 
+module_register(char *name,
+                           char *description,
+                           char *path,
+                           int subscribed_events_mask,
+                           void (*cb_event)(int event_id, TSN_Event_CB_Data event_data))
 {
     modules_id_counter += 1;
 
@@ -43,13 +48,19 @@ TSN_Module module_register(char *name,
     TSN_Module mod;
     mod.name = strdup(name);
     mod.description = strdup(description);
+    mod.path = strdup(path);
     mod.id = modules_id_counter;
+    mod.subscribed_events_mask = subscribed_events_mask;
     mod.cb_event = cb_event;
+    mod.p_id = -1;
 
     modules_count += 1;
-    if (modules_count == 1) {
-        modules = (TSN_Module *) malloc(1 * sizeof(TSN_Module));
-    } else {
+    if (modules_count == 1)
+    {
+        modules = (TSN_Module *)malloc(1 * sizeof(TSN_Module));
+    }
+    else
+    {
         modules = (TSN_Module *)realloc(modules, modules_count * sizeof(TSN_Module));
     }
     modules[modules_count - 1] = mod;
@@ -57,7 +68,8 @@ TSN_Module module_register(char *name,
     return mod;
 }
 
-int module_unregister(int module_id)
+int 
+module_unregister(int module_id)
 {
     for (int i = 0; i < modules_count; ++i)
     {
@@ -76,9 +88,8 @@ int module_unregister(int module_id)
     return EXIT_FAILURE;
 }
 
-TSN_Module
-    *
-    module_get(int module_id)
+TSN_Module *
+module_get(int module_id)
 {
     for (int i = 0; i < modules_count; ++i)
     {
@@ -91,12 +102,39 @@ TSN_Module
     return NULL;
 }
 
-TSN_Module
-    *
-    module_get_all(int *count)
+TSN_Module *
+module_get_all(int *count)
 {
     (*count) = modules_count;
     return modules;
+}
+
+int 
+module_start(TSN_Module module)
+{
+    pid_t pid = fork();
+    if (pid == 0) {
+        //static char *argv[] = {"echo", "Foo is my name.", NULL};
+        //execv("/bin/echo", argv);
+        static char *argv[] = {};
+        execv(module.path, argv);
+        
+    } else {
+        //waitpid(pid, 0, 0);
+    }
+
+    return pid;
+}
+
+int 
+module_stop(TSN_Module module)
+{
+    int res;
+    if (module.p_id > 0) {
+        res = kill(module.p_id, SIGKILL);
+    }
+
+    return res == 0 ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
 // ----------------------------------------------
@@ -160,6 +198,7 @@ void print_module(TSN_Module mod)
     printf("P_ID:        %d\n", mod.p_id);
     printf("Path:        %s\n", mod.path);
     printf("Events Mask: %d\n", mod.subscribed_events_mask);
+    printf("\n");
 }
 
 // ----------------------------------------------
@@ -218,5 +257,17 @@ int main(void)
     */
 
     TSN_Module module_rest;
-    module_rest = module_register("Rest Module", "exposes a rest interface", 515, NULL);
+    module_rest = module_register("Rest Module", "exposes a rest interface", "./Module_REST", 515, NULL);
+    print_module(module_rest);
+
+    // Start the REST Module
+    int pid = module_start(module_rest);
+    if (pid > 0) {
+        module_rest.p_id = pid;
+        printf("---> PID: %d\n", module_rest.p_id);
+    }
+
+    sleep(5);
+    ret = module_stop(module_rest);
+    printf("Stop module result: %d\n", ret);
 }
