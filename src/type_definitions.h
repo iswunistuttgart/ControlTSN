@@ -4,7 +4,47 @@
 #include <stdint.h>
 #include "ieee802_tsn_types.h"
 
+// ----------------------------------------------
+// Event handling
+// ----------------------------------------------
+/**
+ * @brief Data for the event of a requested stream
+ */
+typedef struct TSN_Event_Data_Stream_Requested
+{
+    char *stream_id;
+} TSN_Event_Data_Stream_Requested;
 
+/**
+ * @brief Data for the event of a configured stream
+ */
+typedef struct TSN_Event_Data_Stream_Configured
+{
+    char *stream_id;
+} TSN_Event_Data_Stream_Configured;
+
+/**
+ * @brief Data for the event of an occured error
+ */
+typedef struct TSN_Event_Data_Error
+{
+    int error_code;
+    char *error_msg;
+} TSN_Event_Data_Error;
+
+/**
+ * @brief Union containing the data for the various events
+ */
+typedef union TSN_Event_CB_Data
+{
+    TSN_Event_Data_Stream_Requested stream_requested;
+    TSN_Event_Data_Stream_Configured stream_configured;
+    TSN_Event_Data_Error error;
+} TSN_Event_CB_Data;
+
+// ---------------------------------------
+// Stream definitions
+// ---------------------------------------
 typedef struct TSN_Talker {
     uint16_t count_end_station_interfaces;
     uint16_t count_data_frame_specifications;
@@ -69,10 +109,38 @@ typedef struct TSN_Stream {
     TSN_Configuration configuration;
 } TSN_Stream;
 
+
+// ---------------------------------------
+// Module definitions
+// ---------------------------------------
+typedef struct TSN_Module
+{
+    int id;             // Module ID
+    int p_id;           // Module Process ID
+    char *path;         // Path to the modules executable       (???)
+    char *name;         // Module Name
+    char *description;  // Module Description
+    int subscribed_events_mask;     // Mask describing the relevant events for this module
+    void (*cb_event)(int event_id, TSN_Event_CB_Data data);     // Generic callback method for events
+} TSN_Module;
+
+typedef struct TSN_Modules {
+    uint16_t count_all_modules;
+    TSN_Module *all_modules;
+
+    uint16_t count_registered_modules;
+    TSN_Module *registered_modules;
+} TSN_Modules;
+
+
+// ----------------------------------------------
+// Root
+// ----------------------------------------------
 typedef struct TSN_Uni {
     uint16_t count_streams;
-    
     TSN_Stream *stream_list;
+
+    TSN_Modules modules;
 } TSN_Uni;
 
 

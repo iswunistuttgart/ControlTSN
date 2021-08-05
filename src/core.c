@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
 #include <unistd.h>     // fork
 #include <sys/types.h>  // pid_t
 #include <sys/wait.h>   // wait
@@ -7,6 +8,14 @@
 #include "./sysrepo/sysrepo_client.h"
 
 int ret;
+
+volatile sig_atomic_t is_running = 1;
+
+static void 
+signal_handler(int signum)
+{
+    is_running = 0;
+}
 
 // ----------------------------------------------
 // Module organization & orchestration
@@ -211,6 +220,8 @@ void test_cb(int x, TSN_Event_CB_Data data)
 
 int main(void)
 {
+    printf("[CORE] Started CORE\n");
+
     /*
     int m_id = module_register("Hallo", "DescriptionModule", 0, NULL);
     int m_id2 = module_register("Hallo2", "DescriptionModule2", 0, NULL);
@@ -256,18 +267,32 @@ int main(void)
     }
     */
 
+    signal(SIGINT, signal_handler);
+
+    // REST Module
     TSN_Module module_rest;
     module_rest = module_register("Rest Module", "exposes a rest interface", "./Module_REST", 515, NULL);
-    print_module(module_rest);
-
-    // Start the REST Module
     int pid = module_start(module_rest);
     if (pid > 0) {
         module_rest.p_id = pid;
-        printf("---> PID: %d\n", module_rest.p_id);
+        print_module(module_rest);
     }
 
+    /*
     sleep(5);
     ret = module_stop(module_rest);
     printf("Stop module result: %d\n", ret);
+    */
+
+    TSN_Uni *uni = malloc(sizeof(TSN_Uni));
+    ret = sysrepo_get_root(&uni);
+    printf("GET ROOT: %d\n", ret);
+
+
+    while(is_running) {
+        sleep(1);
+    }
+
+    printf("[CORE] Stopped CORE\n");
+
 }

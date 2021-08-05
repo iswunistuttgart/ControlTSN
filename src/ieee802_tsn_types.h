@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+/*
 typedef enum IEEE_TalkerStatus {
     talker_none = 0,
     talker_ready = 1,
@@ -16,10 +17,13 @@ typedef enum IEEE_ListenerStatus {
     listener_partial_failed = 2,
     listener_failed = 3
 } IEEE_ListenerStatus;
+*/
 
 typedef struct IEEE_StatusInfo {
-    IEEE_TalkerStatus talker_status;
-    IEEE_ListenerStatus listener_status;
+    //IEEE_TalkerStatus talker_status;
+    //IEEE_ListenerStatus listener_status;
+    char *talker_status;
+    char *listener_status;
     uint8_t failure_code;
 } IEEE_StatusInfo;
 
@@ -32,6 +36,8 @@ typedef struct IEEE_StatusStream
 {
     IEEE_StatusInfo status_info;
     IEEE_InterfaceId *failed_interfaces;
+
+    uint16_t count_failed_interfaces;
 } IEEE_StatusStream;
 
 typedef struct IEEE_MacAddresses {
@@ -69,7 +75,7 @@ typedef struct IEEE_ConfigList {
         IEEE_MacAddresses ieee802_mac_addresses;
         IEEE_VlanTag ieee802_vlan_tag;
         IEEE_IPv4Tuple ipv4_tuple;
-        IEEE_IPv6Tuple ipv6_tupe;
+        IEEE_IPv6Tuple ipv6_tuple;
         uint32_t time_aware_offset;
     } config_value;
 } IEEE_ConfigList;

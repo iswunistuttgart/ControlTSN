@@ -1,0 +1,7 @@
+<tsn-uni xmlns="urn:isw:controltsn">
+    <stream-list></stream-list>
+    <modules>
+        <all-modules></all-modules>
+        <registered-modules></registered-modules>
+    </modules>
+</tsn-uni>

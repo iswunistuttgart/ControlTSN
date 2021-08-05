@@ -431,7 +431,7 @@ _read_interface_capabilities(char *xpath, IEEE_InterfaceCapabilities **ic)
     (*ic)->count_cb_stream_iden_types = count_cb_stream_iden_types;
     (*ic)->cb_stream_iden_type_list = (uint32_t *) malloc(sizeof(uint32_t) * count_cb_stream_iden_types);
     for (int i=0; i<count_cb_stream_iden_types; ++i) {
-        uint32_t *cb_stream_iden = malloc(sizeof(uint32_t));
+        uint32_t cb_stream_iden;
         cb_stream_iden = (&val_cb_stream_iden_type_list[i])->data.uint32_val;
         (*ic)->cb_stream_iden_type_list[i] = cb_stream_iden;
     }
@@ -443,7 +443,7 @@ _read_interface_capabilities(char *xpath, IEEE_InterfaceCapabilities **ic)
     (*ic)->count_cb_sequence_types = count_cb_sequence_types;
     (*ic)->cb_sequence_type_list = (uint32_t *) malloc(sizeof(uint32_t) * count_cb_sequence_types);
     for (int i=0; i<count_cb_sequence_types; ++i) {
-        uint32_t *cb_sequence_type = malloc(sizeof(uint32_t));
+        uint32_t cb_sequence_type;
         cb_sequence_type = (&val_cb_sequence_type_list[i])->data.uint32_val;
         (*ic)->cb_sequence_type_list[i] = cb_sequence_type;
     }
@@ -837,21 +837,91 @@ cleanup:
 }
 
 static int
+_read_status_info(char *xpath, IEEE_StatusInfo **si)
+{
+    int rc = SR_ERR_OK;
+    sr_val_t *val_talker_status = NULL;
+    sr_val_t *val_listener_status = NULL;
+    sr_val_t *val_failure_code = NULL;
+    char *xpath_talker_status = NULL;
+    char *xpath_listener_status = NULL;
+    char *xpath_failure_code = NULL;
+        
+    // Read talker status
+    _create_xpath(xpath, "/talker-status", &xpath_talker_status);
+    rc = sr_get_item(session, xpath_talker_status, 0, &val_talker_status);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    //(*si)->talker_status = val_talker_status->data.enum_val;
+    (*si)->talker_status = strdup(val_talker_status->data.enum_val);
+
+    // Read listener status
+    _create_xpath(xpath, "/listener-status", &xpath_listener_status);
+    rc = sr_get_item(session, xpath_listener_status, 0, &val_listener_status);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    //(*si)->listener_status = val_listener_status->data.enum_val;
+    (*si)->listener_status = strdup(val_listener_status->data.enum_val);
+
+    // Read failure code
+    _create_xpath(xpath, "/failure-code", &xpath_failure_code);
+    rc = sr_get_item(session, xpath_failure_code, 0, &val_failure_code);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*si)->failure_code = val_failure_code->data.uint8_val;
+
+cleanup:
+    sr_free_val(val_talker_status);
+    sr_free_val(val_listener_status);
+    sr_free_val(val_failure_code);
+    free(xpath_talker_status);
+    free(xpath_listener_status);
+    free(xpath_failure_code);
+
+    return rc;
+}
+
+static int
 _read_status_stream(char *xpath, IEEE_StatusStream **ss)
 {
+    int rc = SR_ERR_OK;
+    sr_val_t *val_failed_interfaces = NULL;
+    char *xpath_status_info = NULL;
+    char *xpath_failed_interfaces = NULL;
 
-}
+    // Read status info
+    _create_xpath(xpath, "/status-info", &xpath_status_info);
+    IEEE_StatusInfo *si = malloc(sizeof(IEEE_StatusInfo));
+    rc = _read_status_info(xpath_status_info, &si);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*ss)->status_info = *si;
 
-static int
-_read_status_talker(char *xpath, TSN_StatusTalker **st)
-{
+    // Read failed interfaces
+    _create_xpath(xpath, "/failed-interfaces", &xpath_failed_interfaces);
+    size_t count_failed_interfaces = 0;
+    rc = sr_get_items(session, xpath_failed_interfaces, 0, 0, &val_failed_interfaces, &count_failed_interfaces);
+    (*ss)->failed_interfaces = (IEEE_InterfaceId *) malloc(sizeof(IEEE_InterfaceId) * count_failed_interfaces);
+    (*ss)->count_failed_interfaces = count_failed_interfaces;
+    for (int i=0; i<count_failed_interfaces; ++i) {
+        IEEE_InterfaceId *ii = malloc(sizeof(IEEE_InterfaceId));
+        rc = _read_interface_id((&val_failed_interfaces[i])->xpath, &ii);
+        if (rc != SR_ERR_OK) {
+            goto cleanup;
+        }
+        (*ss)->failed_interfaces[i] = *ii;
+    }
 
-}
+cleanup:
+    sr_free_val(val_failed_interfaces);
+    free(xpath_status_info);
+    free(xpath_failed_interfaces);
 
-static int
-_read_status_listener(char *xpath, TSN_StatusListener **sl)
-{
-
+    return rc;
 }
 
 static int
@@ -864,7 +934,12 @@ _read_request(char *xpath, TSN_Request **req)
 
     // Read Talker
     _create_xpath(xpath, "/talker", &xpath_talker);
-    // TODO _read_talker
+    TSN_Talker *t = malloc(sizeof(TSN_Talker));
+    rc = _read_talker(xpath_talker, &t);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*req)->talker = *t;
 
     // Read Listeners
     _create_xpath(xpath, "/listener-list/*", &xpath_listener_list);
@@ -890,6 +965,277 @@ cleanup:
 }
 
 static int
+_read_config_list(char *xpath, IEEE_ConfigList **cl)
+{
+    int rc = SR_ERR_OK;
+    sr_val_t *val_index = NULL;
+    sr_val_t *val_time_aware_offset = NULL;
+    char *xpath_index = NULL;
+    char *xpath_choice = NULL;
+
+    // Read Index
+    _create_xpath(xpath, "/index", &xpath_index);
+    rc = sr_get_item(session, xpath_index, 0, &val_index);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*cl)->index = val_index->data.uint8_val;
+
+    // Read the choice field
+    // Check and read MAC Addresses
+    _create_xpath(xpath, "/ieee802-mac-addresses", &xpath_choice);
+    IEEE_MacAddresses *ma = malloc(sizeof(IEEE_MacAddresses));
+    rc = _read_ieee802_mac_addresses(xpath_choice, &ma);
+    // If no error occured then the choice was ieee802-mac-addresses and we can stop
+    if (rc == SR_ERR_OK) {
+        (*cl)->config_value.ieee802_mac_addresses = *ma;
+        goto cleanup;
+    }  
+
+    // Check and Read VLAN Tag
+    _create_xpath(xpath, "/ieee802-vlan-tag", &xpath_choice);
+    IEEE_VlanTag *vt = malloc(sizeof(IEEE_VlanTag));
+    rc = _read_ieee802_vlan_tag(xpath_choice, &vt);
+    // If no error occured then the choice was ieee802-vlan-tag and we can stop
+    if (rc == SR_ERR_OK) {
+        (*cl)->config_value.ieee802_vlan_tag = *vt;
+        goto cleanup;
+    }
+
+    // Check and Read IPv4 Tuple
+    _create_xpath(xpath, "/ipv4-tuple", &xpath_choice);
+    IEEE_IPv4Tuple *ipv4 = malloc(sizeof(IEEE_IPv4Tuple));
+    rc = _read_ipv4_tuple(xpath_choice, &ipv4);
+    // If no error occured then the choice was ipv4-tuple and we can stop
+    if (rc == SR_ERR_OK) {
+        (*cl)->config_value.ipv4_tuple = *ipv4;
+        goto cleanup;
+    }
+
+    // Check and Read IPv6 Tuple
+    _create_xpath(xpath, "/ipv6-tuple", &xpath_choice);
+    IEEE_IPv6Tuple *ipv6 = malloc(sizeof(IEEE_IPv6Tuple));
+    rc = _read_ipv6_tuple(xpath_choice, &ipv6);
+    // If no error occured then the choice was ipv6-tuple and we can stop
+    if (rc == SR_ERR_OK) {
+        (*cl)->config_value.ipv6_tuple = *ipv6;
+        goto cleanup;
+    }
+
+    // Check and read Time aware offset
+    _create_xpath(xpath, "/time-aware-offset", &xpath_choice);
+    rc = sr_get_item(session, xpath_choice, 0, &val_time_aware_offset);
+    // If no error occured then the choice was time-aware-offset and we can stop
+    if (rc == SR_ERR_OK) {
+        (*cl)->config_value.time_aware_offset = val_time_aware_offset->data.uint32_val;
+        goto cleanup;
+    }
+
+cleanup:
+    sr_free_val(val_index);
+    free(xpath_index);
+    free(xpath_choice);
+
+    return rc;
+}
+
+static int
+_read_interface_list(char *xpath, IEEE_InterfaceList **il)
+{
+    int rc = SR_ERR_OK;
+    sr_val_t *val_config_list = NULL;
+    char *xpath_interface_id = NULL;
+    char *xpath_config_list = NULL;
+
+    // Read interface name and MAC address
+    _create_xpath(xpath, "", &xpath_interface_id);
+    IEEE_InterfaceId *ii = malloc(sizeof(IEEE_InterfaceId));
+    rc = _read_interface_id(xpath_interface_id, &ii);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*il)->interface_name = strdup(ii->interface_name);
+    (*il)->mac_address = strdup(ii->mac_address);
+
+    // Config list
+    _create_xpath(xpath, "/config-list", &xpath_config_list);
+    size_t count_configs = 0;
+    rc = sr_get_items(session, xpath_config_list, 0, 0, &val_config_list, &count_configs);
+    (*il)->config_list = (IEEE_ConfigList *) malloc(sizeof(IEEE_ConfigList) * count_configs);
+    for (int i=0; i<count_configs; ++i) {
+        IEEE_ConfigList *cl = malloc(sizeof(IEEE_ConfigList));
+        rc = _read_config_list((&val_config_list[i])->xpath, &cl);
+        if (rc != SR_ERR_OK) {
+            goto cleanup;
+        }
+        (*il)->config_list[i] = *cl;
+    }
+
+cleanup:
+    sr_free_val(val_config_list);
+    free(xpath_interface_id);
+    free(xpath_config_list);
+
+    return rc;
+}
+
+static int
+_read_interface_configuration(char *xpath, IEEE_InterfaceConfiguration **ic)
+{
+    int rc = SR_ERR_OK;
+    sr_val_t *val_interface_list = NULL;
+    char *xpath_interface_list = NULL;
+
+    // Read Interface list
+    _create_xpath(xpath, "/interface-list", &xpath_interface_list);
+    size_t count_interfaces = 0;
+    rc = sr_get_items(session, xpath_interface_list, 0, 0, &val_interface_list, &count_interfaces);
+    (*ic)->interface_list = (IEEE_InterfaceList *) malloc(sizeof(IEEE_InterfaceList) * count_interfaces);
+    for (int i=0; i<count_interfaces; ++i) {
+        IEEE_InterfaceList *il = malloc(sizeof(IEEE_InterfaceList));
+        rc = _read_interface_list(xpath_interface_list, &il);
+        if (rc != SR_ERR_OK) {
+            goto cleanup;
+        }
+        (*ic)->interface_list[i] = *il;
+    }
+
+cleanup:
+    sr_free_val(val_interface_list);
+    free(xpath_interface_list);
+
+    return rc;
+}
+
+static int
+_read_status_talker(char *xpath, TSN_StatusTalker **st)
+{
+    int rc = SR_ERR_OK;
+    sr_val_t *val_accumulated_latency = NULL;
+    char *xpath_accumulated_latency = NULL;
+    char *xpath_interface_configuration = NULL;
+
+    _create_xpath(xpath, "/accumulated-latency", &xpath_accumulated_latency);
+    rc = sr_get_item(session, xpath_accumulated_latency, 0, &val_accumulated_latency);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*st)->accumulated_latency = val_accumulated_latency->data.uint32_val;
+
+    // Interface configuration
+    _create_xpath(xpath_accumulated_latency, "/interface-configuration", &xpath_interface_configuration);
+    IEEE_InterfaceConfiguration *ic = malloc(sizeof(IEEE_InterfaceConfiguration));
+    rc = _read_interface_configuration(xpath_interface_configuration, &ic);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*st)->interface_configuration = *ic;
+
+cleanup:
+    sr_free_val(val_accumulated_latency);
+    free(xpath_accumulated_latency);
+    free(xpath_interface_configuration);
+
+    return rc;
+}
+
+static int
+_read_status_listener(char *xpath, TSN_StatusListener **sl)
+{
+    int rc = SR_ERR_OK;
+    sr_val_t *val_index = NULL;
+    sr_val_t *val_accumulated_latency = NULL;
+    char *xpath_index = NULL;
+    char *xpath_accumulated_latency = NULL;
+    char *xpath_interface_configuration = NULL;
+
+    _create_xpath(xpath, "/index", &xpath_index);
+    rc = sr_get_item(session, xpath_index, 0, &val_index);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*sl)->index = val_index->data.uint16_val;
+
+    _create_xpath(xpath, "/accumulated-latency", &xpath_accumulated_latency);
+    rc = sr_get_item(session, xpath_accumulated_latency, 0, &val_accumulated_latency);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*sl)->accumulated_latency = val_accumulated_latency->data.uint32_val;
+
+    // Interface configuration
+    _create_xpath(xpath_accumulated_latency, "/interface-configuration", &xpath_interface_configuration);
+    IEEE_InterfaceConfiguration *ic = malloc(sizeof(IEEE_InterfaceConfiguration));
+    rc = _read_interface_configuration(xpath_interface_configuration, &ic);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*sl)->interface_configuration = *ic;
+
+cleanup:
+    sr_free_val(val_index);
+    sr_free_val(val_accumulated_latency);
+    free(xpath_index);
+    free(xpath_accumulated_latency);
+    free(xpath_interface_configuration);
+
+    return rc;
+}
+
+static int
+_read_configuration(char *xpath, TSN_Configuration **con)
+{
+    int rc = SR_ERR_OK;
+    sr_val_t *val_listener_list = NULL;
+    char *xpath_status_stream = NULL;
+    char *xpath_status_talker = NULL;
+    char *xpath_listener_list = NULL;
+
+    // Read status stream
+    _create_xpath(xpath, "", &xpath_status_stream);
+    IEEE_StatusStream *ss = malloc(sizeof(IEEE_StatusStream));
+    rc = _read_status_stream(xpath_status_stream, &ss);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*con)->status_info = ss->status_info;
+    (*con)->count_failed_interfaces = ss->count_failed_interfaces;
+    (*con)->failed_interfaces = ss->failed_interfaces;
+
+    // Read Talker
+    _create_xpath(xpath, "/talker", &xpath_status_talker);
+    TSN_StatusTalker *st = malloc(sizeof(TSN_StatusTalker));
+    rc = _read_status_talker(xpath_status_talker, &st);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*con)->talker = *st;
+
+    // Read listener list
+    _create_xpath(xpath, "/listener-list/*", &xpath_listener_list);
+    size_t count_listeners = 0;
+    rc = sr_get_items(session, xpath_listener_list, 0, 0, &val_listener_list, &count_listeners);
+    (*con)->count_listeners = count_listeners;
+    (*con)->listener_list = (TSN_StatusListener *) malloc(sizeof(TSN_StatusListener) * count_listeners);
+    for (int i=0; i<count_listeners; ++i) {
+        TSN_StatusListener *sl = malloc(sizeof(TSN_StatusListener));
+        rc = _read_status_listener((&val_listener_list[i])->xpath, &sl);
+        if (rc != SR_ERR_OK) {
+            goto cleanup;
+        }
+        (*con)->listener_list[i] = *sl;
+    }
+
+cleanup:
+    sr_free_val(val_listener_list);
+    free(xpath_status_stream);
+    free(xpath_status_talker);
+    free(xpath_listener_list);
+
+    return rc;
+}
+
+static int
 _read_stream(char *xpath, TSN_Stream **stream)
 {
     int rc = SR_ERR_OK;
@@ -908,11 +1254,21 @@ _read_stream(char *xpath, TSN_Stream **stream)
 
     // Request
     _create_xpath(xpath, "/request", &xpath_request);
-    // TODO _read_request
+    TSN_Request *req = malloc(sizeof(TSN_Request));
+    rc = _read_request(xpath_request, &req);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*stream)->request = *req;
 
     // Configuration
     _create_xpath(xpath, "/configuration", &xpath_request);
-    // TODO _read_configuration
+    TSN_Configuration *con = malloc(sizeof(TSN_Configuration));
+    rc = _read_configuration(xpath_configuration, &con);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*stream)->configuration = *con;
 
 cleanup:
     sr_free_val(val_stream_id);
@@ -923,13 +1279,144 @@ cleanup:
     return rc;
 }
 
+
+static int
+_read_module(char *xpath, TSN_Module **mod)
+{
+    int rc = SR_ERR_OK;
+    sr_val_t *val_id = NULL;
+    sr_val_t *val_p_id = NULL;
+    sr_val_t *val_name = NULL;
+    sr_val_t *val_description = NULL;
+    sr_val_t *val_path = NULL;
+    sr_val_t *val_subscribed_events_mask = NULL;
+    char *xpath_id = NULL;
+    char *xpath_p_id = NULL;
+    char *xpath_name = NULL;
+    char *xpath_description = NULL;
+    char *xpath_path = NULL;
+    char *xpath_subscribed_events_mask = NULL;
+
+    // ID
+    _create_xpath(xpath, "/id", &xpath_id);
+    rc = sr_get_item(session, xpath_id, 0, &val_id);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*mod)->id = val_id->data.uint16_val;
+
+    // Process ID
+    _create_xpath(xpath, "/p-id", &xpath_p_id);
+    rc = sr_get_item(session, xpath_p_id, 0, &val_p_id);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*mod)->p_id = val_p_id->data.uint32_val;
+
+    // Name
+    _create_xpath(xpath, "/name", &xpath_name);
+    rc = sr_get_item(session, xpath_name, 0, &val_name);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*mod)->name = strdup(val_name->data.string_val);
+
+    // Description
+    _create_xpath(xpath, "/desc", &xpath_description);
+    rc = sr_get_item(session, xpath_description, 0, &val_description);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*mod)->description = strdup(val_description->data.string_val);
+
+    // Path
+    _create_xpath(xpath, "/executable-path", &xpath_path);
+    rc = sr_get_item(session, xpath_path, 0, &val_path);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*mod)->path = strdup(val_path->data.string_val);
+
+    // Subscribed Events Mask
+    _create_xpath(xpath, "/subscribed-events-mask", &xpath_subscribed_events_mask);
+    rc = sr_get_item(session, xpath_subscribed_events_mask, 0, &val_subscribed_events_mask);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*mod)->subscribed_events_mask = val_subscribed_events_mask->data.uint16_val;
+
+cleanup:
+    sr_free_val(val_id);
+    sr_free_val(val_p_id);
+    sr_free_val(val_name);
+    sr_free_val(val_description);
+    sr_free_val(val_path);
+    sr_free_val(val_subscribed_events_mask);
+    free(xpath_id);
+    free(xpath_p_id);
+    free(xpath_name);
+    free(xpath_description);
+    free(xpath_path);
+    free(xpath_subscribed_events_mask);
+
+    return rc;
+}
+
+static int
+_read_modules(char *xpath, TSN_Modules **modules)
+{
+    int rc = SR_ERR_OK;
+    sr_val_t *val_all_modules = NULL;
+    sr_val_t *val_registered_modules = NULL;
+    char *xpath_all_modules = NULL;
+    char *xpath_registered_modules = NULL;
+
+    // Read all modules
+    _create_xpath(xpath, "/all-modules/*", &xpath_all_modules);
+    size_t count_all_modules = 0;
+    rc = sr_get_items(session, xpath_all_modules, 0, 0, &val_all_modules, &count_all_modules);
+    (*modules)->count_all_modules = count_all_modules;
+    (*modules)->all_modules = (TSN_Module *) malloc(sizeof(TSN_Module) * count_all_modules);
+    for (int i=0; i<count_all_modules; ++i) {
+        TSN_Module *m = malloc(sizeof(TSN_Module));
+        rc = _read_module((&val_all_modules[i])->xpath, &m);
+        if (rc != SR_ERR_OK) {
+            goto cleanup;
+        }
+        (*modules)->all_modules[i] = *m;
+    }
+
+    // Read registered modules
+    _create_xpath(xpath, "/registered-modules/*", &xpath_registered_modules);
+    size_t count_registered_modules = 0;
+    rc = sr_get_items(session, xpath_registered_modules, 0, 0, &val_registered_modules, &count_registered_modules);
+    (*modules)->count_registered_modules = count_registered_modules;
+    (*modules)->registered_modules = (TSN_Module *) malloc(sizeof(TSN_Module) * count_registered_modules);
+    for (int i=0; i<count_registered_modules; ++i) {
+        TSN_Module *m = malloc(sizeof(TSN_Module));
+        rc = _read_module((&val_registered_modules[i])->xpath, &m);
+        if (rc != SR_ERR_OK) {
+            goto cleanup;
+        }
+        (*modules)->registered_modules[i] = *m;
+    }
+
+cleanup:
+    sr_free_val(val_all_modules);
+    sr_free_val(val_registered_modules);
+    free(xpath_all_modules);
+    free(xpath_registered_modules);
+
+    return rc;
+}
+
 static int 
 _read_root(char *xpath, TSN_Uni **root)
 {
     int rc = SR_ERR_OK;
-    sr_val_t *val_stream_list;
-    
+    sr_val_t *val_stream_list = NULL;
     char *xpath_stream_list = NULL;
+    char *xpath_modules = NULL;
 
     // Read streams
     _create_xpath(xpath, "/stream-list/*", &xpath_stream_list);
@@ -946,9 +1433,19 @@ _read_root(char *xpath, TSN_Uni **root)
         (*root)->stream_list[i] = *s;
     }
 
+    // Read modules
+    _create_xpath(xpath, "/modules", &xpath_modules);
+    TSN_Modules *modules = malloc(sizeof(TSN_Modules));
+    rc = _read_modules(xpath_modules, &modules);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*root)->modules = *modules;
+
 cleanup:
     sr_free_val(val_stream_list);
     free(xpath_stream_list);
+    free(xpath_modules);
 
     return rc;
 }
@@ -962,8 +1459,6 @@ int
 sysrepo_get_root(TSN_Uni **root)
 {
     rc = _read_root("/control-tsn-uni:tsn-uni", &(*root));
-
-cleanup:
     return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
@@ -984,4 +1479,24 @@ int
 sysrepo_delete_stream(char *stream_id)
 {
 
+}
+
+// Modules
+int 
+sysrepo_register_module(TSN_Module module)
+{
+
+}
+
+int 
+sysrepo_add_available_module(TSN_Module module)
+{
+
+}
+
+int 
+sysrepo_get_modules(TSN_Modules **modules)
+{
+    rc = _read_modules("/control-tsn-uni:tsn-uni/modules", &(*modules));
+    return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }

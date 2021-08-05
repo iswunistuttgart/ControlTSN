@@ -37,5 +37,12 @@ int sysrepo_write_stream(TSN_Stream stream);
 int sysrepo_read_stream(char *stream_id, TSN_Stream **stream);
 int sysrepo_delete_stream(char *stream_id);
 
+// Modules
+int sysrepo_register_module(TSN_Module module);
+int sysrepo_add_available_module(TSN_Module module);
+int sysrepo_get_modules(TSN_Modules **modules);
+
+// Topology
+
 
 #endif // __SYSREPO_CLIENT_H__

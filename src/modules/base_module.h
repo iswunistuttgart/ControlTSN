@@ -2,6 +2,7 @@
 #define __BASE_MODULE_H__
 
 #include "../core.h"
+#include "../sysrepo/sysrepo_client.h"
 
 // ----------------------------------------------
 // Module initialization

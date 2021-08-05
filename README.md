@@ -1,4 +1,4 @@
-# ControlTSN (2)
+# ControlTSN
 Development repo for the project ControlTSN.
 
 ## Architecture

@@ -17,7 +17,7 @@ module control-tsn-uni {
 
 
     // =============================================================
-    // ===  Groupings
+    // ===  Stream groupings
     // =============================================================
     grouping configuration {
         uses tsn:group-status-stream;
@@ -87,6 +87,30 @@ module control-tsn-uni {
         }
     }
 
+    // =============================================================
+    // ===  Modules groupings
+    // =============================================================
+    grouping module-def {
+        leaf id {
+            type uint16;
+        }
+        leaf p-id {
+            type uint32;
+        }
+        leaf name {
+            type string;
+        }
+        leaf desc {
+            type string;
+        }
+        leaf executable-path {
+            type string;
+        }
+        leaf subscribed-events-mask {
+            type uint16;
+        }
+    }
+
 
     // =============================================================
     // ===  Root
@@ -112,5 +136,21 @@ module control-tsn-uni {
         action undeploy-all-configurations { }
         action delete-all-configurations { }
         */
+
+        container modules {
+            container all-modules {
+                list mod {
+                    key "id";
+                    uses module-def;
+                }
+            }
+
+            container registered-modules {
+                list mod {
+                    key "id";
+                    uses module-def;
+                }
+            }
+        }
     }
 }
