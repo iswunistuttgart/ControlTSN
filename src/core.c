@@ -97,6 +97,7 @@ module_unregister(int module_id)
     return EXIT_FAILURE;
 }
 
+/*
 TSN_Module *
 module_get(int module_id)
 {
@@ -117,6 +118,7 @@ module_get_all(int *count)
     (*count) = modules_count;
     return modules;
 }
+*/
 
 int 
 module_start(TSN_Module module)
@@ -165,8 +167,10 @@ _core_init()
     ret = sysrepo_connect();
     if (ret == EXIT_FAILURE)
     {
+        printf("[CORE] Failure while connecting to Sysrepo!\n");
         return ret;
     }
+    printf("[CORE] Connected to Sysrepo!\n");
 
     // Init the callbacks in sysrepo
     sysrepo_init_callbacks(cb_stream_requested,
@@ -174,7 +178,8 @@ _core_init()
                            NULL);
 
     // Start the subscription for notification from sysrepo
-    ret = sysrepo_start_listening();
+    // TODO uncomment below
+    //ret = sysrepo_start_listening();
 
     return ret;
 }
@@ -211,6 +216,18 @@ void print_module(TSN_Module mod)
 }
 
 // ----------------------------------------------
+// Sysrepo interface
+// ----------------------------------------------
+// MODULES
+/*
+int 
+get_modules_from_sysrepo(TSN_Modules **modules)
+{
+    return 999;
+}
+*/
+
+// ----------------------------------------------
 // MAIN
 // ----------------------------------------------
 void test_cb(int x, TSN_Event_CB_Data data)
@@ -221,6 +238,10 @@ void test_cb(int x, TSN_Event_CB_Data data)
 int main(void)
 {
     printf("[CORE] Started CORE\n");
+    ret = _core_init();
+    if (ret != EXIT_SUCCESS) {
+        goto cleanup;
+    }
 
     /*
     int m_id = module_register("Hallo", "DescriptionModule", 0, NULL);
@@ -272,11 +293,13 @@ int main(void)
     // REST Module
     TSN_Module module_rest;
     module_rest = module_register("Rest Module", "exposes a rest interface", "./Module_REST", 515, NULL);
+    
     int pid = module_start(module_rest);
     if (pid > 0) {
         module_rest.p_id = pid;
-        print_module(module_rest);
+        //print_module(module_rest);
     }
+    
 
     /*
     sleep(5);
@@ -284,15 +307,20 @@ int main(void)
     printf("Stop module result: %d\n", ret);
     */
 
-    TSN_Uni *uni = malloc(sizeof(TSN_Uni));
-    ret = sysrepo_get_root(&uni);
-    printf("GET ROOT: %d\n", ret);
+    
+
+    TSN_Modules *mods = malloc(sizeof(TSN_Modules));
+    ret = sysrepo_get_modules(&mods);
+    printf("[CORE] All Modules Count: %d\n", mods->count_all_modules);
 
 
     while(is_running) {
         sleep(1);
     }
 
+cleanup:
+    ret = _core_shutdown();
     printf("[CORE] Stopped CORE\n");
-
+    
+    return ret;
 }

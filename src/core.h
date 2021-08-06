@@ -56,6 +56,8 @@ void print_module(TSN_Module mod);
 // ----------------------------------------------
 // Sysrepo interface
 // ----------------------------------------------
+// MODULES
+//int get_modules_from_sysrepo(TSN_Modules **modules);
 
 
 #endif // __CORE_H__

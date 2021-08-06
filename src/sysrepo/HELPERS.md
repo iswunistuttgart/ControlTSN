@@ -4,7 +4,7 @@
 
 ### Load initial data to Sysrepo
 - ```sysrepocfg --import [file] -d [running|startup|operational] -m control-tsn-uni```
-- e.g.: ```sysrepocfg --import initial.xml -d running -m control-tsn-uni```
+- e.g.: ```sysrepocfg --import=initial.xml -d running -m control-tsn-uni```
 
 ### Clean shared memory
 1. cd to sysrepo repo 

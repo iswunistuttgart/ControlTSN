@@ -30,7 +30,6 @@ sysrepo_connect()
         sr_disconnect(connection);
         return EXIT_FAILURE;
     }
-
     return EXIT_SUCCESS;
 }
 
@@ -66,7 +65,13 @@ sysrepo_disconnect()
 {
     rc = sr_disconnect(connection);
 
-    return rc ? EXIT_FAILURE : EXIT_SUCCESS;
+    if (rc) {
+        printf("[SYSREPO] Failure while disconnecting!\n");
+        return EXIT_FAILURE;
+    }
+
+    printf("[SYSREPO] Disconnected\n");
+    return EXIT_SUCCESS;
 }
 
 int
@@ -1285,13 +1290,11 @@ _read_module(char *xpath, TSN_Module **mod)
 {
     int rc = SR_ERR_OK;
     sr_val_t *val_id = NULL;
-    sr_val_t *val_p_id = NULL;
     sr_val_t *val_name = NULL;
     sr_val_t *val_description = NULL;
     sr_val_t *val_path = NULL;
     sr_val_t *val_subscribed_events_mask = NULL;
     char *xpath_id = NULL;
-    char *xpath_p_id = NULL;
     char *xpath_name = NULL;
     char *xpath_description = NULL;
     char *xpath_path = NULL;
@@ -1304,14 +1307,6 @@ _read_module(char *xpath, TSN_Module **mod)
         goto cleanup;
     }
     (*mod)->id = val_id->data.uint16_val;
-
-    // Process ID
-    _create_xpath(xpath, "/p-id", &xpath_p_id);
-    rc = sr_get_item(session, xpath_p_id, 0, &val_p_id);
-    if (rc != SR_ERR_OK) {
-        goto cleanup;
-    }
-    (*mod)->p_id = val_p_id->data.uint32_val;
 
     // Name
     _create_xpath(xpath, "/name", &xpath_name);
@@ -1347,13 +1342,11 @@ _read_module(char *xpath, TSN_Module **mod)
 
 cleanup:
     sr_free_val(val_id);
-    sr_free_val(val_p_id);
     sr_free_val(val_name);
     sr_free_val(val_description);
     sr_free_val(val_path);
     sr_free_val(val_subscribed_events_mask);
     free(xpath_id);
-    free(xpath_p_id);
     free(xpath_name);
     free(xpath_description);
     free(xpath_path);
@@ -1379,6 +1372,7 @@ _read_modules(char *xpath, TSN_Modules **modules)
     (*modules)->all_modules = (TSN_Module *) malloc(sizeof(TSN_Module) * count_all_modules);
     for (int i=0; i<count_all_modules; ++i) {
         TSN_Module *m = malloc(sizeof(TSN_Module));
+        m->p_id = -1;
         rc = _read_module((&val_all_modules[i])->xpath, &m);
         if (rc != SR_ERR_OK) {
             goto cleanup;

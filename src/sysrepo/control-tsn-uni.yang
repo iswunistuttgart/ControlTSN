@@ -94,9 +94,6 @@ module control-tsn-uni {
         leaf id {
             type uint16;
         }
-        leaf p-id {
-            type uint32;
-        }
         leaf name {
             type string;
         }
