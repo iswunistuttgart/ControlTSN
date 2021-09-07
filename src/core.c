@@ -31,4 +31,7 @@ int main(void)
     ret = sysrepo_connect();
     ret = sysrepo_get_modules(&m);
     printf("[CORE]: %d\n", m->count_all_modules);
+
+    // Start all registered modules (m->registered_modules)
+    // ...
 }

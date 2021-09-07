@@ -1,13 +1,99 @@
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
-#include <unistd.h>     // fork
-#include <sys/types.h>  // pid_t
-#include <sys/wait.h>   // wait
+//#include <unistd.h>     // fork
+//#include <sys/types.h>  // pid_t
+//#include <sys/wait.h>   // wait
+
 #include "common.h"
 #include "./sysrepo/sysrepo_client.h"
 
 int ret;
+
+
+// ----------------------------------------------
+//      FUNCTIONS - Module-Handling
+// ----------------------------------------------
+int 
+module_init(TSN_Module *this_module)
+{
+    // Establish a connection to sysrepo
+    ret = sysrepo_connect();
+
+    // Add module to the available modules
+    int rc = sysrepo_add_new_module(*(this_module));
+    if (rc != EXIT_SUCCESS) {
+        printf("[COMMON] Module already known or error adding to the datastore!\n");
+    }
+
+    // Setting the generic callback method
+    sysrepo_init_callback(this_module->cb_event);
+
+    return ret;
+}
+
+int
+module_register(int module_id)
+{
+
+}
+
+int
+module_unregister(int module_id)
+{
+
+}
+
+int
+module_get(int module_id, TSN_Module **module)
+{
+
+}
+
+int module_get_all(TSN_Modules **modules)
+{
+
+}
+
+
+// ----------------------------------------------
+//      FUNCTIONS - Sysrepo
+// ----------------------------------------------
+int
+sysrepo_update_module_data(int module_id, TSN_Module_Data *module_data)
+{
+
+}
+
+int
+sysrepo_get_module_data(int module_id, TSN_Module_Data **module_data)
+{
+
+}
+
+
+// ----------------------------------------------
+//      FUNCTIONS - Other/Helpers
+// ----------------------------------------------
+void
+print_module(TSN_Module module) {
+    printf("----- MODULE -----\n");
+    printf("Name:       %s\n", module.name);
+    printf("Description:    %s\n", module.description);
+    printf("ID:             %d\n", module.id);
+    printf("P_ID:           %d\n", module.p_id);
+    printf("Path:           %s\n", module.path);
+    printf("Events Mask:    %d\n", module.subscribed_events_mask);
+    printf("\n");
+}
+
+
+
+
+
+
+/*
+BACKUP
 
 // ----------------------------------------------
 // Module organization & orchestration
@@ -25,26 +111,26 @@ module_register(char *name,
 {
     modules_id_counter += 1;
 
-    /*
-    TSN_Module *mod = malloc(sizeof(TSN_Module));
-    mod->name = strdup(name);
-    mod->description = strdup(description);
-    mod->id = modules_id_counter;
-    mod->cb_event = cb_event;
+    
+    // TSN_Module *mod = malloc(sizeof(TSN_Module));
+    // mod->name = strdup(name);
+    // mod->description = strdup(description);
+    // mod->id = modules_id_counter;
+    // mod->cb_event = cb_event;
 
-    modules_count += 1;
-    if (modules_count == 1)
-    {
-        modules = (TSN_Module *)malloc(1 * sizeof(TSN_Module));
-    }
-    else
-    {
-        modules = (TSN_Module *)realloc(modules, modules_count * sizeof(TSN_Module));
-    }
-    modules[modules_count - 1] = *mod;
+    // modules_count += 1;
+    // if (modules_count == 1)
+    // {
+    //     modules = (TSN_Module *)malloc(1 * sizeof(TSN_Module));
+    // }
+    // else
+    // {
+    //     modules = (TSN_Module *)realloc(modules, modules_count * sizeof(TSN_Module));
+    // }
+    // modules[modules_count - 1] = *mod;
 
-    return modules_id_counter;
-    */
+    // return modules_id_counter;
+    
 
     TSN_Module mod;
     mod.name = strdup(name);
@@ -88,6 +174,7 @@ module_unregister(int module_id)
     }
     return EXIT_FAILURE;
 }
+*/
 
 /*
 TSN_Module *
@@ -112,6 +199,7 @@ module_get_all(int *count)
 }
 */
 
+/*
 int 
 module_start(TSN_Module module)
 {
@@ -217,3 +305,4 @@ get_modules_from_sysrepo(TSN_Modules **modules)
 {
     
 }
+*/

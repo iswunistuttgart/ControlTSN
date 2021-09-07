@@ -71,7 +71,7 @@ _cb_get_modules(const struct _u_request *request, struct _u_response *response, 
 
     return U_CALLBACK_CONTINUE;
 }
-
+   
 /**
  * @brief API endpoint GET "/modules/:id".
  * Query of a specific module based on the module ID 

@@ -1,4 +1,5 @@
 #include <string.h>
+#include <math.h>
 #include "sysrepo_client.h"
 
 //  Sysrepo variables
@@ -7,10 +8,13 @@ sr_conn_ctx_t *connection = NULL;
 sr_session_ctx_t *session = NULL;
 sr_subscription_ctx_t *subscription = NULL;
 
-//  Callbacks
-void (*_cb_stream_requested)(TSN_Stream *);
-void (*_cb_stream_configured)(TSN_Stream *);
-void (*_cb_error)();
+// Generic callback
+void (*_cb_event)(TSN_Event_CB_Data data);
+
+//  Callbacks - OLD
+// void (*_cb_stream_requested)(TSN_Stream *);
+// void (*_cb_stream_configured)(TSN_Stream *);
+// void (*_cb_error)();
 
 
 // -------------------------------------------------------- //
@@ -30,12 +34,20 @@ sysrepo_connect()
         sr_disconnect(connection);
         return EXIT_FAILURE;
     }
+
     return EXIT_SUCCESS;
 }
 
 // -------------------------------------------------------- //
 //  Callbacks
 // -------------------------------------------------------- //
+void 
+sysrepo_init_callback(void (*cb_event)(TSN_Event_CB_Data))
+{
+    _cb_event = cb_event;
+}
+
+/*
 void
 sysrepo_init_callbacks(
     void (*cb_stream_requested)(TSN_Stream *),
@@ -49,6 +61,7 @@ sysrepo_init_callbacks(
     //...
     _cb_error = cb_error;
 }
+*/
 
 // -------------------------------------------------------- //
 //  Notification listener
@@ -74,6 +87,7 @@ sysrepo_disconnect()
     return EXIT_SUCCESS;
 }
 
+/*
 int
 sysrepo_start_listening()
 {
@@ -97,6 +111,7 @@ sysrepo_stop_listening()
     }
     return EXIT_SUCCESS;
 }
+*/
 
 
 // -------------------------------------------------------- //
@@ -108,7 +123,6 @@ _create_xpath(char *xpath_base, char *xpath_append, char **result)
     (*result) = malloc(strlen(xpath_base) + strlen(xpath_append) + 1);
     sprintf((*result), "%s%s", xpath_base, xpath_append);
 }
-
 
 static int
 _read_interface_id(char *xpath, IEEE_InterfaceId **interface_id)
@@ -1284,7 +1298,6 @@ cleanup:
     return rc;
 }
 
-
 static int
 _read_module(char *xpath, TSN_Module **mod)
 {
@@ -1346,6 +1359,67 @@ cleanup:
     sr_free_val(val_description);
     sr_free_val(val_path);
     sr_free_val(val_subscribed_events_mask);
+    free(xpath_id);
+    free(xpath_name);
+    free(xpath_description);
+    free(xpath_path);
+    free(xpath_subscribed_events_mask);
+
+    return rc;
+}
+
+static int
+_write_module(char *xpath, TSN_Module *mod)
+{
+    int rc = SR_ERR_OK;
+    char *xpath_id = NULL;
+    char *xpath_name = NULL;
+    char *xpath_description = NULL;
+    char *xpath_path = NULL;
+    char *xpath_subscribed_events_mask = NULL;
+
+    // Write ID
+    _create_xpath(xpath, "/id", &xpath_id);
+    sr_val_t val_id;
+    val_id.type = SR_UINT16_T;
+    val_id.data.uint16_val = mod->id;
+    rc = sr_set_item(session, xpath_id, &val_id, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+    // Write Name
+    _create_xpath(xpath, "/name", &xpath_name);
+    rc = sr_set_item_str(session, xpath_name, mod->name, NULL, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+    // Write Description
+    _create_xpath(xpath, "/desc", &xpath_description);
+    rc = sr_set_item_str(session, xpath_description, mod->description, NULL, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+    // Write Path
+    _create_xpath(xpath, "/executable-path", &xpath_path);
+    rc = sr_set_item_str(session, xpath_path, mod->path, NULL, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+    // Write Subscribed Events Mask
+    _create_xpath(xpath, "/subscribed-events-mask", &xpath_subscribed_events_mask);
+    sr_val_t val_subscribed_events_mask;
+    val_subscribed_events_mask.type = SR_UINT16_T;
+    val_subscribed_events_mask.data.uint16_val = mod->subscribed_events_mask;
+    rc = sr_set_item(session, xpath_subscribed_events_mask, &val_subscribed_events_mask, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+cleanup:
     free(xpath_id);
     free(xpath_name);
     free(xpath_description);
@@ -1445,10 +1519,13 @@ cleanup:
 }
 
 
+
+
 // -------------------------------------------------------- //
 //  CRUD methods
 // -------------------------------------------------------- //
 // The yang module root containing the stream-list
+/*
 int 
 sysrepo_get_root(TSN_Uni **root)
 {
@@ -1493,4 +1570,105 @@ sysrepo_get_modules(TSN_Modules **modules)
 {
     rc = _read_modules("/control-tsn-uni:tsn-uni/modules", &(*modules));
     return rc ? EXIT_FAILURE : EXIT_SUCCESS;
+}
+*/
+
+
+
+// -------------------------------------------------------- //
+//  Module handling
+// -------------------------------------------------------- //
+int 
+sysrepo_add_new_module(TSN_Module new_module)
+{
+    int is_failure = 0;
+    // Get all modules in the datastore
+    TSN_Modules *stored_modules = NULL;
+    stored_modules = malloc(sizeof(TSN_Modules));
+    rc = _read_modules("/control-tsn-uni:tsn-uni/modules", &(*stored_modules));
+    if (rc != SR_ERR_OK) {
+        is_failure = 1;
+        goto cleanup;
+    }
+
+    // Search if the name and path already exists under the stored modules
+    // simultaneously the highest used ID is determined in order to specify
+    // the ID for the potential, new module
+    int highest_used_id = 0;
+    for (int i=0; i<stored_modules->count_all_modules; ++i) {
+        // Compare name and path
+        if ((strcmp(new_module.name, stored_modules->all_modules[i].name) == 0
+            && (strcmp(new_module.path, stored_modules->all_modules[i].path)))) {
+            
+            // We found a module with the same name and path
+            printf("[SYSREPO] Error adding a new module. Module with the same name and path already exists!\n");
+            is_failure = 1;
+            goto cleanup;
+        }
+
+        if (stored_modules->all_modules[i].id > highest_used_id) {
+            highest_used_id = stored_modules->all_modules[i].id;
+        }
+    }
+
+    // Otherwise we can add the new module
+    new_module.id = (highest_used_id + 1);
+    rc = _write_module("/control-tsn-uni:tsn-uni/modules/all-modules", &new_module);
+    if (rc != SR_ERR_OK) {
+        printf("[SYSREPO] Error adding a new module to the list!\n");
+        is_failure = 1;
+        goto cleanup;
+    }
+
+cleanup:
+    free(stored_modules);
+
+    return is_failure ? EXIT_FAILURE : EXIT_SUCCESS;
+}
+
+int
+sysrepo_register_module(int module_id)
+{
+    int is_failure = 0;
+    // Get the module from the datastore
+    size_t size_xpath_all = snprintf(NULL, 0, "/control-tsn-uni:tsn-uni/modules/all-modules/mod[id='%d']", module_id) + 1;
+    char *xpath_stored_module = malloc(size_xpath_all);
+    TSN_Module *stored_module = malloc(sizeof(TSN_Module));
+    rc = _read_module(xpath_stored_module, &stored_module);
+    if (rc != SR_ERR_OK) {
+        printf("[SYSREPO] Error finding module with the ID %d in the list!\n", module_id);
+        is_failure = 1;
+        goto cleanup;
+    }
+
+    // Check if the module is already in the list of registered modules
+    size_t size_xpath_check = snprintf(NULL, 0, "/control-tsn-uni:tsn-uni/modules/registered-modules/mod[id='%d']/name", module_id) + 1;
+    char *xpath_module_check = malloc(size_xpath_check);
+    sr_val_t *val_module_name_check = NULL;
+    rc = sr_get_item(session, xpath_module_check, 0, &val_module_name_check);
+    if (rc == SR_ERR_OK) {
+        // A module exists already under the specified ID
+        printf("[SYSREPO] Error registering the Module. Module already exists under the specified ID!\n");
+        is_failure = 1;
+        goto cleanup;
+    }
+
+    // Otherwise add the module to the list
+    size_t size_xpath_add = snprintf(NULL, 0, "/control-tsn-uni:tsn-uni/modules/registered-modules/mod[id='%d']", module_id) + 1;
+    char *xpath_module_add = malloc(size_xpath_add);
+    rc = _write_module(xpath_module_add, stored_module);
+    if (rc != SR_ERR_OK) {
+        printf("[SYSREPO] Error registering the Module!\n");
+        is_failure = 1;
+        goto cleanup;
+    }
+
+cleanup:
+    free(xpath_stored_module);
+    free(stored_module);
+    free(xpath_module_check);
+    sr_free_val(val_module_name_check);
+    free(xpath_module_add);
+
+    return is_failure ? EXIT_FAILURE : EXIT_SUCCESS;
 }

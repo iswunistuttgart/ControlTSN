@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include "ieee802_tsn_types.h"
+#include "sysrepo.h"
 
 // ----------------------------------------------
 // Event handling
@@ -113,14 +114,28 @@ typedef struct TSN_Stream {
 // ---------------------------------------
 // Module definitions
 // ---------------------------------------
+typedef struct TSN_Module_Data_Entry
+{
+    char *name;         // The name of the variable
+    sr_type_t type;     // The type of the variable
+    sr_data_t value;    // The value of the variable
+} TSN_Module_Data_Entry;
+
+typedef struct TSN_Module_Data 
+{
+    uint16_t count_entries;
+    TSN_Module_Data_Entry *entries;
+} TSN_Module_Data;
+
+
 typedef struct TSN_Module
 {
-    int id;             // Module ID
+    uint16_t id;             // Module ID
     int p_id;           // Module Process ID
     char *path;         // Path to the modules executable       (???)
     char *name;         // Module Name
     char *description;  // Module Description
-    int subscribed_events_mask;     // Mask describing the relevant events for this module
+    uint16_t subscribed_events_mask;     // Mask describing the relevant events for this module
     void (*cb_event)(int event_id, TSN_Event_CB_Data data);     // Generic callback method for events
 } TSN_Module;
 
