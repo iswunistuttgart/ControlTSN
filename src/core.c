@@ -25,6 +25,7 @@ init()
 
 int main(void)
 {
+    /*
     printf("[CORE] Started CORE\n");
     TSN_Modules *m = malloc(sizeof(TSN_Modules));
     
@@ -34,4 +35,7 @@ int main(void)
 
     // Start all registered modules (m->registered_modules)
     // ...
+    */
+
+    ret = sysrepo_unregister_module(2);
 }

@@ -37,7 +37,7 @@ int module_init(TSN_Module *this_module);
 int module_register(int module_id);
 
 /**
- * @brief Unregisters a module from the core.
+ * @brief Unregisters a module from the core. Before that the function stops the module if necessary.
  * @param module_id The id of the module to unregister
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */

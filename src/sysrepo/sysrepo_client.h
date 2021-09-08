@@ -49,6 +49,15 @@ int sysrepo_add_new_module(TSN_Module module);
  */
 int sysrepo_register_module(int module_id);
 
+/**
+ * @brief Unregisters a module by removing it from the list of registered modules in the datastore.
+ * @param module_id The id of the module to unregister
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+ */
+int sysrepo_unregister_module(int module_id);
+
+int sysrepo_get_module(int module_id);
+
 // -------------------------------------------------------- //
 //  CRUD methods
 // -------------------------------------------------------- //

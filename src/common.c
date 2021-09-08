@@ -35,7 +35,9 @@ module_init(TSN_Module *this_module)
 int
 module_register(int module_id)
 {
+    ret = sysrepo_register_module(module_id);
 
+    return ret;
 }
 
 int
