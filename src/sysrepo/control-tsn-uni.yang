@@ -135,7 +135,7 @@ module control-tsn-uni {
         */
 
         container modules {
-            container all-modules {
+            container available-modules {
                 list mod {
                     key "id";
                     uses module-def;

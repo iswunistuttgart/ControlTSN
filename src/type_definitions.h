@@ -140,8 +140,8 @@ typedef struct TSN_Module
 } TSN_Module;
 
 typedef struct TSN_Modules {
-    uint16_t count_all_modules;
-    TSN_Module *all_modules;
+    uint16_t count_available_modules;
+    TSN_Module *available_modules;
 
     uint16_t count_registered_modules;
     TSN_Module *registered_modules;

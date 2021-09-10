@@ -33,7 +33,7 @@ void sysrepo_init_callbacks(
 //  Module handling
 // -------------------------------------------------------- //
 /**
- * @brief Adds a new module to the list of all modules in the datastore. 
+ * @brief Adds a new module to the list of available modules in the datastore. 
  * Before that it is checked if the module already exists.
  * @param module The module to add (the id of the module is determined automatically and ignored if already set)
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
@@ -56,7 +56,18 @@ int sysrepo_register_module(int module_id);
  */
 int sysrepo_unregister_module(int module_id);
 
-int sysrepo_get_module(int module_id);
+int sysrepo_get_module_from_registered(int module_id, TSN_Module **module);
+
+int sysrepo_get_module_from_all(int module_id, TSN_Module **module);
+
+int sysrepo_get_all_modules(TSN_Modules **modules);
+
+/**
+ * @brief Removes a module from the list of available modules in the datastore. 
+ * @param module The module to remove
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+ */
+int sysrepo_delete_module(int module_id);
 
 // -------------------------------------------------------- //
 //  CRUD methods

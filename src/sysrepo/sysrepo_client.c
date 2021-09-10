@@ -1453,11 +1453,11 @@ _read_modules(char *xpath, TSN_Modules **modules)
     char *xpath_registered_modules = NULL;
 
     // Read all modules
-    _create_xpath(xpath, "/all-modules/*", &xpath_all_modules);
+    _create_xpath(xpath, "/available-modules/*", &xpath_all_modules);
     size_t count_all_modules = 0;
     rc = sr_get_items(session, xpath_all_modules, 0, 0, &val_all_modules, &count_all_modules);
-    (*modules)->count_all_modules = count_all_modules;
-    (*modules)->all_modules = (TSN_Module *) malloc(sizeof(TSN_Module) * count_all_modules);
+    (*modules)->count_available_modules = count_all_modules;
+    (*modules)->available_modules = (TSN_Module *) malloc(sizeof(TSN_Module) * count_all_modules);
     for (int i=0; i<count_all_modules; ++i) {
         TSN_Module *m = malloc(sizeof(TSN_Module));
         m->p_id = -1;
@@ -1465,7 +1465,7 @@ _read_modules(char *xpath, TSN_Modules **modules)
         if (rc != SR_ERR_OK) {
             goto cleanup;
         }
-        (*modules)->all_modules[i] = *m;
+        (*modules)->available_modules[i] = *m;
     }
 
     // Read registered modules
@@ -1596,6 +1596,8 @@ int
 sysrepo_add_new_module(TSN_Module new_module)
 {
     int is_failure = 0;
+    char *xpath_mod = NULL;
+
     // Get all modules in the datastore
     TSN_Modules *stored_modules = NULL;
     stored_modules = malloc(sizeof(TSN_Modules));
@@ -1609,10 +1611,10 @@ sysrepo_add_new_module(TSN_Module new_module)
     // simultaneously the highest used ID is determined in order to specify
     // the ID for the potential, new module
     int highest_used_id = 0;
-    for (int i=0; i<stored_modules->count_all_modules; ++i) {
+    for (int i=0; i<stored_modules->count_available_modules; ++i) {
         // Compare name and path
-        if ((strcmp(new_module.name, stored_modules->all_modules[i].name) == 0
-            && (strcmp(new_module.path, stored_modules->all_modules[i].path)))) {
+        if ((strcmp(new_module.name, stored_modules->available_modules[i].name) == 0) &&
+            (strcmp(new_module.path, stored_modules->available_modules[i].path) == 0)) {
             
             // We found a module with the same name and path
             printf("[SYSREPO] Error adding a new module. Module with the same name and path already exists!\n");
@@ -1620,14 +1622,15 @@ sysrepo_add_new_module(TSN_Module new_module)
             goto cleanup;
         }
 
-        if (stored_modules->all_modules[i].id > highest_used_id) {
-            highest_used_id = stored_modules->all_modules[i].id;
+        if (stored_modules->available_modules[i].id > highest_used_id) {
+            highest_used_id = stored_modules->available_modules[i].id;
         }
     }
 
     // Otherwise we can add the new module
     new_module.id = (highest_used_id + 1);
-    rc = _write_module("/control-tsn-uni:tsn-uni/modules/all-modules", &new_module);
+    _create_xpath_id("/control-tsn-uni:tsn-uni/modules/available-modules/mod[id='%d']", new_module.id, &xpath_mod);
+    rc = _write_module(xpath_mod, &new_module);
     if (rc != SR_ERR_OK) {
         printf("[SYSREPO] Error adding a new module to the list!\n");
         is_failure = 1;
@@ -1635,6 +1638,7 @@ sysrepo_add_new_module(TSN_Module new_module)
     }
 
 cleanup:
+    free(xpath_mod);
     free(stored_modules);
 
     return is_failure ? EXIT_FAILURE : EXIT_SUCCESS;
@@ -1646,7 +1650,7 @@ sysrepo_register_module(int module_id)
     int is_failure = 0;
     // Get the module from the datastore
     char *xpath_stored_module = NULL;
-    _create_xpath_id("/control-tsn-uni:tsn-uni/modules/all-modules/mod[id='%d']", module_id, &xpath_stored_module);
+    _create_xpath_id("/control-tsn-uni:tsn-uni/modules/available-modules/mod[id='%d']", module_id, &xpath_stored_module);
     TSN_Module *stored_module = malloc(sizeof(TSN_Module));
     rc = _read_module(xpath_stored_module, &stored_module);
     if (rc != SR_ERR_OK) {
@@ -1710,7 +1714,68 @@ cleanup:
 }
 
 int 
-sysrepo_get_module(int module_id)
+sysrepo_delete_module(int module_id)
+{
+    // Delete the entry
+    char *xpath_module_delete = NULL;
+    _create_xpath_id("/control-tsn-uni:tsn-uni/modules/available-modules/mod[id='%d']", module_id, &xpath_module_delete);
+    rc = sr_delete_item(session, xpath_module_delete, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+    rc = sr_apply_changes(session, 0, 1);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+cleanup:
+    free(xpath_module_delete);
+
+    return rc ? EXIT_FAILURE : EXIT_SUCCESS;
+}
+
+int 
+sysrepo_get_module_from_registered(int module_id, TSN_Module **module)
 {
     char *xpath_module = NULL;
+    _create_xpath_id("/control-tsn-uni:tsn-uni/modules/registered-modules/mod[id='%d']", module_id, &xpath_module);
+    rc = _read_module(xpath_module, module);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+cleanup:
+    free(xpath_module);
+
+    return rc ? EXIT_FAILURE : EXIT_SUCCESS;
+}
+
+int 
+sysrepo_get_module_from_all(int module_id, TSN_Module **module)
+{
+    char *xpath_module = NULL;
+    _create_xpath_id("/control-tsn-uni:tsn-uni/modules/available-modules/mod[id='%d']", module_id, &xpath_module);
+    rc = _read_module(xpath_module, module);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+cleanup:
+    free(xpath_module);
+
+    return rc ? EXIT_FAILURE : EXIT_SUCCESS;
+}
+
+int 
+sysrepo_get_all_modules(TSN_Modules **modules)
+{
+    char *xpath = NULL;
+    rc = _read_modules("/control-tsn-uni:tsn-uni/modules", modules);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+cleanup:
+    return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }

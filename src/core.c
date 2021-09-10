@@ -7,6 +7,7 @@
 #include "core.h"
 #include "common.h"
 
+
 int ret;
 
 volatile sig_atomic_t is_running = 1;
@@ -23,19 +24,35 @@ init()
     
 }
 
-int main(void)
+void main(void)
 {
-    /*
-    printf("[CORE] Started CORE\n");
+    TSN_Module *this_module = malloc(sizeof(TSN_Module));
+    this_module->name = strdup("TestModul");
+    this_module->description = strdup("This is a example description");
+    this_module->path = strdup("./ThisModule");
+    this_module->subscribed_events_mask = 0;
+
+    ret = module_init(this_module);
+    if (ret) {
+        goto cleanup;
+    }
+
     TSN_Modules *m = malloc(sizeof(TSN_Modules));
-    
-    ret = sysrepo_connect();
-    ret = sysrepo_get_modules(&m);
-    printf("[CORE]: %d\n", m->count_all_modules);
+    ret = module_get_all(&m);
+    if (ret) {
+        goto cleanup;
+    }
+
+    for (int i=0; i<m->count_available_modules; ++i) {
+        print_module(m->available_modules[i]);
+        //ret = module_delete(m->available_modules[i].id);
+    }
 
     // Start all registered modules (m->registered_modules)
-    // ...
-    */
+    for (int i=0; i<m->count_registered_modules; ++i) {
+        // ...
+    }
 
-    ret = sysrepo_unregister_module(2);
+cleanup:
+    return;
 }

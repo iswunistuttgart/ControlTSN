@@ -44,12 +44,20 @@ int module_register(int module_id);
 int module_unregister(int module_id);
 
 /**
- * @brief Get a specific module based on the id.
+ * @brief Get a specific module based on the id from the list of registered modules.
  * @param module_id The id of the module to get
  * @param module The TSN_Module struct to write on
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
-int module_get(int module_id, TSN_Module **module);
+int module_get_registered(int module_id, TSN_Module **module);
+
+/**
+ * @brief Get a specific module based on the id from the list of available modules.
+ * @param module_id The id of the module to get
+ * @param module The TSN_Module struct to write on
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+ */
+int module_get_available(int module_id, TSN_Module **module);
 
 /**
  * @brief Get all modules stored in the datastore
@@ -57,6 +65,8 @@ int module_get(int module_id, TSN_Module **module);
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
 int module_get_all(TSN_Modules **modules);
+
+int module_delete(int module_id);
 
 
 // ----------------------------------------------
@@ -68,7 +78,7 @@ int module_get_all(TSN_Modules **modules);
  * @param module_data The module specific data
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
-int sysrepo_update_module_data(int module_id, TSN_Module_Data *module_data);
+int module_update_data(int module_id, TSN_Module_Data *module_data);
 
 /**
  * @brief Get the module specific data of a module.
@@ -76,7 +86,7 @@ int sysrepo_update_module_data(int module_id, TSN_Module_Data *module_data);
  * @param module_data A pointer where the data will be written
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
-int sysrepo_get_module_data(int module_id, TSN_Module_Data **module_data);
+int module_get_data(int module_id, TSN_Module_Data **module_data);
 
 
 // ----------------------------------------------

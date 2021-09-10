@@ -6,7 +6,6 @@
 //#include <sys/wait.h>   // wait
 
 #include "common.h"
-#include "./sysrepo/sysrepo_client.h"
 
 int ret;
 
@@ -21,13 +20,15 @@ module_init(TSN_Module *this_module)
     ret = sysrepo_connect();
 
     // Add module to the available modules
-    int rc = sysrepo_add_new_module(*(this_module));
-    if (rc != EXIT_SUCCESS) {
-        printf("[COMMON] Module already known or error adding to the datastore!\n");
-    }
+    if (this_module) {
+        int rc = sysrepo_add_new_module(*(this_module));
+        if (rc != EXIT_SUCCESS) {
+            printf("[COMMON] Module already known or error adding to the datastore!\n");
+        }
 
-    // Setting the generic callback method
-    sysrepo_init_callback(this_module->cb_event);
+        // Setting the generic callback method
+        sysrepo_init_callback(this_module->cb_event);
+    }
 
     return ret;
 }
@@ -36,25 +37,42 @@ int
 module_register(int module_id)
 {
     ret = sysrepo_register_module(module_id);
-
     return ret;
 }
 
 int
 module_unregister(int module_id)
 {
-
+    ret = sysrepo_unregister_module(module_id);
+    return ret;
 }
 
 int
-module_get(int module_id, TSN_Module **module)
+module_get_registered(int module_id, TSN_Module **module)
 {
-
+    ret = sysrepo_get_module_from_registered(module_id, module);
+    return ret;
 }
 
-int module_get_all(TSN_Modules **modules)
+int
+module_get_available(int module_id, TSN_Module **module)
 {
+    ret = sysrepo_get_module_from_all(module_id, module);
+    return ret;
+}
 
+int 
+module_get_all(TSN_Modules **modules)
+{
+    ret = sysrepo_get_all_modules(modules);
+    return ret;
+}
+
+int 
+module_delete(int module_id)
+{
+    ret = sysrepo_delete_module(module_id);
+    return ret;
 }
 
 
@@ -80,7 +98,7 @@ sysrepo_get_module_data(int module_id, TSN_Module_Data **module_data)
 void
 print_module(TSN_Module module) {
     printf("----- MODULE -----\n");
-    printf("Name:       %s\n", module.name);
+    printf("Name:           %s\n", module.name);
     printf("Description:    %s\n", module.description);
     printf("ID:             %d\n", module.id);
     printf("P_ID:           %d\n", module.p_id);
