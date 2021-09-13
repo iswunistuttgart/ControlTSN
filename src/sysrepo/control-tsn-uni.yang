@@ -90,6 +90,55 @@ module control-tsn-uni {
     // =============================================================
     // ===  Modules groupings
     // =============================================================
+    grouping module-data-def {
+        leaf data-name {
+            type string;
+        }
+
+        leaf data-type {
+            type enumeration {
+                enum binary;
+                //enum bits-type;
+                enum boolean;
+                enum decimal64;
+                //enum enumeration-type;
+                //enum identifyref-type;
+                enum instance-identifier;
+                enum int8;
+                enum int16;
+                enum int32;
+                enum int64;
+                enum string;
+                enum uint8;
+                enum uint16;
+                enum uint32;
+                enum uint64;
+            }
+        }
+
+        leaf data-value {
+            //type string;    // Maybe not the best solution. Should each module get a own yang file?
+            type union {
+                type binary;
+                //type bits;                
+                type boolean;
+                type decimal64              {fraction-digits 5;}
+                //type enumeration;
+                //type identifyref;
+                type instance-identifier;
+                type int8;
+                type int16;
+                type int32;
+                type int64;
+                type string;
+                type uint8;
+                type uint16;
+                type uint32;
+                type uint64;
+            }
+        }
+    }
+
     grouping module-def {
         leaf id {
             type uint16;
@@ -105,6 +154,13 @@ module control-tsn-uni {
         }
         leaf subscribed-events-mask {
             type uint16;
+        }
+
+        container data {
+            list entry {
+                key "data-name";
+                uses module-data-def;
+            }
         }
     }
 

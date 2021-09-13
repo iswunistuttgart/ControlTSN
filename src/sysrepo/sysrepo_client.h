@@ -56,10 +56,27 @@ int sysrepo_register_module(int module_id);
  */
 int sysrepo_unregister_module(int module_id);
 
+/**
+ * @brief Gets a specific module from the list of registered modules.
+ * @param module_id The id of the module to get
+ * @param module The struct to write on
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+ */
 int sysrepo_get_module_from_registered(int module_id, TSN_Module **module);
 
-int sysrepo_get_module_from_all(int module_id, TSN_Module **module);
+/**
+ * @brief Gets a specific module from the list of available modules.
+ * @param module_id The id of the module to get
+ * @param module The struct to write on
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+ */
+int sysrepo_get_module_from_available(int module_id, TSN_Module **module);
 
+/**
+ * @brief Returns all stored modules (contains the available and the registered).
+ * @param modules The struct to write on
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+ */
 int sysrepo_get_all_modules(TSN_Modules **modules);
 
 /**
@@ -68,6 +85,22 @@ int sysrepo_get_all_modules(TSN_Modules **modules);
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
 int sysrepo_delete_module(int module_id);
+
+/**
+ * @brief Gets the stored data of a specific module.
+ * @param module_id The id of the module
+ * @param data The struct to write on
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1) 
+ */
+int sysrepo_get_module_data(int module_id, TSN_Module_Data **data);
+
+/**
+ * @brief Updates the data of a specific module in the datastore.
+ * @param module_id The id of the module
+ * @param data The data to write to the sysrepo
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+ */
+int sysrepo_update_module_data(int module_id, TSN_Module_Data data);
 
 // -------------------------------------------------------- //
 //  CRUD methods

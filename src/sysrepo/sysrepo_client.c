@@ -132,6 +132,14 @@ _create_xpath_id(char *xpath_base, int id, char **result)
     sprintf((*result), xpath_base, id); 
 }
 
+void 
+_create_xpath_key(char *xpath_base, char *key, char **result)
+{
+    size_t size_needed = snprintf(NULL, 0, xpath_base, key) + 1;
+    (*result) = malloc(size_needed);
+    sprintf((*result), xpath_base, key); 
+}
+
 static int
 _read_interface_id(char *xpath, IEEE_InterfaceId **interface_id)
 {
@@ -1306,6 +1314,161 @@ cleanup:
     return rc;
 }
 
+
+static int
+_read_module_data_entry(char *xpath, TSN_Module_Data_Entry **entry)
+{
+    int rc = SR_ERR_OK;
+    sr_val_t *val_data_name = NULL;
+    sr_val_t *val_data_type = NULL;
+    sr_val_t *val_data_value = NULL;
+    char *xpath_data_name = NULL;
+    char *xpath_data_type = NULL;
+    char *xpath_data_value = NULL;
+
+    // Name
+    _create_xpath(xpath, "/data-name", &xpath_data_name);
+    rc = sr_get_item(session, xpath_data_name, 0, &val_data_name);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*entry)->name = strdup(val_data_name->data.string_val);
+
+    // Type
+    _create_xpath(xpath, "/data-type", &xpath_data_type);
+    rc = sr_get_item(session, xpath_data_type, 0, &val_data_type);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*entry)->type = sr_enum_to_data_type(val_data_type->data.enum_val);
+
+    // Value
+    _create_xpath(xpath, "/data-value", &xpath_data_value);
+    rc = sr_get_item(session, xpath_data_value, 0, &val_data_value);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*entry)->value = sr_data_to_data_value(val_data_value, (*entry)->type);
+
+cleanup:
+    sr_free_val(val_data_name);
+    sr_free_val(val_data_type);
+    sr_free_val(val_data_value);
+    free(xpath_data_name);
+    free(xpath_data_type);
+    free(xpath_data_value);
+
+    return rc;
+}
+
+static int
+_write_module_data_entry(char *xpath, TSN_Module_Data_Entry *entry)
+{
+    int rc = SR_ERR_OK;
+    char *xpath_data_name = NULL;
+    char *xpath_data_type = NULL;
+    char *xpath_data_value = NULL;
+
+    // Name
+    _create_xpath(xpath, "/data-name", &xpath_data_name);
+    rc = sr_set_item_str(session, xpath_data_name, entry->name, NULL, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+    // Type
+    _create_xpath(xpath, "/data-type", &xpath_data_type);
+    sr_val_t val_type;
+    val_type.type = SR_ENUM_T;
+    char *enum_string = strdup(data_type_to_sr_enum(entry->type));
+    val_type.data.enum_val = enum_string;
+    rc = sr_set_item(session, xpath_data_type, &val_type, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+    // Value
+    _create_xpath(xpath, "/data-value", &xpath_data_value);
+    sr_val_t val_value;
+    val_value = data_value_to_sr_value(entry->value, entry->type);
+    rc = sr_set_item(session, xpath_data_value, &val_value, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+    // Apply the changes
+    rc = sr_apply_changes(session, 0, 1);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+cleanup:
+    free(xpath_data_name);
+    free(xpath_data_type);
+    free(xpath_data_value);
+
+    return rc;
+}
+
+static int
+_read_module_data(char *xpath, TSN_Module_Data **module_data)
+{
+    int rc = SR_ERR_OK;
+    sr_val_t *val_data = NULL;
+    char *xpath_data = NULL;
+
+    _create_xpath(xpath, "/*", &xpath_data);
+    size_t count_data_entries = 0;
+    rc = sr_get_items(session, xpath_data, 0, 0, &val_data, &count_data_entries);
+    (*module_data)->count_entries = count_data_entries;
+    (*module_data)->entries = (TSN_Module_Data_Entry *) malloc(sizeof(TSN_Module_Data_Entry) * count_data_entries);
+    for (int i=0; i<count_data_entries; ++i) {
+        TSN_Module_Data_Entry *e = malloc(sizeof(TSN_Module_Data_Entry));
+        rc = _read_module_data_entry((&val_data[i])->xpath, &e);
+        if (rc != SR_ERR_OK) {
+            goto cleanup;
+        }
+        (*module_data)->entries[i] = *e;
+    }
+    
+cleanup:
+    sr_free_val(val_data);
+    free(xpath_data);
+
+    return rc;
+}
+
+static int
+_write_module_data(char *xpath, TSN_Module_Data *module_data)
+{
+    int rc = SR_ERR_OK;
+    char *xpath_data = NULL;
+
+    _create_xpath(xpath, "/entry[data-name='%s']", &xpath_data);
+
+    for (int i=0; i<module_data->count_entries; ++i) {
+        char *xpath_data_entry = NULL;
+        TSN_Module_Data_Entry *e = &(module_data->entries[i]);
+        _create_xpath_key(xpath_data, e->name, &xpath_data_entry);
+        rc = _write_module_data_entry(xpath_data_entry, e);
+        free(xpath_data_entry);
+        if (rc != SR_ERR_OK) {
+            goto cleanup;
+        }
+    }
+
+    // Apply the changes
+    rc = sr_apply_changes(session, 0, 1);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+cleanup:
+    free(xpath_data);
+
+    return rc;
+}
+
 static int
 _read_module(char *xpath, TSN_Module **mod)
 {
@@ -1315,11 +1478,13 @@ _read_module(char *xpath, TSN_Module **mod)
     sr_val_t *val_description = NULL;
     sr_val_t *val_path = NULL;
     sr_val_t *val_subscribed_events_mask = NULL;
+    sr_val_t *val_data = NULL;
     char *xpath_id = NULL;
     char *xpath_name = NULL;
     char *xpath_description = NULL;
     char *xpath_path = NULL;
     char *xpath_subscribed_events_mask = NULL;
+    char *xpath_data = NULL;
 
     // ID
     _create_xpath(xpath, "/id", &xpath_id);
@@ -1361,17 +1526,28 @@ _read_module(char *xpath, TSN_Module **mod)
     }
     (*mod)->subscribed_events_mask = val_subscribed_events_mask->data.uint16_val;
 
+    // Module Data
+    _create_xpath(xpath, "/data", &xpath_data);
+    TSN_Module_Data *data = malloc(sizeof(TSN_Module_Data));
+    rc = _read_module_data(xpath_data, &data);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*mod)->data = *data;
+
 cleanup:
     sr_free_val(val_id);
     sr_free_val(val_name);
     sr_free_val(val_description);
     sr_free_val(val_path);
     sr_free_val(val_subscribed_events_mask);
+    sr_free_val(val_data);
     free(xpath_id);
     free(xpath_name);
     free(xpath_description);
     free(xpath_path);
     free(xpath_subscribed_events_mask);
+    free(xpath_data);
 
     return rc;
 }
@@ -1385,6 +1561,7 @@ _write_module(char *xpath, TSN_Module *mod)
     char *xpath_description = NULL;
     char *xpath_path = NULL;
     char *xpath_subscribed_events_mask = NULL;
+    char *xpath_data = NULL;
 
     // Write ID
     _create_xpath(xpath, "/id", &xpath_id);
@@ -1427,6 +1604,13 @@ _write_module(char *xpath, TSN_Module *mod)
         goto cleanup;
     }
 
+    // Write Data
+    _create_xpath(xpath, "/data", &xpath_data);
+    rc = _write_module_data(xpath_data, &(mod->data));
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
     // Apply the changes
     rc = sr_apply_changes(session, 0, 1);
     if (rc != SR_ERR_OK) {
@@ -1439,6 +1623,7 @@ cleanup:
     free(xpath_description);
     free(xpath_path);
     free(xpath_subscribed_events_mask);
+    free(xpath_data);
 
     return rc;
 }
@@ -1752,7 +1937,7 @@ cleanup:
 }
 
 int 
-sysrepo_get_module_from_all(int module_id, TSN_Module **module)
+sysrepo_get_module_from_available(int module_id, TSN_Module **module)
 {
     char *xpath_module = NULL;
     _create_xpath_id("/control-tsn-uni:tsn-uni/modules/available-modules/mod[id='%d']", module_id, &xpath_module);
@@ -1777,5 +1962,37 @@ sysrepo_get_all_modules(TSN_Modules **modules)
     }
 
 cleanup:
+    return rc ? EXIT_FAILURE : EXIT_SUCCESS;
+}
+
+int 
+sysrepo_get_module_data(int module_id, TSN_Module_Data **data)
+{
+    char *xpath_module_data = NULL;
+    _create_xpath_id("/control-tsn-uni:tsn-uni/modules/registered-modules/mod[id='%d']/data", module_id, &xpath_module_data);
+    rc = _read_module_data(xpath_module_data, data);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+cleanup:
+    free(xpath_module_data);
+
+    return rc ? EXIT_FAILURE : EXIT_SUCCESS;
+}
+
+int 
+sysrepo_update_module_data(int module_id, TSN_Module_Data data)
+{
+    char *xpath_module_data = NULL;
+    _create_xpath_id("/control-tsn-uni:tsn-uni/modules/registered-modules/mod[id='%d']/data", module_id, &xpath_module_data);
+    rc = _write_module_data(xpath_module_data, &data);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+cleanup:
+    free(xpath_module_data);
+
     return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }

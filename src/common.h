@@ -66,6 +66,11 @@ int module_get_available(int module_id, TSN_Module **module);
  */
 int module_get_all(TSN_Modules **modules);
 
+/**
+ * @brief Deletes a specific module from the list of available modules.
+ * @param module_id The id of the module to delete
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+ */
 int module_delete(int module_id);
 
 
@@ -92,6 +97,11 @@ int module_get_data(int module_id, TSN_Module_Data **module_data);
 // ----------------------------------------------
 //      FUNCTIONS - Other/Helpers
 // ----------------------------------------------
+
+/**
+ * @brief Prints a module to the console.
+ * @param module The module struct to print
+ */
 void print_module(TSN_Module module);
 
 

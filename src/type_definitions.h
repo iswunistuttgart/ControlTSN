@@ -114,11 +114,49 @@ typedef struct TSN_Stream {
 // ---------------------------------------
 // Module definitions
 // ---------------------------------------
+typedef enum TSN_Module_Data_Entry_Type {
+    BINARY,
+    BOOLEAN,
+    DECIMAL64,
+    INSTANCE_IDENTIFIER,
+    INT8,
+    INT16,
+    INT32,
+    INT64,
+    STRING,
+    UINT8,
+    UINT16,
+    UINT32,
+    UINT64
+} TSN_Module_Data_Entry_Type;
+
+TSN_Module_Data_Entry_Type sr_enum_to_data_type(char *enum_string);
+char *data_type_to_sr_enum(TSN_Module_Data_Entry_Type type);
+
+typedef union TSN_Module_Data_Entry_Value {
+    char *binary_val;
+    bool boolean_val;
+    double decimal64_val;
+    char *instance_identifier_val;
+    int8_t int8_val;
+    int16_t int16_val;
+    int32_t int32_val;
+    int64_t int64_val;
+    char *string_val;
+    uint8_t uint8_val;
+    uint16_t uint16_val;
+    uint32_t uint32_val;
+    uint64_t uint64_val;
+} TSN_Module_Data_Entry_Value;
+
+TSN_Module_Data_Entry_Value sr_data_to_data_value(sr_data_t *data, TSN_Module_Data_Entry_Type type);
+sr_val_t data_value_to_sr_value(TSN_Module_Data_Entry_Value value, TSN_Module_Data_Entry_Type type);
+
 typedef struct TSN_Module_Data_Entry
 {
-    char *name;         // The name of the variable
-    sr_type_t type;     // The type of the variable
-    sr_data_t value;    // The value of the variable
+    char *name;                         // The name of the variable
+    TSN_Module_Data_Entry_Type type;    // The type of the variable
+    TSN_Module_Data_Entry_Value value;  // The value of the variable
 } TSN_Module_Data_Entry;
 
 typedef struct TSN_Module_Data 
@@ -130,13 +168,14 @@ typedef struct TSN_Module_Data
 
 typedef struct TSN_Module
 {
-    uint16_t id;             // Module ID
+    uint16_t id;        // Module ID
     int p_id;           // Module Process ID
     char *path;         // Path to the modules executable       (???)
     char *name;         // Module Name
     char *description;  // Module Description
     uint16_t subscribed_events_mask;     // Mask describing the relevant events for this module
     void (*cb_event)(int event_id, TSN_Event_CB_Data data);     // Generic callback method for events
+    TSN_Module_Data data;
 } TSN_Module;
 
 typedef struct TSN_Modules {

@@ -57,7 +57,7 @@ module_get_registered(int module_id, TSN_Module **module)
 int
 module_get_available(int module_id, TSN_Module **module)
 {
-    ret = sysrepo_get_module_from_all(module_id, module);
+    ret = sysrepo_get_module_from_available(module_id, module);
     return ret;
 }
 
@@ -80,21 +80,24 @@ module_delete(int module_id)
 //      FUNCTIONS - Sysrepo
 // ----------------------------------------------
 int
-sysrepo_update_module_data(int module_id, TSN_Module_Data *module_data)
+module_update_data(int module_id, TSN_Module_Data *module_data)
 {
-
+    // TODO
 }
 
 int
-sysrepo_get_module_data(int module_id, TSN_Module_Data **module_data)
+module_get_data(int module_id, TSN_Module_Data **module_data)
 {
-
+    // TODO 
+    // 1. Check the module for the data model
+    // 2. Read each entry from the sysrepo
 }
 
 
 // ----------------------------------------------
 //      FUNCTIONS - Other/Helpers
 // ----------------------------------------------
+
 void
 print_module(TSN_Module module) {
     printf("----- MODULE -----\n");
@@ -104,6 +107,10 @@ print_module(TSN_Module module) {
     printf("P_ID:           %d\n", module.p_id);
     printf("Path:           %s\n", module.path);
     printf("Events Mask:    %d\n", module.subscribed_events_mask);
+    printf("Data:\n");
+    for (int i=0; i<module.data.count_entries; ++i) {
+        printf("   %s - %s\n", module.data.entries[i].name, data_type_to_sr_enum(module.data.entries[i].type));
+    }
     printf("\n");
 }
 
