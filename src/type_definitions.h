@@ -130,8 +130,18 @@ typedef enum TSN_Module_Data_Entry_Type {
     UINT64
 } TSN_Module_Data_Entry_Type;
 
-TSN_Module_Data_Entry_Type sr_enum_to_data_type(char *enum_string);
-char *data_type_to_sr_enum(TSN_Module_Data_Entry_Type type);
+/**
+ * @brief Converts the string from the sysrepo type enum to the module data type enum. 
+ * @param enum_string The string to convert
+ * @return The module data type enum
+ */
+TSN_Module_Data_Entry_Type string_to_data_type(char *enum_string);
+/**
+ * @brief Converts the module data type to the corresponding sysrepo enum string. 
+ * @param type The module data type enum
+ * @return The converted string for writing to sysrepo
+ */
+char *data_type_to_string(TSN_Module_Data_Entry_Type type);
 
 typedef union TSN_Module_Data_Entry_Value {
     char *binary_val;
@@ -149,8 +159,20 @@ typedef union TSN_Module_Data_Entry_Value {
     uint64_t uint64_val;
 } TSN_Module_Data_Entry_Value;
 
-TSN_Module_Data_Entry_Value sr_data_to_data_value(sr_data_t *data, TSN_Module_Data_Entry_Type type);
-sr_val_t data_value_to_sr_value(TSN_Module_Data_Entry_Value value, TSN_Module_Data_Entry_Type type);
+/**
+ * @brief Converts a sysrepo data struct to the corresponding module data value. 
+ * @param data The data struct from sysrepo
+ * @param type The assigned type of this module data 
+ * @return The converted module data value struct
+ */
+TSN_Module_Data_Entry_Value sysrepo_data_to_data_value(sr_data_t data, TSN_Module_Data_Entry_Type type);
+/**
+ * @brief Converts a module data value to the corresponding sysrepo value. 
+ * @param value The module data value
+ * @param type The assigned type of this module data
+ * @return The converted sysrepo value struct
+ */
+sr_val_t data_value_to_sysrepo_value(TSN_Module_Data_Entry_Value value, TSN_Module_Data_Entry_Type type);
 
 typedef struct TSN_Module_Data_Entry
 {
@@ -158,6 +180,13 @@ typedef struct TSN_Module_Data_Entry
     TSN_Module_Data_Entry_Type type;    // The type of the variable
     TSN_Module_Data_Entry_Value value;  // The value of the variable
 } TSN_Module_Data_Entry;
+
+/**
+ * @brief Converts a module data value to a string (e.g. for printing).
+ * @param entry The module data entry
+ * @return The value represented as a string
+ */
+char *data_value_to_string(TSN_Module_Data_Entry entry);
 
 typedef struct TSN_Module_Data 
 {

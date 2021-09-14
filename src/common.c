@@ -75,28 +75,49 @@ module_delete(int module_id)
     return ret;
 }
 
+int 
+module_start(int module_id)
+{
+    // TODO
+}
+
+int 
+module_stop(int module_id)
+{
+    // TODO
+}
 
 // ----------------------------------------------
 //      FUNCTIONS - Sysrepo
 // ----------------------------------------------
 int
-module_update_data(int module_id, TSN_Module_Data *module_data)
+module_update_data(int module_id, TSN_Module_Data module_data)
 {
-    // TODO
+    ret = sysrepo_update_module_data(module_id, module_data);
+    return ret;
 }
 
 int
 module_get_data(int module_id, TSN_Module_Data **module_data)
 {
-    // TODO 
-    // 1. Check the module for the data model
-    // 2. Read each entry from the sysrepo
+    ret = sysrepo_get_module_data(module_id, module_data);
+    return ret;
 }
 
 
 // ----------------------------------------------
 //      FUNCTIONS - Other/Helpers
 // ----------------------------------------------
+
+void
+print_module_data(TSN_Module_Data data)
+{
+    for (int i=0; i<data.count_entries; ++i) {
+        char *type_str = data_type_to_string(data.entries[i].type);
+        char *val_str = data_value_to_string(data.entries[i]);
+        printf("   %s (%s): %s\n", data.entries[i].name, type_str, val_str);
+    }
+}
 
 void
 print_module(TSN_Module module) {
@@ -108,9 +129,7 @@ print_module(TSN_Module module) {
     printf("Path:           %s\n", module.path);
     printf("Events Mask:    %d\n", module.subscribed_events_mask);
     printf("Data:\n");
-    for (int i=0; i<module.data.count_entries; ++i) {
-        printf("   %s - %s\n", module.data.entries[i].name, data_type_to_sr_enum(module.data.entries[i].type));
-    }
+    print_module_data(module.data);
     printf("\n");
 }
 

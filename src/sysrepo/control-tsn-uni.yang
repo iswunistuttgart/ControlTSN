@@ -122,7 +122,6 @@ module control-tsn-uni {
                 type binary;
                 //type bits;                
                 type boolean;
-                type decimal64              {fraction-digits 5;}
                 //type enumeration;
                 //type identifyref;
                 type instance-identifier;
@@ -135,6 +134,7 @@ module control-tsn-uni {
                 type uint16;
                 type uint32;
                 type uint64;
+                type decimal64              {fraction-digits 5;}
             }
         }
     }
@@ -199,6 +199,7 @@ module control-tsn-uni {
             }
 
             container registered-modules {
+                // TODO Maybe just a instance-identifier as a reference and augment it with 'data'?
                 list mod {
                     key "id";
                     uses module-def;

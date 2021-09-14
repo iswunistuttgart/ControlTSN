@@ -1340,7 +1340,7 @@ _read_module_data_entry(char *xpath, TSN_Module_Data_Entry **entry)
     if (rc != SR_ERR_OK) {
         goto cleanup;
     }
-    (*entry)->type = sr_enum_to_data_type(val_data_type->data.enum_val);
+    (*entry)->type = string_to_data_type(val_data_type->data.enum_val);
 
     // Value
     _create_xpath(xpath, "/data-value", &xpath_data_value);
@@ -1348,7 +1348,7 @@ _read_module_data_entry(char *xpath, TSN_Module_Data_Entry **entry)
     if (rc != SR_ERR_OK) {
         goto cleanup;
     }
-    (*entry)->value = sr_data_to_data_value(val_data_value, (*entry)->type);
+    (*entry)->value = sysrepo_data_to_data_value(val_data_value->data, (*entry)->type);
 
 cleanup:
     sr_free_val(val_data_name);
@@ -1380,7 +1380,7 @@ _write_module_data_entry(char *xpath, TSN_Module_Data_Entry *entry)
     _create_xpath(xpath, "/data-type", &xpath_data_type);
     sr_val_t val_type;
     val_type.type = SR_ENUM_T;
-    char *enum_string = strdup(data_type_to_sr_enum(entry->type));
+    char *enum_string = strdup(data_type_to_string(entry->type));
     val_type.data.enum_val = enum_string;
     rc = sr_set_item(session, xpath_data_type, &val_type, 0);
     if (rc != SR_ERR_OK) {
@@ -1390,7 +1390,7 @@ _write_module_data_entry(char *xpath, TSN_Module_Data_Entry *entry)
     // Value
     _create_xpath(xpath, "/data-value", &xpath_data_value);
     sr_val_t val_value;
-    val_value = data_value_to_sr_value(entry->value, entry->type);
+    val_value = data_value_to_sysrepo_value(entry->value, entry->type);
     rc = sr_set_item(session, xpath_data_value, &val_value, 0);
     if (rc != SR_ERR_OK) {
         goto cleanup;
@@ -1605,12 +1605,15 @@ _write_module(char *xpath, TSN_Module *mod)
     }
 
     // Write Data
-    _create_xpath(xpath, "/data", &xpath_data);
-    rc = _write_module_data(xpath_data, &(mod->data));
-    if (rc != SR_ERR_OK) {
-        goto cleanup;
+    // ONLY WRITE DATA TO REGISTERED MODULES
+    if (strstr(xpath, "/registered-modules/") != NULL) {
+        _create_xpath(xpath, "/data", &xpath_data);
+        rc = _write_module_data(xpath_data, &(mod->data));
+        if (rc != SR_ERR_OK) {
+            goto cleanup;
+        }
     }
-
+    
     // Apply the changes
     rc = sr_apply_changes(session, 0, 1);
     if (rc != SR_ERR_OK) {
@@ -1901,6 +1904,11 @@ cleanup:
 int 
 sysrepo_delete_module(int module_id)
 {
+    // Unregister the module first
+    char *xpath_module_unregister = NULL;
+    _create_xpath_id("/control-tsn-uni:tsn-uni/modules/registered-modules/mod[id='%d']", module_id, &xpath_module_unregister);
+    rc = sr_delete_item(session, xpath_module_unregister, 0);
+
     // Delete the entry
     char *xpath_module_delete = NULL;
     _create_xpath_id("/control-tsn-uni:tsn-uni/modules/available-modules/mod[id='%d']", module_id, &xpath_module_delete);

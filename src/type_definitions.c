@@ -3,7 +3,7 @@
 #include "type_definitions.h"
 
 TSN_Module_Data_Entry_Type 
-sr_enum_to_data_type(char *enum_string)
+string_to_data_type(char *enum_string)
 {
     if (strcmp("binary", enum_string) == 0) {
         return BINARY;
@@ -49,7 +49,7 @@ sr_enum_to_data_type(char *enum_string)
 }
 
 char *
-data_type_to_sr_enum(TSN_Module_Data_Entry_Type type)
+data_type_to_string(TSN_Module_Data_Entry_Type type)
 {
     if (type == BINARY) {
         return "binary";
@@ -94,56 +94,138 @@ data_type_to_sr_enum(TSN_Module_Data_Entry_Type type)
     return NULL;
 }
 
+char *
+data_value_to_string(TSN_Module_Data_Entry entry)
+{
+    char *str_val = NULL;
+
+    if (entry.type == BINARY) {
+        str_val = entry.value.binary_val;
+    }
+    else if (entry.type == BOOLEAN) {
+        str_val = entry.value.boolean_val ? strdup("TRUE") : strdup("FALSE");
+    }
+    else if (entry.type == DECIMAL64) {
+        size_t size_needed = snprintf(NULL, 0, "%g", entry.value.decimal64_val) + 1;
+        str_val = malloc(size_needed);
+        sprintf(str_val, "%g", entry.value.decimal64_val);
+    }
+    else if (entry.type == INSTANCE_IDENTIFIER) {
+        str_val = entry.value.instance_identifier_val;
+    }
+    else if (entry.type == INT8) {
+        size_t size_needed = snprintf(NULL, 0, "%d", entry.value.int8_val) + 1;
+        str_val = malloc(size_needed);
+        sprintf(str_val, "%d", entry.value.int8_val);
+    }
+    else if (entry.type == INT16) {
+        size_t size_needed = snprintf(NULL, 0, "%d", entry.value.int16_val) + 1;
+        str_val = malloc(size_needed);
+        sprintf(str_val, "%d", entry.value.int16_val);
+    }
+    else if (entry.type == INT32) {
+        size_t size_needed = snprintf(NULL, 0, "%d", entry.value.int32_val) + 1;
+        str_val = malloc(size_needed);
+        sprintf(str_val, "%d", entry.value.int32_val);
+    }
+    else if (entry.type == INT64) {
+        size_t size_needed = snprintf(NULL, 0, "%ld", entry.value.int64_val) + 1;
+        str_val = malloc(size_needed);
+        sprintf(str_val, "%ld", entry.value.int64_val);
+    }
+    else if (entry.type == STRING) {
+        str_val = entry.value.string_val;
+    }
+    else if (entry.type == UINT8) {
+        size_t size_needed = snprintf(NULL, 0, "%u", entry.value.uint8_val) + 1;
+        str_val = malloc(size_needed);
+        sprintf(str_val, "%u", entry.value.uint8_val);
+    }
+    else if (entry.type == UINT16) {
+        size_t size_needed = snprintf(NULL, 0, "%u", entry.value.uint16_val) + 1;
+        str_val = malloc(size_needed);
+        sprintf(str_val, "%u", entry.value.uint16_val);
+    }
+    else if (entry.type == UINT32) {
+        size_t size_needed = snprintf(NULL, 0, "%u", entry.value.uint32_val) + 1;
+        str_val = malloc(size_needed);
+        sprintf(str_val, "%u", entry.value.uint32_val);
+    }
+    else if (entry.type == UINT64) {
+        size_t size_needed = snprintf(NULL, 0, "%lu", entry.value.uint64_val) + 1;
+        str_val = malloc(size_needed);
+        sprintf(str_val, "%lu", entry.value.uint64_val);
+    }
+
+    return str_val;
+}
+
 TSN_Module_Data_Entry_Value 
-sr_data_to_data_value(sr_data_t *data, TSN_Module_Data_Entry_Type type)
+sysrepo_data_to_data_value(sr_data_t data, TSN_Module_Data_Entry_Type type)
 {
     TSN_Module_Data_Entry_Value val;
 
     if (type == BINARY) {
-        val.binary_val = data->binary_val;
+        val.binary_val = strdup(data.binary_val);
     }
     else if (type == BOOLEAN) {
-        val.boolean_val = data->bool_val;
+        val.boolean_val = data.bool_val;
     }
     else if (type == DECIMAL64) {
-        val.decimal64_val = data->decimal64_val;
+        val.decimal64_val = data.decimal64_val;
     }
     else if (type == INSTANCE_IDENTIFIER) {
-        val.instance_identifier_val = data->instanceid_val;
+        val.instance_identifier_val = strdup(data.instanceid_val);
     }
     else if (type == INT8) {
-        val.int8_val = data->int8_val;
+        val.int8_val = data.int8_val;
     }
     else if (type == INT16) {
-        val.int16_val = data->int16_val;
+        val.int16_val = data.int16_val;
     }
     else if (type == INT32) {
-        val.int32_val = data->int32_val;
+        val.int32_val = data.int32_val;
     }
     else if (type == INT64) {
-        val.int64_val = data->int64_val;
+        val.int64_val = data.int64_val;
     }
     else if (type == STRING) {
-        val.string_val = data->string_val;
+        val.string_val = strdup(data.string_val);
     }
     else if (type == UINT8) {
-        val.uint8_val = data->uint8_val;
+        val.uint8_val = data.uint8_val;
     }
     else if (type == UINT16) {
-        val.uint16_val = data->uint16_val;
+        val.uint16_val = data.uint16_val;
     }
     else if (type == UINT32) {
-        val.uint32_val = data->uint32_val;
+        val.uint32_val = data.uint32_val;
     }
     else if (type == UINT64) {
-        val.uint64_val = data->uint64_val;
+        val.uint64_val = data.uint64_val;
     }
+    
+    /*
+    val.binary_val = data.binary_val;
+    val.boolean_val = data.bool_val;
+    val.decimal64_val = data.decimal64_val;
+    val.instance_identifier_val = data.instanceid_val;
+    val.int8_val = data.int8_val;
+    val.int16_val = data.int16_val;
+    val.int32_val = data.int32_val;
+    val.int64_val = data.int64_val;
+    val.string_val = data.string_val;
+    val.uint8_val = data.uint8_val;
+    val.uint16_val = data.uint16_val;
+    val.uint32_val = data.uint32_val;
+    val.uint64_val = data.uint64_val;
+    */
 
     return val;
 }
 
 sr_val_t 
-data_value_to_sr_value(TSN_Module_Data_Entry_Value value, TSN_Module_Data_Entry_Type type)
+data_value_to_sysrepo_value(TSN_Module_Data_Entry_Value value, TSN_Module_Data_Entry_Type type)
 {
     sr_val_t val;
 
@@ -202,3 +284,4 @@ data_value_to_sr_value(TSN_Module_Data_Entry_Value value, TSN_Module_Data_Entry_
 
     return val;
 }
+

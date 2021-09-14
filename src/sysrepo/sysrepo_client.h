@@ -80,7 +80,7 @@ int sysrepo_get_module_from_available(int module_id, TSN_Module **module);
 int sysrepo_get_all_modules(TSN_Modules **modules);
 
 /**
- * @brief Removes a module from the list of available modules in the datastore. 
+ * @brief Removes a module from the list of available modules in the datastore. The function also unregisters the module. 
  * @param module The module to remove
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
