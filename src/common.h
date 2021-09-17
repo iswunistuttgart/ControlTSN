@@ -96,7 +96,7 @@ int module_delete(int module_id);
 
 /**
  * @brief Starts a specific module by calling the executable defined by the path.
- * @param module_id The id of the module to start
+ * @param module_id The ID of the module to start
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
 int module_start(int module_id);

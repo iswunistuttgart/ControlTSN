@@ -166,6 +166,10 @@ void main(void)
     if (modules->count_registered_modules > 0) {
         for (int i=0; i<modules->count_registered_modules; ++i) {
             printf("[MAIN] Starting module '%s' ...\n", modules->registered_modules[i].name);
+            ret = module_start(modules->registered_modules[i].id);
+            if (ret) {
+                printf("[MAIN] Could not start module '%s' ...\n", modules->registered_modules[i].name);
+            }
         }
 
     } else {

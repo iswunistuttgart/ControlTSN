@@ -156,6 +156,10 @@ module control-tsn-uni {
             type uint16;
         }
 
+        leaf pid {
+            type uint32;
+        }
+
         container data {
             list entry {
                 key "data-name";

@@ -87,6 +87,14 @@ int sysrepo_get_all_modules(TSN_Modules **modules);
 int sysrepo_delete_module(int module_id);
 
 /**
+ * @brief Sets the PID of a specific module.
+ * @param module_id The id of the module
+ * @param pid The PID
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+ */
+int sysrepo_set_module_pid(int module_id, pid_t pid);
+
+/**
  * @brief Gets the stored data of a specific module.
  * @param module_id The id of the module
  * @param data The struct to write on

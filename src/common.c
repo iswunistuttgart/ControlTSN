@@ -1,8 +1,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
-//#include <unistd.h>     // fork
-//#include <sys/types.h>  // pid_t
+#include <unistd.h>     // fork
+#include <sys/types.h>  // pid_t
 //#include <sys/wait.h>   // wait
 
 #include "common.h"
@@ -78,13 +78,64 @@ module_delete(int module_id)
 int 
 module_start(int module_id)
 {
-    // TODO
+    // Get the module from sysrepo
+    TSN_Module *module = NULL;
+    module = malloc(sizeof(TSN_Module));
+    ret = sysrepo_get_module_from_registered(module_id, &module);
+    if (ret) {
+        printf("[COMMON] Error reading module with ID %d from sysrepo!\n", module_id);
+        return EXIT_FAILURE;
+    }
+
+    // Fork the current process
+    pid_t pid = fork();
+    if (pid == 0) {
+        // Parameters for the call
+        static char *argv[] = {};
+        // Start the module 
+        if (execv(module->path, argv) == -1) {
+            printf("[COMMON] Error starting module '%s'!\n", module->name);
+            return EXIT_FAILURE;
+        }
+
+        // Write the PID to sysrepo
+        ret = sysrepo_set_module_pid(module->id, pid);
+        if (ret) {
+            printf("[COMMON] Error writing PID (%d) to module '%s' with ID %d!\n", pid, module->name, module->id);
+            return EXIT_FAILURE;
+        }
+        printf("[COMMON] Successfully started module '%s' with PID %d\n", module->name, module->p_id);
+    }
+
+    return EXIT_SUCCESS;
 }
 
 int 
 module_stop(int module_id)
 {
-    // TODO
+    // Get the module from sysrepo
+    TSN_Module *module = NULL;
+    module = malloc(sizeof(TSN_Module));
+    ret = sysrepo_get_module_from_registered(module_id, &module);
+    if (ret) {
+        printf("[COMMON] Error reading module with ID %d from sysrepo!\n", module_id);
+        return EXIT_FAILURE;
+    }
+
+    // Kill the process
+    if (!(module->p_id > 0)) {
+        printf("[COMMON] Error stopping process of module '%s'. Could not read the PID!\n", module->name);
+        return EXIT_FAILURE;
+    }
+
+    if (kill(module->p_id, SIGKILL) != 0) {
+        printf("[COMMON] Error stopping process of module '%s' with PID %d!\n", module->name, module->p_id);
+        return EXIT_FAILURE;
+    }
+
+    printf("[COMMON] Successfully stopped module '%s' with PID %d\n", module->name, module->p_id);
+
+    return EXIT_SUCCESS;
 }
 
 // ----------------------------------------------

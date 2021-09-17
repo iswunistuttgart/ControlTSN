@@ -1478,12 +1478,14 @@ _read_module(char *xpath, TSN_Module **mod)
     sr_val_t *val_description = NULL;
     sr_val_t *val_path = NULL;
     sr_val_t *val_subscribed_events_mask = NULL;
+    sr_val_t *val_pid = NULL;
     sr_val_t *val_data = NULL;
     char *xpath_id = NULL;
     char *xpath_name = NULL;
     char *xpath_description = NULL;
     char *xpath_path = NULL;
     char *xpath_subscribed_events_mask = NULL;
+    char *xpath_pid = NULL;
     char *xpath_data = NULL;
 
     // ID
@@ -1526,6 +1528,14 @@ _read_module(char *xpath, TSN_Module **mod)
     }
     (*mod)->subscribed_events_mask = val_subscribed_events_mask->data.uint16_val;
 
+    // PID
+    _create_xpath(xpath, "/pid", &xpath_pid);
+    rc = sr_get_item(session, xpath_pid, 0, &val_pid);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*mod)->p_id = val_pid->data.uint32_val;
+
     // Module Data
     _create_xpath(xpath, "/data", &xpath_data);
     TSN_Module_Data *data = malloc(sizeof(TSN_Module_Data));
@@ -1541,12 +1551,14 @@ cleanup:
     sr_free_val(val_description);
     sr_free_val(val_path);
     sr_free_val(val_subscribed_events_mask);
+    sr_free_val(val_pid);
     sr_free_val(val_data);
     free(xpath_id);
     free(xpath_name);
     free(xpath_description);
     free(xpath_path);
     free(xpath_subscribed_events_mask);
+    free(xpath_pid);
     free(xpath_data);
 
     return rc;
@@ -1561,6 +1573,7 @@ _write_module(char *xpath, TSN_Module *mod)
     char *xpath_description = NULL;
     char *xpath_path = NULL;
     char *xpath_subscribed_events_mask = NULL;
+    char *xpath_pid = NULL;
     char *xpath_data = NULL;
 
     // Write ID
@@ -1604,6 +1617,16 @@ _write_module(char *xpath, TSN_Module *mod)
         goto cleanup;
     }
 
+    // Write PID
+    _create_xpath(xpath, "/subspid", &xpath_pid);
+    sr_val_t val_pid;
+    val_pid.type = SR_UINT32_T;
+    val_pid.data.uint32_val = mod->p_id;
+    rc = sr_set_item(session, xpath_pid, &val_pid, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
     // Write Data
     // ONLY WRITE DATA TO REGISTERED MODULES
     if (strstr(xpath, "/registered-modules/") != NULL) {
@@ -1626,6 +1649,7 @@ cleanup:
     free(xpath_description);
     free(xpath_path);
     free(xpath_subscribed_events_mask);
+    free(xpath_pid);
     free(xpath_data);
 
     return rc;
@@ -1924,6 +1948,32 @@ sysrepo_delete_module(int module_id)
 
 cleanup:
     free(xpath_module_delete);
+
+    return rc ? EXIT_FAILURE : EXIT_SUCCESS;
+}
+
+int
+sysrepo_set_module_pid(int module_id, pid_t pid)
+{
+    char *xpath_module_pid = NULL;
+    _create_xpath_id("/control-tsn-uni:tsn-uni/modules/registered-modules/mod[id='%d']/pid", module_id, &xpath_module_pid);
+
+    // Set the PID
+    sr_val_t val_pid;
+    val_pid.type = SR_UINT32_T;
+    val_pid.data.uint32_val = pid;
+    rc = sr_set_item(session, xpath_module_pid, &val_pid, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+    rc = sr_apply_changes(session, 0, 1);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+cleanup:
+    free(xpath_module_pid);
 
     return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }
