@@ -2,13 +2,15 @@
 #include <ulfius.h>
 #include <signal.h>
 
+#include "../../common.h"
 #include "module_rest.h"
-#include "../base_module.h"
-#include "../../sysrepo/sysrepo_client.h"
 
 int rc;
-
 volatile sig_atomic_t is_running = 1;
+
+TSN_Module this_module;
+struct _u_instance server_instance;
+
 
 static void 
 signal_handler(int signum)
@@ -24,6 +26,7 @@ signal_handler(int signum)
  * @brief API endpoint GET "/".
  * Index and default.
  */
+/*
 static int 
 _cb_get_index(const struct _u_request *request, struct _u_response *response, void *user_data) 
 {
@@ -50,15 +53,18 @@ _cb_get_index(const struct _u_request *request, struct _u_response *response, vo
     ulfius_set_string_body_response(response, 200, resp);
     return U_CALLBACK_CONTINUE;
 }
+*/
 
 // MODULES
 /**
  * @brief API endpoint GET "/modules".
  * Query of the modules registered in the core
  */
+/*
 static int 
 _cb_get_modules(const struct _u_request *request, struct _u_response *response, void *user_data)
 {
+    
     // Get Modules from Sysrepo
     TSN_Modules *mods = malloc(sizeof(TSN_Modules));
     //int ret = get_modules_from_sysrepo(&mods);
@@ -71,153 +77,10 @@ _cb_get_modules(const struct _u_request *request, struct _u_response *response, 
 
     return U_CALLBACK_CONTINUE;
 }
+*/
    
-/**
- * @brief API endpoint GET "/modules/:id".
- * Query of a specific module based on the module ID 
- */
-static int 
-_cb_get_modules_id(const struct _u_request *request, struct _u_response *response, void *user_data)
-{
 
-}
-
-/**
- * @brief API endpoint POST "/modules/:id/start".
- * Starting a specific module
- */
-static int 
-_cb_post_modules_id_start(const struct _u_request *request, struct _u_response *response, void *user_data)
-{
-
-}
-
-/**
- * @brief API endpoint POST "/modules/:id/stop".
- * Stopping a specific module
- */
-static int 
-_cb_post_modules_id_stop(const struct _u_request *request, struct _u_response *response, void *user_data)
-{
-
-}
-
-/**
- * @brief API endpoint POST "/modules/:id/remove".
- * Removing a specific module
- */
-static int 
-_cb_post_modules_id_remove(const struct _u_request *request, struct _u_response *response, void *user_data)
-{
-
-}
-
-/**
- * @brief API endpoint POST "/modules/:id/register".
- * Register a specific module
- */
-static int 
-_cb_post_modules_id_register(const struct _u_request *request, struct _u_response *response, void *user_data)
-{
-
-}
-
-/**
- * @brief API endpoint POST "/modules/:id/unregister".
- * Unregister a specific module
- */
-static int 
-_cb_post_modules_id_unregister(const struct _u_request *request, struct _u_response *response, void *user_data)
-{
-
-}
-
-/**
- * @brief API endpoint POST "/modules/add".
- * Adding a new module by passing the necessary information
- */
-static int 
-_cb_post_modules_add(const struct _u_request *request, struct _u_response *response, void *user_data)
-{
-
-}
-
-// TOPOLOGY
-/**
- * @brief API endpoint GET "/topology".
- * Query of the stored topology information
- */
-static int 
-_cb_get_topology(const struct _u_request *request, struct _u_response *response, void *user_data)
-{
-
-}
-
-/**
- * @brief API endpoint POST "/topology/scan".
- * Initiate the scan of the topology
- */
-static int 
-_cb_post_topology_scan(const struct _u_request *request, struct _u_response *response, void *user_data)
-{
-
-}
-
-// STREAMS
-/**
- * @brief API endpoint GET "/streams".
- * Query of all streams
- */
-static int 
-_cb_get_streams(const struct _u_request *request, struct _u_response *response, void *user_data)
-{
-
-}
-
-/**
- * @brief API endpoint GET "/streams/:id".
- * Query of a specific stream based on the stream ID
- */
-static int 
-_cb_get_streams_id(const struct _u_request *request, struct _u_response *response, void *user_data)
-{
-
-}
-
-/**
- * @brief API endpoint POST "/streams/:id/modify".
- * Modifying a specific streams by passing the necessary information
- */
-static int 
-_cb_post_streams_id_modify(const struct _u_request *request, struct _u_response *response, void *user_data)
-{
-
-}
-
-/**
- * @brief API endpoint POST "/streams/:id/remove".
- * Removing a specific stream
- */
-static int 
-_cb_post_stream_id_remove(const struct _u_request *request, struct _u_response *response, void *user_data) {
-
-}
-
-/**
- * @brief API endpoint POST "/streams/add".
- * Adding a new stream by passing the necessary information
- */
-static int 
-_cb_post_stream_add(const struct _u_request *request, struct _u_response *response, void *user_data)
-{
-
-}
-
-
-void set_module_data(void *data){
-    printf("HALLO----------------------\n");
-}
-
+/*
 int main(void)
 {
     // Signal handling
@@ -279,4 +142,108 @@ int main(void)
     ulfius_clean_instance(&instance);
 
     return 0;
+}
+*/
+
+
+
+// ------------------------------------
+// Callback handler
+// ------------------------------------
+static void
+_cb_event(int event_id, TSN_Event_CB_Data data)
+{
+    printf("[REST] Triggered callback for event ID %d\n", event_id);
+    
+    if (event_id == EVENT_ERROR) {
+        printf("[REST][CB] ERROR: Code %d - '%s'\n", data.error.error_code, data.error.error_msg);
+    }
+
+    return;
+}
+
+// ------------------------------------
+// API Endpoint Callback Functions
+// ------------------------------------
+// INDEX '/'
+static int
+_cb_index_get(const struct _u_request *request, struct _u_response *response, void *user_data)
+{
+    const char *resp = "HALLO\n";
+    ulfius_set_string_body_response(response, 200, resp);
+
+    return U_CALLBACK_CONTINUE;
+}
+
+// ------------------------------------
+// Server initialization
+// ------------------------------------
+static int
+_init_server()
+{
+    if (ulfius_init_instance(&server_instance, PORT, NULL, NULL) != U_OK) {
+        printf("[REST] Error initializing server instance!\n");
+        return EXIT_FAILURE;
+    }
+
+    // Add the API endpoints to the server
+    ulfius_add_endpoint_by_val(&server_instance, "GET", API_INDEX, NULL, 0, &_cb_index_get, NULL);
+
+    ulfius_set_default_endpoint(&server_instance, &_cb_index_get, NULL);
+}
+
+// ------------------------------------
+// MAIN
+// ------------------------------------
+int 
+main(void)
+{
+    // Signal handling
+    signal(SIGINT, signal_handler);
+
+    // Init this module
+    this_module.name = "REST";
+    this_module.description = "Exposes a REST API to interact with the framework";
+    this_module.path = "./RESTModule";
+    this_module.subscribed_events_mask = (EVENT_ERROR);
+    this_module.cb_event = _cb_event;
+    
+    rc = module_init(&this_module);
+    if (rc == EXIT_FAILURE) {
+        printf("[REST] Error initializing module!\n");
+        goto cleanup;
+    }
+
+    // Init the web server instance
+    rc = _init_server();
+    if (rc == EXIT_FAILURE) {
+        goto cleanup;
+    }
+
+    // Start the server
+    if (ulfius_start_framework(&server_instance) == U_OK) {
+        printf("[REST] REST server successfully started and listening on '%s:%d'\n", "http://localhost", server_instance.port);
+
+        // Keep the server running
+        while (is_running) {
+            sleep(1);
+        }
+    } else {
+        printf("[REST] Error starting the server!\n");
+        rc = EXIT_FAILURE;
+        goto cleanup;
+    }
+
+    printf("[REST] Stopping the module...\n");
+    if (ulfius_stop_framework(&server_instance) != U_OK) {
+        printf("[REST] Error stopping server!\n");
+        rc = EXIT_FAILURE;
+        goto cleanup;
+    }
+    
+
+cleanup:
+    ulfius_clean_instance(&server_instance);
+
+    return rc;    
 }

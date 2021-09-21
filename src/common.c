@@ -19,8 +19,9 @@ module_init(TSN_Module *this_module)
     // Establish a connection to sysrepo
     ret = sysrepo_connect();
 
-    // Add module to the available modules
     if (this_module) {
+        // Add module to the available modules
+        // TODO!! This step is not necessary and should be done (e.g.) by the engineering tool
         int rc = sysrepo_add_new_module(*(this_module));
         if (rc != EXIT_SUCCESS) {
             printf("[COMMON] Module already known or error adding to the datastore!\n");

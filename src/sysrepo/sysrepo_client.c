@@ -1528,22 +1528,25 @@ _read_module(char *xpath, TSN_Module **mod)
     }
     (*mod)->subscribed_events_mask = val_subscribed_events_mask->data.uint16_val;
 
-    // PID
-    _create_xpath(xpath, "/pid", &xpath_pid);
-    rc = sr_get_item(session, xpath_pid, 0, &val_pid);
-    if (rc != SR_ERR_OK) {
-        goto cleanup;
-    }
-    (*mod)->p_id = val_pid->data.uint32_val;
+    // ONLY READ PID & DATA OF REGISTERED MODULES
+    if (strstr(xpath, "/registered-modules/") != NULL) {
+        // PID
+        _create_xpath(xpath, "/pid", &xpath_pid);
+        rc = sr_get_item(session, xpath_pid, 0, &val_pid);
+        if (rc != SR_ERR_OK) {
+            goto cleanup;
+        }
+        (*mod)->p_id = val_pid->data.uint32_val;
 
-    // Module Data
-    _create_xpath(xpath, "/data", &xpath_data);
-    TSN_Module_Data *data = malloc(sizeof(TSN_Module_Data));
-    rc = _read_module_data(xpath_data, &data);
-    if (rc != SR_ERR_OK) {
-        goto cleanup;
+        // Module Data
+        _create_xpath(xpath, "/data", &xpath_data);
+        TSN_Module_Data *data = malloc(sizeof(TSN_Module_Data));
+        rc = _read_module_data(xpath_data, &data);
+        if (rc != SR_ERR_OK) {
+            goto cleanup;
+        }
+        (*mod)->data = *data;
     }
-    (*mod)->data = *data;
 
 cleanup:
     sr_free_val(val_id);
@@ -1617,19 +1620,19 @@ _write_module(char *xpath, TSN_Module *mod)
         goto cleanup;
     }
 
-    // Write PID
-    _create_xpath(xpath, "/subspid", &xpath_pid);
-    sr_val_t val_pid;
-    val_pid.type = SR_UINT32_T;
-    val_pid.data.uint32_val = mod->p_id;
-    rc = sr_set_item(session, xpath_pid, &val_pid, 0);
-    if (rc != SR_ERR_OK) {
-        goto cleanup;
-    }
-
-    // Write Data
-    // ONLY WRITE DATA TO REGISTERED MODULES
+    // ONLY WRITE PID & DATA TO REGISTERED MODULES
     if (strstr(xpath, "/registered-modules/") != NULL) {
+        // Write PID
+        _create_xpath(xpath, "/pid", &xpath_pid);
+        sr_val_t val_pid;
+        val_pid.type = SR_UINT32_T;
+        val_pid.data.uint32_val = mod->p_id;
+        rc = sr_set_item(session, xpath_pid, &val_pid, 0);
+        if (rc != SR_ERR_OK) {
+            goto cleanup;
+        }
+
+        // Write Data
         _create_xpath(xpath, "/data", &xpath_data);
         rc = _write_module_data(xpath_data, &(mod->data));
         if (rc != SR_ERR_OK) {
