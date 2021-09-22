@@ -22,4 +22,3 @@ target_link_libraries(MainModule common)
 #target_link_libraries(Module_REST ulfius jansson common)
 add_executable(RESTModule src/modules/REST/module_rest.c)
 target_link_libraries(RESTModule common ulfius jansson)
-

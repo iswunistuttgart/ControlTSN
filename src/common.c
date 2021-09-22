@@ -129,7 +129,7 @@ module_stop(int module_id)
         return EXIT_FAILURE;
     }
 
-    if (kill(module->p_id, SIGKILL) != 0) {
+    if (kill(module->p_id, SIGUSR1) != 0) {
         printf("[COMMON] Error stopping process of module '%s' with PID %d!\n", module->name, module->p_id);
         return EXIT_FAILURE;
     }

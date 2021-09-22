@@ -103,6 +103,7 @@ int module_start(int module_id);
 
 /**
  * @brief Stops the execution of a specific module by terminating the process defined by the PID.
+ * The function uses 'kill' with the SIGUSR1 signal.
  * @param module_id The id of the module to start
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */

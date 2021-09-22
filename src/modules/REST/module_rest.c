@@ -200,6 +200,7 @@ main(void)
 {
     // Signal handling
     signal(SIGINT, signal_handler);
+    signal(SIGKILL, signal_handler);
 
     // Init this module
     this_module.name = "REST";
