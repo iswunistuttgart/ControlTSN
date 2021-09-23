@@ -36,8 +36,8 @@ const char *API_STREAMS_REQUEST = "/streams/request";
 const char *API_APPLICATIONS                        = "/applications";
 const char *API_APPLICATIONS_IMAGES                 = "/applications/images";
 const char *API_APPLICATIONS_IMAGES_DISTRIBUTION    = "/applications/images/distribution";
-const char *API_APPLICATIONS_START                  = "/applications/start";
-const char *API_APPLICATIONS_STOP                   = "/applications/stop";
+const char *API_APPLICATIONS_START                  = "/applications/:id/start";
+const char *API_APPLICATIONS_STOP                   = "/applications/:id/stop";
 
 
 #endif // __MODULE_REST_H__

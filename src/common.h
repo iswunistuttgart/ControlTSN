@@ -109,9 +109,6 @@ int module_start(int module_id);
  */
 int module_stop(int module_id);
 
-// ----------------------------------------------
-//      FUNCTIONS - Sysrepo
-// ----------------------------------------------
 /**
  * @brief Writes the module specific data to the corresponding place in the sysrepo.
  * @param module_id The id of the module for which the data is to be updated
@@ -130,6 +127,16 @@ int module_get_data(int module_id, TSN_Module_Data **module_data);
 
 
 // ----------------------------------------------
+//      FUNCTIONS - Stream-Handling
+// ----------------------------------------------
+/**
+ * @brief Get all streams stored in the datastore
+ * @param streams The TSN_Streams struct to write on
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+ */
+int streams_get_all(TSN_Streams **streams);
+
+// ----------------------------------------------
 //      FUNCTIONS - Other/Helpers
 // ----------------------------------------------
 
@@ -144,9 +151,6 @@ void print_module_data(TSN_Module_Data data);
  * @param module The module struct to print
  */
 void print_module(TSN_Module module);
-
-
-
 
 
 // ----------------------------------------------

@@ -4,6 +4,7 @@
 
 #include "../../common.h"
 #include "module_rest.h"
+#include "json_serializer.h"
 
 int rc;
 volatile sig_atomic_t is_running = 1;
@@ -165,15 +166,81 @@ _cb_event(int event_id, TSN_Event_CB_Data data)
 // ------------------------------------
 // API Endpoint Callback Functions
 // ------------------------------------
-// INDEX '/'
+// INDEX
 static int
-_cb_index_get(const struct _u_request *request, struct _u_response *response, void *user_data)
+_api_index_get(const struct _u_request *request, struct _u_response *response, void *user_data)
 {
-    const char *resp = "HALLO\n";
+    const char *resp = "<html><b>This is the ControlTSN REST Server.</b></br>" \
+                       "Following endpoints are provided:</br></br>" \
+                       "<table>" \
+                       // Index
+                       "<tr><th style='text-align: left;'>Index</th></tr>" \
+                       "<tr><td><a href='/'>/</a></td><td>GET</td><td>This site</td></tr>" \
+                       // Modules
+                       "<tr><th style='text-align: left;'>Modules</th></tr>" \
+                       "<tr><td><a href='/modules'>/modules</a></td><td>GET</td><td>Get all available and registered modules</td></tr>" \
+                       // Topology
+                       "<tr><th style='text-align: left;'>Topology</th></tr>" \
+                       "<tr><td><a href='/topology'>/topology</a></td><td>GET</td><td>Get the stored topology data</td></tr>" \
+                       "<tr><td><a href='/topology/discover'>/topology/discover</a></td><td>POST</td><td>Trigger the topology discovery</td></tr>" \
+                       // Streams
+                       "<tr><th style='text-align: left;'>Streams</th></tr>" \
+                       "<tr><td><a href='/streams'>/streams</a></td><td>GET</td><td>Get all streams</td></tr>" \
+                       "<tr><td><a href='/streams/request'>/streams/request</a></td><td>POST</td><td>Request a new stream</td></tr>" \
+                       // Applications
+                       "<tr><th style='text-align: left;'>Applications</th></tr>" \
+                       "<tr><td><a href='/applications'>/applications</a></td><td>GET</td><td>Get all applications</td></tr>" \
+                       "<tr><td><a href='/applications/images'>/applications/images</a></td><td>GET</td><td>Get all application images</td></tr>" \
+                       "<tr><td><a href='/applications/images/distribution'>/applications/images/distribution</a></td><td>POST</td><td>Distribute the application images</td></tr>" \
+                       "<tr><td><a href='/applications/:id/start'>/applications/:id/start</a></td><td>POST</td><td>Start a specific application</td></tr>" \
+                       "<tr><td><a href='/applications/:id/stop'>/applications/:id/stop</a></td><td>POST</td><td>Stop a specific application</td></tr>" \
+                       "</table></html>";
     ulfius_set_string_body_response(response, 200, resp);
 
     return U_CALLBACK_CONTINUE;
 }
+
+// MODULES
+static int
+_api_modules_get(const struct _u_request *request, struct _u_response *response, void *user_data)
+{
+    // Get all modules from sysrepo
+    TSN_Modules *modules = malloc(sizeof(TSN_Modules));
+    rc = module_get_all(&modules);
+    if (rc == EXIT_FAILURE) {
+        return U_CALLBACK_ERROR;
+    }
+
+    // Return modules as JSON
+    json_t *json_body = serialize_modules(modules);
+    ulfius_set_json_body_response(response, 200, json_body);
+
+    // Decrease the reference count so the jansson lib is able to release the resources
+    json_decref(json_body);
+
+    return U_CALLBACK_COMPLETE;
+}
+
+// Streams
+static int
+_api_streams_get(const struct _u_request *request, struct _u_response *response, void *user_data)
+{
+    // Get all streams from sysrepo
+    TSN_Streams *streams = malloc(sizeof(TSN_Streams));
+    rc = streams_get_all(&streams);
+    if (rc == EXIT_FAILURE) {
+        return U_CALLBACK_ERROR;
+    }
+
+    // Return streams as JSON
+    json_t *json_body = serialize_streams(streams);
+    ulfius_set_json_body_response(response, 200, json_body);
+
+    json_decref(json_body);
+
+    return U_CALLBACK_COMPLETE;
+}
+
 
 // ------------------------------------
 // Server initialization
@@ -187,9 +254,13 @@ _init_server()
     }
 
     // Add the API endpoints to the server
-    ulfius_add_endpoint_by_val(&server_instance, "GET", API_INDEX, NULL, 0, &_cb_index_get, NULL);
-
-    ulfius_set_default_endpoint(&server_instance, &_cb_index_get, NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "GET", API_INDEX, NULL, 0, &_api_index_get, NULL);
+    // Modules
+    ulfius_add_endpoint_by_val(&server_instance, "GET", API_MODULES, NULL, 0, &_api_modules_get, NULL);
+    // Streams
+    ulfius_add_endpoint_by_val(&server_instance, "GET", API_STREAMS, NULL, 0, &_api_streams_get, NULL);
+    
+    ulfius_set_default_endpoint(&server_instance, &_api_index_get, NULL);
 }
 
 // ------------------------------------

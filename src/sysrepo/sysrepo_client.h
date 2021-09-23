@@ -110,6 +110,17 @@ int sysrepo_get_module_data(int module_id, TSN_Module_Data **data);
  */
 int sysrepo_update_module_data(int module_id, TSN_Module_Data data);
 
+
+// -------------------------------------------------------- //
+// Stream handling
+// -------------------------------------------------------- //
+/**
+ * @brief Returns all stored streams.
+ * @param streams The struct to write on
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+ */
+int sysrepo_get_all_streams(TSN_Streams **streams);
+
 // -------------------------------------------------------- //
 //  CRUD methods
 // -------------------------------------------------------- //

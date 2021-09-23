@@ -175,7 +175,7 @@ module control-tsn-uni {
     container tsn-uni {
         description "The root of the yang module.";
         
-        container stream-list {
+        container streams {
             list stream {
                 key "stream-id";
                 uses stream;

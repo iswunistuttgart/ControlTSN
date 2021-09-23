@@ -139,9 +139,6 @@ module_stop(int module_id)
     return EXIT_SUCCESS;
 }
 
-// ----------------------------------------------
-//      FUNCTIONS - Sysrepo
-// ----------------------------------------------
 int
 module_update_data(int module_id, TSN_Module_Data module_data)
 {
@@ -153,6 +150,17 @@ int
 module_get_data(int module_id, TSN_Module_Data **module_data)
 {
     ret = sysrepo_get_module_data(module_id, module_data);
+    return ret;
+}
+
+
+// ----------------------------------------------
+//      FUNCTIONS - Stream
+// ----------------------------------------------
+int 
+streams_get_all(TSN_Streams **streams)
+{
+    ret = sysrepo_get_all_streams(streams);
     return ret;
 }
 

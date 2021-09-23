@@ -216,13 +216,20 @@ typedef struct TSN_Modules {
 } TSN_Modules;
 
 
+// ---------------------------------------
+// Stream definitions
+// ---------------------------------------
+typedef struct TSN_Streams {
+    uint16_t count_streams;
+    TSN_Stream *streams;
+} TSN_Streams;
+
+
 // ----------------------------------------------
 // Root
 // ----------------------------------------------
 typedef struct TSN_Uni {
-    uint16_t count_streams;
-    TSN_Stream *stream_list;
-
+    TSN_Streams streams;
     TSN_Modules modules;
 } TSN_Uni;
 

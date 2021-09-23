@@ -1707,6 +1707,34 @@ cleanup:
     return rc;
 }
 
+static int
+_read_streams(char *xpath, TSN_Streams **streams) {
+    int rc = SR_ERR_OK;
+    sr_val_t *val_streams = NULL;
+    char *xpath_streams = NULL;
+
+    _create_xpath(xpath, "/*", &xpath_streams);
+    size_t count_streams = 0;
+    rc = sr_get_items(session, xpath_streams, 0, 0, &val_streams, &count_streams);
+    (*streams)->count_streams = count_streams;
+    (*streams)->streams = (TSN_Stream *) malloc(sizeof(TSN_Stream) * count_streams);
+    for (int i=0; i<count_streams; ++i) {
+        TSN_Stream *s = malloc(sizeof(TSN_Stream));
+        rc = _read_stream((&val_streams[i])->xpath, &s);
+        if (rc != SR_ERR_OK) {
+            goto cleanup;
+        }
+        (*streams)->streams[i] = *s;
+    }
+
+cleanup:
+    sr_free_val(val_streams);
+    free(xpath_streams);
+
+    return rc;
+}
+
+/*
 static int 
 _read_root(char *xpath, TSN_Uni **root)
 {
@@ -1746,7 +1774,7 @@ cleanup:
 
     return rc;
 }
-
+*/
 
 
 
@@ -2016,7 +2044,6 @@ cleanup:
 int 
 sysrepo_get_all_modules(TSN_Modules **modules)
 {
-    char *xpath = NULL;
     rc = _read_modules("/control-tsn-uni:tsn-uni/modules", modules);
     if (rc != SR_ERR_OK) {
         goto cleanup;
@@ -2055,5 +2082,21 @@ sysrepo_update_module_data(int module_id, TSN_Module_Data data)
 cleanup:
     free(xpath_module_data);
 
+    return rc ? EXIT_FAILURE : EXIT_SUCCESS;
+}
+
+
+// -------------------------------------------------------- //
+//  Stream handling
+// -------------------------------------------------------- //
+int 
+sysrepo_get_all_streams(TSN_Streams **streams)
+{
+    rc = _read_streams("/control-tsn-uni:tsn-uni/streams", streams);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+cleanup:
     return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }
