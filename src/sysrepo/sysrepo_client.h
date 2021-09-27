@@ -34,11 +34,12 @@ void sysrepo_init_callbacks(
 // -------------------------------------------------------- //
 /**
  * @brief Adds a new module to the list of available modules in the datastore. 
- * Before that it is checked if the module already exists.
+ * Before that it is checked if the module already exists. 
+ * If the module exists the passed struct will be overwritten by the stored module information.
  * @param module The module to add (the id of the module is determined automatically and ignored if already set)
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
-int sysrepo_add_new_module(TSN_Module module);
+int sysrepo_add_or_get_module(TSN_Module **module);
 
 /**
  * @brief Registers a module by adding it to the list of registered modules in the datastore. 

@@ -87,6 +87,15 @@ int module_get_available(int module_id, TSN_Module **module);
 int module_get_all(TSN_Modules **modules);
 
 /**
+ * @brief Get a specific module stored in the datastore
+ * @param module_id The id of the desired module
+ * @param module The TSN_Module struct to write on
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+ */
+int module_get_id(int module_id, TSN_Modules **modules);
+
+
+/**
  * @brief Deletes a specific module from the list of available modules. 
  * Before that, the module will be unregistered
  * @param module_id The id of the module to delete
@@ -151,23 +160,6 @@ void print_module_data(TSN_Module_Data data);
  * @param module The module struct to print
  */
 void print_module(TSN_Module module);
-
-
-// ----------------------------------------------
-// BACKUP
-// ----------------------------------------------
-/**
- * @brief Method to start a module by executing it in a process.
- * @return The process id on success, otherwise -1;
- */
-// int module_start(TSN_Module module);
-/**
- * @brief Method to stop a module.
- * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1).
- */
-// int module_stop(TSN_Module module);
-
-//int get_modules_from_sysrepo(TSN_Modules **modules);
 
 
 #endif // __COMMON_H__

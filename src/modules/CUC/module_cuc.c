@@ -1,0 +1,72 @@
+#include <unistd.h>
+#include <signal.h>
+
+#include "../../common.h"
+#include "module_cuc.h"
+
+int rc;
+volatile sig_atomic_t is_running = 1;
+
+TSN_Module this_module;
+TSN_Module_Data *this_module_data = NULL;
+
+static void 
+signal_handler(int signum)
+{
+    is_running = 0;
+}
+
+// ------------------------------------
+// Callback handler
+// ------------------------------------
+static void
+_cb_event(int event_id, TSN_Event_CB_Data data)
+{
+    printf("[CUC] Triggered callback for event ID %d\n", event_id);
+
+    if (event_id == EVENT_ERROR) {
+        printf("[CUC][CB] ERROR: Code %d - '%s'\n", data.error.error_code, data.error.error_msg);
+    }
+
+    return;
+}
+
+void
+_init_cuc()
+{
+    this_module_data = malloc(sizeof(TSN_Module_Data));
+}
+
+// ------------------------------------
+// MAIN
+// ------------------------------------
+int
+main(void)
+{
+    // Signal handling
+    signal(SIGINT, signal_handler);
+    signal(SIGKILL, signal_handler);
+
+    // Init this module
+    this_module.name = "CUC";
+    this_module.description = "Represents the Central User Controller in the network based on the central configuration approach of TSN";
+    this_module.path ="./CUCModule";
+    this_module.subscribed_events_mask = (EVENT_ERROR);
+    this_module.cb_event = _cb_event;
+
+    rc = module_init(&this_module);
+    if (rc == EXIT_FAILURE) {
+        printf("[CUC] Error initializing module!\n");
+        goto cleanup;
+    }
+
+    // Keep running
+    while (is_running) {
+        sleep(1);
+    }
+
+    printf("[CUC] Stopping the module...\n");
+    
+cleanup:
+    return rc;
+}

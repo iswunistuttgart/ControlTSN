@@ -8,6 +8,7 @@
 
 // The port for the API
 #define PORT 8080
+#define API_PREFIX ""
 
 // ----------------------------------------------
 //      The API endpoint urls
@@ -15,14 +16,15 @@
 const char *API_INDEX                  = "/";
 
 // Modules
-const char *API_MODULES = "/modules";
-//const char *API_MODULES_ID             = "/modules/:id";
-//const char *API_MODULES_ID_START       = "/modules/:id/start";
-//const char *API_MODULES_ID_STOP        = "/modules/:id/stop";
-//const char *API_MODULES_ID_REMOVE      = "/modules/:id/remove";
-//const char *API_MODULES_ID_REGISTER    = "/modules/:id/register";
-//const char *API_MODULES_ID_UNREGISTER  = "/modules/:id/unregister";
-//const char *API_MODULES_ADD            = "/modules/add";
+const char *API_MODULES                 = "/modules";
+const char *API_MODULES_REGISTERD_ID    = "/modules/registered/:id";
+const char *API_MODULES_AVAILABLE_ID    = "/modules/available/:id";
+const char *API_MODULES_ID_START        = "/modules/:id/start";
+const char *API_MODULES_ID_STOP         = "/modules/:id/stop";
+const char *API_MODULES_ID_DELETE       = "/modules/:id/delete";
+const char *API_MODULES_ID_REGISTER     = "/modules/:id/register";
+const char *API_MODULES_ID_UNREGISTER   = "/modules/:id/unregister";
+const char *API_MODULES_ID_DATA         = "/modules/:id/data";
 
 // Topology
 const char *API_TOPOLOGY            = "/topology";

@@ -1836,7 +1836,7 @@ sysrepo_get_modules(TSN_Modules **modules)
 //  Module handling
 // -------------------------------------------------------- //
 int 
-sysrepo_add_new_module(TSN_Module new_module)
+sysrepo_add_or_get_module(TSN_Module **module)
 {
     int is_failure = 0;
     char *xpath_mod = NULL;
@@ -1849,18 +1849,23 @@ sysrepo_add_new_module(TSN_Module new_module)
         is_failure = 1;
         goto cleanup;
     }
-
+    
     // Search if the name and path already exists under the stored modules
     // simultaneously the highest used ID is determined in order to specify
     // the ID for the potential, new module
     int highest_used_id = 0;
     for (int i=0; i<stored_modules->count_available_modules; ++i) {
         // Compare name and path
-        if ((strcmp(new_module.name, stored_modules->available_modules[i].name) == 0) &&
-            (strcmp(new_module.path, stored_modules->available_modules[i].path) == 0)) {
+        if ((strcmp((*module)->name, stored_modules->available_modules[i].name) == 0) &&
+            (strcmp((*module)->path, stored_modules->available_modules[i].path) == 0)) {
             
             // We found a module with the same name and path
-            printf("[SYSREPO] Error adding a new module. Module with the same name and path already exists!\n");
+            printf("[SYSREPO] Module not added. Module with the same name and path already exists!\n");
+            // Overwrite the passed struct with the stored information
+            (*module)->id = stored_modules->available_modules[i].id;
+            (*module)->description = stored_modules->available_modules[i].description;
+            (*module)->subscribed_events_mask = stored_modules->available_modules[i].subscribed_events_mask;
+
             is_failure = 1;
             goto cleanup;
         }
@@ -1871,14 +1876,15 @@ sysrepo_add_new_module(TSN_Module new_module)
     }
 
     // Otherwise we can add the new module
-    new_module.id = (highest_used_id + 1);
-    _create_xpath_id("/control-tsn-uni:tsn-uni/modules/available-modules/mod[id='%d']", new_module.id, &xpath_mod);
-    rc = _write_module(xpath_mod, &new_module);
+    (*module)->id = (highest_used_id + 1);
+    _create_xpath_id("/control-tsn-uni:tsn-uni/modules/available-modules/mod[id='%d']", (*module)->id, &xpath_mod);
+    rc = _write_module(xpath_mod, &module);
     if (rc != SR_ERR_OK) {
         printf("[SYSREPO] Error adding a new module to the list!\n");
         is_failure = 1;
         goto cleanup;
     }
+    
 
 cleanup:
     free(xpath_mod);
