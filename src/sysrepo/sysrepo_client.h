@@ -122,6 +122,46 @@ int sysrepo_update_module_data(int module_id, TSN_Module_Data data);
  */
 int sysrepo_get_all_streams(TSN_Streams **streams);
 
+
+// -------------------------------------------------------- //
+// Topology handling
+// -------------------------------------------------------- //
+/**
+ * @brief Returns the stored topology containing all devices and the connections.
+ * @param topology The struct to write on
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+ */
+int sysrepo_get_topology(TSN_Topology **topology);
+/**
+ * @brief Returns all stored devices.
+ * @param devices The struct to write on
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+ */
+int sysrepo_get_all_devices(TSN_Devices **devices);
+/**
+ * @brief Returns the graph of the topology containing all connections.
+ * @param graph The struct to write on
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+ */
+int sysrepo_get_topology_graph(TSN_Graph **graph);
+
+// -------------------------------------------------------- //
+// Application handling
+// -------------------------------------------------------- //
+/**
+ * @brief Returns all stored applications.
+ * @param applications The struct to write on
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+ */
+int sysrepo_get_all_applications(TSN_Applications **applications);
+
+
+
+
+
+
+// OLD VVVVVVVVVVVVVVVVVVVV
+
 // -------------------------------------------------------- //
 //  CRUD methods
 // -------------------------------------------------------- //

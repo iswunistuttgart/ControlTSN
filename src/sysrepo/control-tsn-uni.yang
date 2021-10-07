@@ -168,6 +168,124 @@ module control-tsn-uni {
         }
     }
 
+    // =============================================================
+    // ===  Topology groupings
+    // =============================================================
+    grouping enddevice {
+        leaf mac {
+            type string {
+                pattern '[0-9a-fA-F]{2}(-[0-9a-fA-F]{2}){5}';
+            }
+        }
+        leaf application-ref {
+            type leafref {
+                path "/control-tsn-uni:tsn-uni/applications/application/id";
+            }
+        }
+    }
+
+    grouping switch {
+        leaf mac {
+            type string {
+                pattern '[0-9a-fA-F]{2}(-[0-9a-fA-F]{2}){5}';
+            }
+        }
+        leaf ports-count {
+            type uint8;
+        }
+    }
+
+    grouping connection {
+        leaf id {
+            type uint8;
+        }
+        leaf from-mac {
+            type string;
+        }
+        leaf from-port {
+            type uint8;
+        }
+        leaf to-mac {
+            type string;
+        }
+        leaf to-port {
+            type uint8;
+        }
+    }
+
+    // =============================================================
+    // ===  Application groupings
+    // =============================================================
+    grouping application-parameter {
+        leaf param-name {
+            type string;
+        }
+        leaf param-type {
+            type enumeration {
+                enum binary;
+                //enum bits-type;
+                enum boolean;
+                enum decimal64;
+                //enum enumeration-type;
+                //enum identifyref-type;
+                enum instance-identifier;
+                enum int8;
+                enum int16;
+                enum int32;
+                enum int64;
+                enum string;
+                enum uint8;
+                enum uint16;
+                enum uint32;
+                enum uint64;
+            }
+        }
+        leaf param-value {
+            type union {
+                type binary;
+                //type bits;                
+                type boolean;
+                //type enumeration;
+                //type identifyref;
+                type instance-identifier;
+                type int8;
+                type int16;
+                type int32;
+                type int64;
+                type string;
+                type uint8;
+                type uint16;
+                type uint32;
+                type uint64;
+                type decimal64              {fraction-digits 5;}
+            }
+        }
+    }
+    
+    grouping application {
+        leaf id {
+            type string;
+        }
+        leaf name {
+            type string;
+        }
+        leaf desc {
+            type string;
+        }
+        leaf version {
+            type string;
+        }
+        leaf count-parameters {
+            type uint8;
+        }
+        container parameters {
+            list parameter {
+                key "param-name";
+                uses application-parameter;
+            }
+        }
+
+    }
 
     // =============================================================
     // ===  Root
@@ -208,6 +326,40 @@ module control-tsn-uni {
                     key "id";
                     uses module-def;
                 }
+            }
+        }
+
+        container topology {
+            container devices {
+                container enddevices {
+                    list enddevice {
+                        key "mac";
+                        uses enddevice;
+                    }
+                }
+                
+                container switches {
+                    list switch {
+                        key "mac";
+                        uses switch;
+                    }
+                }
+            }
+
+            container graph {
+                container connections {
+                    list connection {
+                        key "id";
+                        uses connection;
+                    }
+                }
+            }
+        }
+
+        container applications {
+            list application {
+                key "id";
+                uses application;
             }
         }
     }

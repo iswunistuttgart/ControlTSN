@@ -166,6 +166,43 @@ streams_get_all(TSN_Streams **streams)
 
 
 // ----------------------------------------------
+//      FUNCTIONS - Topology
+// ----------------------------------------------
+int 
+topology_get_all(TSN_Topology **topology)
+{
+    ret = sysrepo_get_topology(topology);
+    return ret;
+} 
+
+int
+topology_get_devices(TSN_Devices **devices)
+{
+    ret = sysrepo_get_all_devices(devices);
+    return ret;
+}
+
+int
+topology_get_graph(TSN_Graph **graph)
+{
+    ret = sysrepo_get_topology_graph(graph);
+    return ret;
+}
+
+
+// ----------------------------------------------
+//      FUNCTIONS - Applications
+// ----------------------------------------------
+int
+applications_get_all(TSN_Applications **applications)
+{
+    ret = sysrepo_get_all_applications(applications);
+    return ret;
+}
+
+
+
+// ----------------------------------------------
 //      FUNCTIONS - Other/Helpers
 // ----------------------------------------------
 

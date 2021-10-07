@@ -2106,3 +2106,36 @@ sysrepo_get_all_streams(TSN_Streams **streams)
 cleanup:
     return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }
+
+
+// -------------------------------------------------------- //
+//  Topology handling
+// -------------------------------------------------------- //
+int 
+sysrepo_get_topology(TSN_Topology **topology)
+{
+
+}
+
+int 
+sysrepo_get_all_devices(TSN_Devices **devices)
+{
+
+}
+
+int 
+sysrepo_get_topology_graph(TSN_Graph **graph)
+{
+
+}
+
+
+// -------------------------------------------------------- //
+//  Application handling
+// -------------------------------------------------------- //
+int 
+sysrepo_get_all_applications(TSN_Applications **applications)
+{
+
+}
+

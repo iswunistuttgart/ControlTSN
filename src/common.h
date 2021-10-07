@@ -145,6 +145,41 @@ int module_get_data(int module_id, TSN_Module_Data **module_data);
  */
 int streams_get_all(TSN_Streams **streams);
 
+
+// ----------------------------------------------
+//      FUNCTIONS - Topology-Handling
+// ----------------------------------------------
+/**
+ * @brief Get the complete topology information containing the devices and the connections.
+ * @param topology The TSN_Topology struct to write on
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+ */
+int topology_get_all(TSN_Topology **topology);
+/**
+ * @brief Get all devices from the topology.
+ * @param devices The TSN_Devices struct to write on
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+ */
+int topology_get_devices(TSN_Devices **devices);
+/**
+ * @brief Get the graph of the topology containing all connections.
+ * @param graph The TSN_Graph struct to write on
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+ */
+int topology_get_graph(TSN_Graph **graph);
+
+
+// ----------------------------------------------
+//      FUNCTIONS - Application-Handling
+// ----------------------------------------------
+/**
+ * @brief Get all applications.
+ * @param applications The TSN_Applications struct to write on
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+ */
+int applications_get_all(TSN_Applications **applications);
+
+
 // ----------------------------------------------
 //      FUNCTIONS - Other/Helpers
 // ----------------------------------------------
