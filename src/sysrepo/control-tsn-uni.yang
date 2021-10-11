@@ -275,9 +275,6 @@ module control-tsn-uni {
         leaf version {
             type string;
         }
-        leaf count-parameters {
-            type uint8;
-        }
         container parameters {
             list parameter {
                 key "param-name";
