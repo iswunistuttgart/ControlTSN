@@ -144,17 +144,33 @@ int sysrepo_get_all_devices(TSN_Devices **devices);
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
 int sysrepo_get_topology_graph(TSN_Graph **graph);
+/**
+ * @brief Triggers the discovery of the topology by setting the corresponding flag in the datastore.
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+ */
+int sysrepo_trigger_topology_discovery();
 
 // -------------------------------------------------------- //
 // Application handling
 // -------------------------------------------------------- //
 /**
- * @brief Returns all stored applications.
+ * @brief Returns the stored application containing all apps and images.
  * @param applications The struct to write on
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
-int sysrepo_get_all_applications(TSN_Applications **applications);
-
+int sysrepo_get_application(TSN_Application **application);
+/**
+ * @brief Returns all stored apps.
+ * @param apps The struct to write on
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+ */
+int sysrepo_get_application_apps(TSN_Apps **apps);
+/**
+ * @brief Returns all stored images.
+ * @param images The struct to write on
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+ */
+int sysrepo_get_application_images(TSN_Images **images);
 
 
 

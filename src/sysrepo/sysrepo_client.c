@@ -1740,9 +1740,9 @@ _read_enddevice(char *xpath, TSN_Enddevice **enddevice)
 {
     int rc = SR_ERR_OK;
     sr_val_t *val_mac = NULL;
-    sr_val_t *val_application_ref = NULL;
+    sr_val_t *val_app_ref = NULL;
     char *xpath_mac = NULL;
-    char *xpath_application_ref = NULL;
+    char *xpath_app_ref = NULL;
 
     // MAC
     _create_xpath(xpath, "/mac", &xpath_mac);
@@ -1752,19 +1752,19 @@ _read_enddevice(char *xpath, TSN_Enddevice **enddevice)
     }
     (*enddevice)->mac = strdup(val_mac->data.string_val);
 
-    // Application Ref
-    _create_xpath(xpath, "/application-ref", &xpath_application_ref);
-    rc = sr_get_item(session, xpath_application_ref, 0, &val_application_ref);
+    // App Ref
+    _create_xpath(xpath, "/appn-ref", &xpath_app_ref);
+    rc = sr_get_item(session, xpath_app_ref, 0, &val_app_ref);
     if (rc != SR_ERR_OK) {
         goto cleanup;
     }
-    (*enddevice)->application_ref = strdup(val_application_ref->data.string_val);
+    (*enddevice)->app_ref = strdup(val_app_ref->data.string_val);
 
 cleanup:
     sr_free_val(val_mac);
-    sr_free_val(val_application_ref);
+    sr_free_val(val_app_ref);
     free(xpath_mac);
-    free(xpath_application_ref);
+    free(xpath_app_ref);
 
     return rc;
 }
@@ -1875,7 +1875,7 @@ _read_connection(char *xpath, TSN_Connection **connection)
     (*connection)->id = val_id->data.uint8_val;
 
     // From MAC
-    _create_xpath(xpath, "/from-mac", xpath_from_mac);
+    _create_xpath(xpath, "/from-mac", &xpath_from_mac);
     rc = sr_get_item(session, xpath_from_mac, 0, &val_from_mac);
     if (rc != SR_ERR_OK) {
         goto cleanup;
@@ -1891,7 +1891,7 @@ _read_connection(char *xpath, TSN_Connection **connection)
     (*connection)->from_port = val_from_port->data.uint8_val;
     
     // To MAC
-    _create_xpath(xpath, "/to-mac", xpath_to_mac);
+    _create_xpath(xpath, "/to-mac", &xpath_to_mac);
     rc = sr_get_item(session, xpath_to_mac, 0, &val_to_mac);
     if (rc != SR_ERR_OK) {
         goto cleanup;
@@ -1985,7 +1985,7 @@ cleanup:
 }
 
 static int
-_read_application_parameter(char *xpath, TSN_Application_Parameter **parameter)
+_read_app_parameter(char *xpath, TSN_App_Parameter **parameter)
 {
     int rc = SR_ERR_OK;
     sr_val_t *val_param_name = NULL;
@@ -1996,7 +1996,7 @@ _read_application_parameter(char *xpath, TSN_Application_Parameter **parameter)
     char *xpath_param_value = NULL;
 
     // Name
-    _create_xpath(xpath, "/param-name", xpath_param_name);
+    _create_xpath(xpath, "/param-name", &xpath_param_name);
     rc = sr_get_item(session, xpath_param_name, 0, &val_param_name);
     if (rc != SR_ERR_OK) {
         goto cleanup;
@@ -2031,18 +2031,20 @@ cleanup:
 }
 
 static int
-_read_application(char *xpath, TSN_Application **application)
+_read_app(char *xpath, TSN_App **app)
 {
     int rc = SR_ERR_OK;
     sr_val_t *val_id = NULL;
     sr_val_t *val_name = NULL;
     sr_val_t *val_desc = NULL;
     sr_val_t *val_version = NULL;
+    sr_val_t *val_image_ref = NULL;
     sr_val_t *val_parameters = NULL;
     char *xpath_id = NULL;
     char *xpath_name = NULL;
     char *xpath_desc = NULL;
     char *xpath_version = NULL;
+    char *xpath_image_ref = NULL;
     char *xpath_parameters = NULL;
 
     // ID
@@ -2051,7 +2053,7 @@ _read_application(char *xpath, TSN_Application **application)
     if (rc != SR_ERR_OK) {
         goto cleanup;
     }
-    (*application)->id = strdup(val_id->data.string_val);
+    (*app)->id = strdup(val_id->data.string_val);
 
     // Name
     _create_xpath(xpath, "/name", &xpath_name);
@@ -2059,7 +2061,7 @@ _read_application(char *xpath, TSN_Application **application)
     if (rc != SR_ERR_OK) {
         goto cleanup;
     }
-    (*application)->name = strdup(val_name->data.string_val);
+    (*app)->name = strdup(val_name->data.string_val);
 
     // Description
     _create_xpath(xpath, "/desc", &xpath_desc);
@@ -2067,7 +2069,7 @@ _read_application(char *xpath, TSN_Application **application)
     if (rc != SR_ERR_OK) {
         goto cleanup;
     }
-    (*application)->description = strdup(val_desc->data.string_val);
+    (*app)->description = strdup(val_desc->data.string_val);
 
     // Version
     _create_xpath(xpath, "/version", &xpath_version);
@@ -2075,21 +2077,29 @@ _read_application(char *xpath, TSN_Application **application)
     if (rc != SR_ERR_OK) {
         goto cleanup;
     }
-    (*application)->version = strdup(val_version->data.string_val);
+    (*app)->version = strdup(val_version->data.string_val);
+
+    // Image Reference
+    _create_xpath(xpath, "/image-ref", &xpath_image_ref);
+    rc = sr_get_item(session, xpath_image_ref, 0, &val_image_ref);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*app)->image_ref = strdup(val_image_ref->data.string_val);
 
     // Parameters
     _create_xpath(xpath, "/parameters/*", &xpath_parameters);
     size_t count_parameters = 0;
     rc = sr_get_items(session, xpath_parameters, 0, 0, &val_parameters, &count_parameters);
-    (*application)->count_parameters = count_parameters;
-    (*application)->parameters = (TSN_Application_Parameter *) malloc(sizeof(TSN_Application_Parameter) * count_parameters);
+    (*app)->count_parameters = count_parameters;
+    (*app)->parameters = (TSN_App_Parameter *) malloc(sizeof(TSN_App_Parameter) * count_parameters);
     for (int i=0; i<count_parameters; ++i) {
-        TSN_Application_Parameter *p = malloc(sizeof(TSN_Application_Parameter));
-        rc = _read_application_parameter((&val_parameters[i])->xpath, &p);
+        TSN_App_Parameter *p = malloc(sizeof(TSN_App_Parameter));
+        rc = _read_app_parameter((&val_parameters[i])->xpath, &p);
         if (rc != SR_ERR_OK) {
             goto cleanup;
         }
-        (*application)->parameters[i] = *p;
+        (*app)->parameters[i] = *p;
     }
 
 cleanup:
@@ -2108,29 +2118,155 @@ cleanup:
 }
 
 static int
-_read_applications(char *xpath, TSN_Applications **applications)
+_read_image(char *xpath, TSN_Image **image)
 {
     int rc = SR_ERR_OK;
-    sr_val_t *val_applications = NULL;
-    char *xpath_applications = NULL;
+    sr_val_t *val_id = NULL;
+    sr_val_t *val_name = NULL;
+    sr_val_t *val_desc = NULL;
+    sr_val_t *val_version = NULL;
+    char *xpath_id = NULL;
+    char *xpath_name = NULL;
+    char *xpath_desc = NULL;
+    char *xpath_version = NULL;
 
-    _create_xpath(xpath, "/*", &xpath_applications);
-    size_t count_applications = 0;
-    rc = sr_get_items(session, xpath_applications, 0, 0, &val_applications, &count_applications);
-    (*applications)->count_applications = count_applications;
-    (*applications)->applications = (TSN_Application *) malloc(sizeof(TSN_Application) * count_applications);
-    for (int i=0; i<count_applications; ++i) {
-        TSN_Application *a = malloc(sizeof(TSN_Application));
-        rc = _read_application((&val_applications[i])->xpath, &a);
+    // ID
+    _create_xpath(xpath, "/id", &xpath_id);
+    rc = sr_get_item(session, xpath_id, 0, &val_id);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*image)->id = strdup(val_id->data.string_val);
+
+    // Name
+    _create_xpath(xpath, "/name", &xpath_name);
+    rc = sr_get_item(session, xpath_name, 0, &val_name);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*image)->name = strdup(val_name->data.string_val);
+
+    // Description
+    _create_xpath(xpath, "/desc", &xpath_desc);
+    rc = sr_get_item(session, xpath_desc, 0, &val_desc);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*image)->description = strdup(val_desc->data.string_val);
+
+    // Version
+    _create_xpath(xpath, "/version", &xpath_version);
+    rc = sr_get_item(session, xpath_version, 0, &val_version);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*image)->version = strdup(val_version->data.string_val);
+
+cleanup:
+    sr_free_val(val_id);
+    sr_free_val(val_name);
+    sr_free_val(val_desc);
+    sr_free_val(val_version);
+    free(xpath_id);
+    free(xpath_name);
+    free(xpath_desc);
+    free(xpath_version);
+
+    return rc;
+}
+
+static int
+_read_apps(char *xpath, TSN_Apps **apps)
+{
+    int rc = SR_ERR_OK;
+    sr_val_t *val_apps = NULL;
+    char *xpath_apps = NULL;
+
+    // Apps
+    _create_xpath(xpath, "/*", &xpath_apps);
+    size_t count_apps = 0;
+    rc = sr_get_items(session, xpath_apps, 0, 0, &val_apps, &count_apps);
+    (*apps)->count_apps = count_apps;
+    (*apps)->apps = (TSN_App *) malloc(sizeof(TSN_App) * count_apps);
+    for (int i=0; i<count_apps; ++i) {
+        TSN_App *a = malloc(sizeof(TSN_App));
+        rc = _read_app((&val_apps[i])->xpath, &a);
         if (rc != SR_ERR_OK) {
             goto cleanup;
         }
-        (*applications)->applications[i] = *a;
+        (*apps)->apps[i] = *a;
     }
 
 cleanup:
-    sr_free_val(val_applications);
-    free(xpath_applications);
+    sr_free_val(val_apps);
+    free(xpath_apps);
+
+    return rc;
+}
+
+static int
+_read_images(char *xpath, TSN_Images **images)
+{
+    int rc = SR_ERR_OK;
+    sr_val_t *val_images = NULL;
+    char *xpath_images = NULL;
+
+    // Apps
+    _create_xpath(xpath, "/*", &xpath_images);
+    size_t count_images = 0;
+    rc = sr_get_items(session, xpath_images, 0, 0, &val_images, &count_images);
+    (*images)->count_images = count_images;
+    (*images)->images = (TSN_Image *) malloc(sizeof(TSN_Image) * count_images);
+    for (int i=0; i<count_images; ++i) {
+        TSN_Image *im = malloc(sizeof(TSN_Image));
+        rc = _read_image((&val_images[i])->xpath, &im);
+        if (rc != SR_ERR_OK) {
+            goto cleanup;
+        }
+        (*images)->images[i] = *im;
+    }
+
+cleanup:
+    sr_free_val(val_images);
+    free(xpath_images);
+
+    return rc;
+}
+
+static int
+_read_application(char *xpath, TSN_Application **application)
+{
+    int rc = SR_ERR_OK;
+    sr_val_t *val_apps = NULL;
+    sr_val_t *val_images = NULL;
+    char *xpath_apps = NULL;
+    char *xpath_images = NULL;
+
+    // Apps
+    _create_xpath(xpath, "/apps", &xpath_apps);
+    TSN_Apps *apps = NULL;
+    apps = malloc(sizeof(TSN_Apps));
+    rc = _read_apps(xpath_apps, &apps);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*application)->apps = *apps;
+
+    // Images
+    _create_xpath(xpath, "/images", &xpath_images);
+    TSN_Images *images = NULL;
+    images = malloc(sizeof(TSN_Images));
+    rc = _read_images(xpath_images, &images);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*application)->images = *images;
+
+cleanup:
+    sr_free_val(val_apps);
+    sr_free_val(val_images);
+    free(xpath_apps);
+    free(xpath_images);
 
     return rc;
 }
@@ -2184,7 +2320,7 @@ sysrepo_add_or_get_module(TSN_Module **module)
     // Otherwise we can add the new module
     (*module)->id = (highest_used_id + 1);
     _create_xpath_id("/control-tsn-uni:tsn-uni/modules/available-modules/mod[id='%d']", (*module)->id, &xpath_mod);
-    rc = _write_module(xpath_mod, &module);
+    rc = _write_module(xpath_mod, (*module));   // &module
     if (rc != SR_ERR_OK) {
         printf("[SYSREPO] Error adding a new module to the list!\n");
         is_failure = 1;
@@ -2453,14 +2589,35 @@ cleanup:
     return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
+int 
+sysrepo_trigger_topology_discovery()
+{
+    int rc = SR_ERR_OK;
+    sr_val_t *output = NULL;
+    char *xpath_rpc_trigger_topology_discovery = NULL;
+
+    // Send the RPC
+    size_t ouput_count = 0;
+    xpath_rpc_trigger_topology_discovery = strdup("/control-tsn-uni:trigger-topology-discovery");
+    rc = sr_rpc_send(session, xpath_rpc_trigger_topology_discovery, NULL, 0, 0, &output, &ouput_count);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+cleanup:
+    sr_free_val(output);
+    free(xpath_rpc_trigger_topology_discovery);
+
+    return rc ? EXIT_FAILURE : EXIT_SUCCESS;
+}
 
 // -------------------------------------------------------- //
 //  Application handling
 // -------------------------------------------------------- //
 int 
-sysrepo_get_all_applications(TSN_Applications **applications)
+sysrepo_get_application(TSN_Application **application)
 {
-    rc = _read_applications("/control-tsn-uni:tsn-uni/applications", applications);
+    rc = _read_application("/control-tsn-uni:tsn-uni/application", application);
     if (rc != SR_ERR_OK) {
         goto cleanup;
     }
@@ -2469,3 +2626,26 @@ cleanup:
     return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
+int 
+sysrepo_get_application_apps(TSN_Apps **apps)
+{
+    rc = _read_apps("/control-tsn-uni:tsn-uni/application/apps", apps);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+cleanup:
+    return rc ? EXIT_FAILURE : EXIT_SUCCESS;
+}
+
+int 
+sysrepo_get_application_images(TSN_Images **images)
+{
+    rc = _read_images("/control-tsn-uni:tsn-uni/application/images", images);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+cleanup:
+    return rc ? EXIT_FAILURE : EXIT_SUCCESS;
+}

@@ -154,7 +154,7 @@ int streams_get_all(TSN_Streams **streams);
  * @param topology The TSN_Topology struct to write on
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
-int topology_get_all(TSN_Topology **topology);
+int topology_get(TSN_Topology **topology);
 /**
  * @brief Get all devices from the topology.
  * @param devices The TSN_Devices struct to write on
@@ -167,17 +167,33 @@ int topology_get_devices(TSN_Devices **devices);
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
 int topology_get_graph(TSN_Graph **graph);
-
+/**
+ * @brief Triggers the discovery of the topology. The result can be captured by subscribing the corresponding event.
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+ */
+int topology_trigger_discovery();
 
 // ----------------------------------------------
 //      FUNCTIONS - Application-Handling
 // ----------------------------------------------
 /**
- * @brief Get all applications.
+ * @brief Get the application information containing all apps and images.
  * @param applications The TSN_Applications struct to write on
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
-int applications_get_all(TSN_Applications **applications);
+int application_get(TSN_Application **application);
+/**
+ * @brief Get the stored apps.
+ * @param apps The TSN_Apps struct to write on
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+ */
+int application_get_apps(TSN_Apps **apps);
+/**
+ * @brief Get the stored images.
+ * @param apps The TSN_Images struct to write on
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+ */
+int application_get_images(TSN_Images **images);
 
 
 // ----------------------------------------------

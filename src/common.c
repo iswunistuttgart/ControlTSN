@@ -169,7 +169,7 @@ streams_get_all(TSN_Streams **streams)
 //      FUNCTIONS - Topology
 // ----------------------------------------------
 int 
-topology_get_all(TSN_Topology **topology)
+topology_get(TSN_Topology **topology)
 {
     ret = sysrepo_get_topology(topology);
     return ret;
@@ -189,17 +189,36 @@ topology_get_graph(TSN_Graph **graph)
     return ret;
 }
 
+int
+topology_trigger_discovery()
+{
+    
+}
+
 
 // ----------------------------------------------
 //      FUNCTIONS - Applications
 // ----------------------------------------------
 int
-applications_get_all(TSN_Applications **applications)
+application_get(TSN_Application **application)
 {
-    ret = sysrepo_get_all_applications(applications);
+    ret = sysrepo_get_application(application);
     return ret;
 }
 
+int
+application_get_apps(TSN_Apps **apps)
+{
+    ret = sysrepo_get_application_apps(apps);
+    return ret;
+}
+
+int
+application_get_images(TSN_Images **images)
+{
+    ret = sysrepo_get_application_images(images);
+    return ret;
+}
 
 
 // ----------------------------------------------

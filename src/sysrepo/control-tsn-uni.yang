@@ -177,9 +177,9 @@ module control-tsn-uni {
                 pattern '[0-9a-fA-F]{2}(-[0-9a-fA-F]{2}){5}';
             }
         }
-        leaf application-ref {
+        leaf app-ref {
             type leafref {
-                path "/control-tsn-uni:tsn-uni/applications/application/id";
+                path "/control-tsn-uni:tsn-uni/application/apps/app/id";
             }
         }
     }
@@ -216,7 +216,7 @@ module control-tsn-uni {
     // =============================================================
     // ===  Application groupings
     // =============================================================
-    grouping application-parameter {
+    grouping app-parameter {
         leaf param-name {
             type string;
         }
@@ -262,7 +262,7 @@ module control-tsn-uni {
         }
     }
     
-    grouping application {
+    grouping app {
         leaf id {
             type string;
         }
@@ -275,13 +275,32 @@ module control-tsn-uni {
         leaf version {
             type string;
         }
+        leaf image-ref {
+            type leafref {
+                path "/control-tsn-uni:tsn-uni/application/images/image/id";
+            }
+        }
         container parameters {
             list parameter {
                 key "param-name";
-                uses application-parameter;
+                uses app-parameter;
             }
         }
+    }
 
+    grouping image {
+        leaf id {
+            type string;
+        }
+        leaf name {
+            type string;
+        }
+        leaf desc {
+            type string;
+        }
+        leaf version {
+            type string;
+        }
     }
 
     // =============================================================
@@ -289,18 +308,9 @@ module control-tsn-uni {
     // =============================================================
     container tsn-uni {
         description "The root of the yang module.";
-        
-        container streams {
-            list stream {
-                key "stream-id";
-                uses stream;
-            }
-        }
 
         /*
-
         // Actions should be implemented and callable in the CNC!! 
-
         // === Actions
         // (Difference between compute and deploy is the status of the stream in the response)
         action compute-all-requests { }
@@ -308,6 +318,13 @@ module control-tsn-uni {
         action undeploy-all-configurations { }
         action delete-all-configurations { }
         */
+        
+        container streams {
+            list stream {
+                key "stream-id";
+                uses stream;
+            }
+        }
 
         container modules {
             container available-modules {
@@ -353,11 +370,28 @@ module control-tsn-uni {
             }
         }
 
-        container applications {
-            list application {
-                key "id";
-                uses application;
+        container application {
+            container apps {
+                list app {
+                    key "id";
+                    uses app;
+                }
+            }
+
+            container images {
+                list image {
+                    key "id";
+                    uses image;
+                }
             }
         }
+    }
+
+    // =============================================================
+    // ===  RCP Handling
+    // =============================================================
+    // Topology Discovery Triggering
+    rpc trigger-topology-discovery {
+        description "Triggers the discovery of the topology";
     }
 }

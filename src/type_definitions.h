@@ -230,7 +230,7 @@ typedef struct TSN_Streams {
 // ---------------------------------------
 typedef struct TSN_Enddevice {
     char *mac;
-    char *application_ref;
+    char *app_ref;
 } TSN_Enddevice;
 
 typedef struct TSN_Switch {
@@ -266,26 +266,44 @@ typedef struct TSN_Topology {
 // ---------------------------------------
 // Application definitions
 // ---------------------------------------
-typedef struct TSN_Application_Parameter {
+typedef struct TSN_App_Parameter {
     char *name;
     char *description;
     TSN_Module_Data_Entry_Type type;
     TSN_Module_Data_Entry_Value value;    
-} TSN_Application_Parameter;
+} TSN_App_Parameter;
 
-typedef struct TSN_Application {
+typedef struct TSN_App {
     char *id;           // {name}_{version}
     char *name;
     char *description;
     char *version;      // {X}.{Y}.{Z}
+    char *image_ref;
     uint8_t count_parameters;
-    TSN_Application_Parameter *parameters;
-} TSN_Application;
+    TSN_App_Parameter *parameters;
+} TSN_App;
 
-typedef struct TSN_Applications {
-    uint16_t count_applications;
-    TSN_Application *applications;
-} TSN_Applications;
+typedef struct TSN_Image {
+    char *id;           // {name}_{version}
+    char *name;
+    char *description;
+    char *version;      // {X}.{Y}.{Z}
+} TSN_Image;
+
+typedef struct TSN_Apps {
+    uint16_t count_apps;
+    TSN_App *apps;
+} TSN_Apps;
+
+typedef struct TSN_Images {
+    uint16_t count_images;
+    TSN_Image *images;
+} TSN_Images;
+
+typedef struct TSN_Application {
+    TSN_Apps apps;
+    TSN_Images images;
+} TSN_Application;
 
 // ----------------------------------------------
 // Root
@@ -294,7 +312,7 @@ typedef struct TSN_Uni {
     TSN_Streams streams;
     TSN_Modules modules;
     TSN_Topology topology;
-    TSN_Applications applications;
+    TSN_Application application;
 } TSN_Uni;
 
 
