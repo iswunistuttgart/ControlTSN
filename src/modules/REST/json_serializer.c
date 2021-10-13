@@ -1,48 +1,48 @@
 #include "json_serializer.h"
 
 json_t *
-_data_value_to_json(TSN_Module_Data_Entry *entry)
+_data_value_to_json(TSN_Module_Data_Entry_Type type, TSN_Module_Data_Entry_Value value)
 {
     json_t *root = NULL;
     
-    if (entry->type == BINARY) {
-        root = json_string(entry->value.binary_val);
+    if (type == BINARY) {
+        root = json_string(value.binary_val);
     }
-    else if (entry->type == BOOLEAN) {
-        root = json_boolean(entry->value.boolean_val);
+    else if (type == BOOLEAN) {
+        root = json_boolean(value.boolean_val);
     }
-    else if (entry->type == DECIMAL64) {
-        root = json_real(entry->value.decimal64_val);
+    else if (type == DECIMAL64) {
+        root = json_real(value.decimal64_val);
     }
-    else if (entry->type == INSTANCE_IDENTIFIER) {
-        root = json_string(entry->value.instance_identifier_val);
+    else if (type == INSTANCE_IDENTIFIER) {
+        root = json_string(value.instance_identifier_val);
     }
-    else if (entry->type == INT8) {
-        root = json_integer(entry->value.int8_val);
+    else if (type == INT8) {
+        root = json_integer(value.int8_val);
     }
-    else if (entry->type == INT16) {
-        root = json_integer(entry->value.int16_val);
+    else if (type == INT16) {
+        root = json_integer(value.int16_val);
     }
-    else if (entry->type == INT32) {
-        root = json_integer(entry->value.int32_val);
+    else if (type == INT32) {
+        root = json_integer(value.int32_val);
     }
-    else if (entry->type == INT64) {
-        root = json_integer(entry->value.int64_val);
+    else if (type == INT64) {
+        root = json_integer(value.int64_val);
     }
-    else if (entry->type == STRING) {
-        root = json_string(entry->value.string_val);
+    else if (type == STRING) {
+        root = json_string(value.string_val);
     }
-    else if (entry->type == UINT8) {
-        root = json_integer(entry->value.uint8_val);
+    else if (type == UINT8) {
+        root = json_integer(value.uint8_val);
     }
-    else if (entry->type == UINT16) {
-        root = json_integer(entry->value.uint16_val);
+    else if (type == UINT16) {
+        root = json_integer(value.uint16_val);
     }
-    else if (entry->type == UINT32) {
-        root = json_integer(entry->value.uint32_val);
+    else if (type == UINT32) {
+        root = json_integer(value.uint32_val);
     }
-    else if (entry->type == UINT64) {
-        root = json_integer(entry->value.uint64_val);
+    else if (type == UINT64) {
+        root = json_integer(value.uint64_val);
     }
 
     return root;
@@ -68,7 +68,7 @@ serialize_module_data(TSN_Module_Data *module_data)
 
         json_object_set_new(data_entry, "name", json_string(module_data->entries[i].name));
         json_object_set_new(data_entry, "type", json_string(data_type_to_string(module_data->entries[i].type)));
-        json_object_set_new(data_entry, "value", _data_value_to_json(&module_data->entries[i]));
+        json_object_set_new(data_entry, "value", _data_value_to_json(module_data->entries[i].type, module_data->entries[i].value));
 
         json_array_append_new(array_data, data_entry);
     }
@@ -289,7 +289,7 @@ serialize_app_parameter(TSN_App_Parameter *param)
     json_object_set_new(root, "name", json_string(param->name));
     json_object_set_new(root, "description", json_string(param->description));
     json_object_set_new(root, "type", json_string(data_type_to_string(param->type)));
-    json_object_set_new(root, "value", _data_value_to_json(&param->value));
+    json_object_set_new(root, "value", _data_value_to_json(param->type, param->value));
 
     return root;
 }

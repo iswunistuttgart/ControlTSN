@@ -153,7 +153,7 @@ module control-tsn-uni {
             type string;
         }
         leaf subscribed-events-mask {
-            type uint16;
+            type uint32;
         }
 
         leaf pid {
@@ -174,7 +174,7 @@ module control-tsn-uni {
     grouping enddevice {
         leaf mac {
             type string {
-                pattern '[0-9a-fA-F]{2}(-[0-9a-fA-F]{2}){5}';
+                pattern '[0-9a-fA-F]{2}(:[0-9a-fA-F]{2}){5}';
             }
         }
         leaf app-ref {
@@ -187,7 +187,7 @@ module control-tsn-uni {
     grouping switch {
         leaf mac {
             type string {
-                pattern '[0-9a-fA-F]{2}(-[0-9a-fA-F]{2}){5}';
+                pattern '[0-9a-fA-F]{2}(:[0-9a-fA-F]{2}){5}';
             }
         }
         leaf ports-count {
@@ -388,10 +388,37 @@ module control-tsn-uni {
     }
 
     // =============================================================
-    // ===  RCP Handling
+    // ===  RCPs
     // =============================================================
     // Topology Discovery Triggering
-    rpc trigger-topology-discovery {
-        description "Triggers the discovery of the topology";
+    //rpc rpc-trigger-topology-discovery {
+    //    description "Triggers the discovery of the topology";
+    //}
+    //rpc rpc-generic {
+    //    description "A generic RPC to use the plugin as a middleware";     
+    //}
+
+    // =============================================================
+    // ===  Notifications
+    // =============================================================
+    //notification notif-topology-discovery-requested {
+    //    description "The discovery of the topology was requested";
+    //}
+
+    notification notif-generic {
+        description "A generic notification including the corresponding event ID";
+
+        leaf event-id {
+            type uint32;
+            description "Describing the occured event (see 'events_definitions.h' for the list of events)";
+        }
+        leaf entry-id {
+            type string;
+            description "Can be used to describe the corresponding entry associated with this event";
+        }
+        leaf msg {
+            type string;
+            description "A generic message associated with this event";
+        }
     }
 }

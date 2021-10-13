@@ -29,9 +29,20 @@ module_init(TSN_Module *this_module)
 
         // Setting the generic callback method
         sysrepo_init_callback(this_module->cb_event);
+
+        // Start listening to notifications
+        ret = sysrepo_start_listening();
     }
 
     return ret;
+}
+
+int 
+module_shutdown()
+{
+    // Disconnect from sysrepo connection and stop listening
+    int rc = sysrepo_disconnect();
+    return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
 int

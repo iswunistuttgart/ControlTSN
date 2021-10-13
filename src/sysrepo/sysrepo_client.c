@@ -38,6 +38,24 @@ sysrepo_connect()
     return EXIT_SUCCESS;
 }
 
+int 
+sysrepo_disconnect()
+{
+    rc = sysrepo_stop_listening();
+    if (rc == EXIT_SUCCESS) {
+        printf("[SYSREPO] Successfully stopped listening!\n");
+    }
+
+    rc = sr_disconnect(connection);
+    if (rc == EXIT_SUCCESS) {
+        printf("[SYSREPO] Successfully disconneted!\n");
+        return EXIT_SUCCESS;
+    }
+
+    printf("[SYSREPO] Failure while disconnecting!\n");
+    return EXIT_FAILURE;
+}
+
 // -------------------------------------------------------- //
 //  Callbacks
 // -------------------------------------------------------- //
@@ -46,6 +64,29 @@ sysrepo_init_callback(void (*cb_event)(TSN_Event_CB_Data))
 {
     _cb_event = cb_event;
 }
+
+int 
+sysrepo_send_notification(uint32_t event_id, char *entry_id, char *msg)
+{
+    sr_val_t notif_values[3];
+    notif_values[0].xpath = strdup("/control-tsn-uni:notif-generic/event-id");
+    notif_values[0].type = SR_UINT32_T;
+    notif_values[0].data.uint32_val = event_id;
+    notif_values[1].xpath = strdup("/control-tsn-uni:notif-generic/entry-id");
+    notif_values[1].type = SR_STRING_T;
+    notif_values[1].data.string_val = entry_id;
+    notif_values[2].xpath = strdup("/control-tsn-uni:notif-generic/msg");
+    notif_values[2].type = SR_STRING_T;
+    notif_values[2].data.string_val = msg;
+
+    rc = sr_event_notif_send(session, "/control-tsn-uni:notif-generic", notif_values, 3);
+    if (rc != SR_ERR_OK) {
+        printf("[SYSREPO] Failure while sending notification for event id %d!\n", event_id);
+    }
+
+    return rc ? EXIT_FAILURE : EXIT_SUCCESS;
+}
+
 
 /*
 void
@@ -70,48 +111,49 @@ static void
 _notif_listener_cb(sr_session_ctx_t *session, const sr_ev_notif_type_t notif_type, const char *path, const sr_val_t *values,
         const size_t values_cnt, time_t timestamp, void *private_data)
 {
-    // ...
-}
-
-int 
-sysrepo_disconnect()
-{
-    rc = sr_disconnect(connection);
-
-    if (rc) {
-        printf("[SYSREPO] Failure while disconnecting!\n");
-        return EXIT_FAILURE;
+    if (!_cb_event) {
+        return;
     }
 
-    printf("[SYSREPO] Disconnected\n");
-    return EXIT_SUCCESS;
+    // Creating the event data
+    TSN_Event_CB_Data event_data = {
+        .event_id = values[0].data.uint32_val,
+        .entry_id = values[1].data.string_val,
+        .msg = values[2].data.string_val
+    };
+
+    // Calling the callback function
+    _cb_event(event_data);
 }
 
-/*
 int
 sysrepo_start_listening()
 {
+    // Subscribe to notifications
     rc = sr_event_notif_subscribe(session, "control-tsn-uni", NULL, 0, 0, _notif_listener_cb, NULL, 0, &subscription);
-    
     if (rc != SR_ERR_OK) {
-        sr_disconnect(connection);
-        return EXIT_FAILURE;
-    }
-    return EXIT_SUCCESS;
+        printf("[SYSREPO] Failure while subscribing to notifications!\n");
+    } 
+
+    return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
-int
+int 
 sysrepo_stop_listening()
 {
-    rc = sr_unsubscribe(subscription);
-
-    if (rc != SR_ERR_OK) {
-        sr_disconnect(connection);
+    if (subscription == NULL) {
+        printf("[SYSREPO] No subscriptions to unsubscribe!\n");
         return EXIT_FAILURE;
     }
-    return EXIT_SUCCESS;
+
+    // Unsubscribe from notifications
+    rc = sr_unsubscribe(subscription);
+    if (rc != SR_ERR_OK) {
+        printf("[SYSREPO] Failure while unsubscribing from notifications!\n");
+    }
+
+    return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }
-*/
 
 
 // -------------------------------------------------------- //
@@ -1753,12 +1795,16 @@ _read_enddevice(char *xpath, TSN_Enddevice **enddevice)
     (*enddevice)->mac = strdup(val_mac->data.string_val);
 
     // App Ref
-    _create_xpath(xpath, "/appn-ref", &xpath_app_ref);
+    _create_xpath(xpath, "/app-ref", &xpath_app_ref);
     rc = sr_get_item(session, xpath_app_ref, 0, &val_app_ref);
-    if (rc != SR_ERR_OK) {
-        goto cleanup;
+    // Commented out because the app-ref is optional
+    //if (rc != SR_ERR_OK) {
+    //    goto cleanup;
+    //}
+    //(*enddevice)->app_ref = strdup(val_app_ref->data.string_val);
+    if (rc == SR_ERR_OK) {
+        (*enddevice)->app_ref = strdup(val_app_ref->data.string_val);
     }
-    (*enddevice)->app_ref = strdup(val_app_ref->data.string_val);
 
 cleanup:
     sr_free_val(val_mac);
@@ -1977,6 +2023,102 @@ _read_topology(char *xpath, TSN_Topology **topology)
     }
     (*topology)->graph = *graph;
     
+cleanup:
+    free(xpath_devices);
+    free(xpath_graph);
+
+    return rc;
+}
+
+static int
+_write_enddevice(char *xpath, TSN_Enddevice *enddevice)
+{
+    int rc = SR_ERR_OK;
+    char *xpath_mac = NULL;
+    char *xpath_app_ref = NULL;
+    
+    // Mac
+    _create_xpath(xpath, "/mac", &xpath_mac);
+    rc = sr_set_item_str(session, xpath_mac, enddevice->mac, NULL, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+    // App Ref
+    if (enddevice->app_ref) {
+        _create_xpath(xpath, "/app-ref", &xpath_app_ref);
+        rc = sr_set_item_str(session, xpath_app_ref, enddevice->app_ref, NULL, 0);
+        if (rc != SR_ERR_OK) {
+            goto cleanup;
+        }
+    }
+
+    // Apply the changes
+    rc = sr_apply_changes(session, 0, 1);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+cleanup:
+    free(xpath_mac);
+    free(xpath_app_ref);
+
+    return rc;
+}
+
+static int
+_write_devices(char *xpath, TSN_Devices *devices)
+{
+    int rc = SR_ERR_OK;
+    char *xpath_enddevices = NULL;
+    char *xpath_switches = NULL;
+    
+    // Write Enddevices
+    _create_xpath(xpath, "/enddevices/enddevice[mac='%s']", &xpath_enddevices);
+    for (int i=0; i<devices->count_enddevices; ++i) {
+        TSN_Enddevice *ed = &(devices->enddevices[i]);
+        char *xpath_entry = NULL;
+        _create_xpath_key(xpath_enddevices, ed->mac, &xpath_entry);
+        rc = _write_enddevice(xpath_entry, ed);
+        free(xpath_entry);
+        if (rc != SR_ERR_OK) {
+            goto cleanup;
+        }
+    }
+
+    // Write Switches
+    
+
+    // Apply the changes
+    rc = sr_apply_changes(session, 0, 1);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+cleanup:
+    free(xpath_enddevices);
+    free(xpath_switches);
+
+    return rc;
+}
+
+static int
+_write_topology(char *xpath, TSN_Topology *topology)
+{
+    int rc = SR_ERR_OK;
+    char *xpath_devices = NULL;
+    char *xpath_graph = NULL;
+
+    // Write Devices
+    _create_xpath(xpath, "/devices", &xpath_devices);
+    rc = _write_devices(xpath_devices, &(topology->devices));
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+
+    // Write Graph
+
 cleanup:
     free(xpath_devices);
     free(xpath_graph);
@@ -2566,6 +2708,18 @@ cleanup:
 }
 
 int 
+sysrepo_set_topology(TSN_Topology *topology)
+{
+    rc = _write_topology("/control-tsn-uni:tsn-uni/topology", topology);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+cleanup:
+    return rc ? EXIT_FAILURE : EXIT_SUCCESS;
+}
+
+int 
 sysrepo_get_all_devices(TSN_Devices **devices)
 {
     rc = _read_devices("/control-tsn-uni:tsn-uni/topology/devices", devices);
@@ -2589,6 +2743,7 @@ cleanup:
     return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
+/*      NOT NEEDED ANYMORE?! --> switched to generic notif in yang and a single (generic) send notif function
 int 
 sysrepo_trigger_topology_discovery()
 {
@@ -2597,12 +2752,23 @@ sysrepo_trigger_topology_discovery()
     char *xpath_rpc_trigger_topology_discovery = NULL;
 
     // Send the RPC
+    
     size_t ouput_count = 0;
-    xpath_rpc_trigger_topology_discovery = strdup("/control-tsn-uni:trigger-topology-discovery");
+    xpath_rpc_trigger_topology_discovery = strdup("/control-tsn-uni:rpc-trigger-topology-discovery");
     rc = sr_rpc_send(session, xpath_rpc_trigger_topology_discovery, NULL, 0, 0, &output, &ouput_count);
     if (rc != SR_ERR_OK) {
         goto cleanup;
     }
+    
+
+    
+    // TEEEEEEEEEEEEEEST
+    rc = sr_event_notif_send(session, "/control-tsn-uni:notif-topology-discovery-requested", NULL, 0);
+    printf("[SYSREPO] Sending notification 'notif-topology-discovery-requested'... \n");
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    
 
 cleanup:
     sr_free_val(output);
@@ -2610,6 +2776,7 @@ cleanup:
 
     return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }
+*/
 
 // -------------------------------------------------------- //
 //  Application handling

@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include <ulfius.h>
 #include <signal.h>
+#include <string.h>
 
 #include "../../common.h"
+#include "../../events_definitions.h"
 #include "module_rest.h"
 #include "json_serializer.h"
 
@@ -24,12 +26,16 @@ signal_handler(int signum)
 // Callback handler
 // ------------------------------------
 static void
-_cb_event(int event_id, TSN_Event_CB_Data data)
+_cb_event(TSN_Event_CB_Data data)
 {
-    printf("[REST] Triggered callback for event ID %d\n", event_id);
+    printf("[REST] Triggered callback for event ID %d\n", data.event_id);
     
-    if (event_id == EVENT_ERROR) {
-        printf("[REST][CB] ERROR: Code %d - '%s'\n", data.error.error_code, data.error.error_msg);
+    if (data.event_id == EVENT_ERROR) {
+        //printf("[REST][CB] ERROR: Code %d - '%s'\n", data.error.error_code, data.error.error_msg);
+        printf("[REST][CB] ERROR: %s\n", data.msg);
+    }
+    else if (data.event_id == EVENT_TOPOLOGY_DISCOVERY_REQUESTED) {
+        printf("[REST][CB] Topology discovery requested!\n");
     }
 
     return;
@@ -76,6 +82,9 @@ _api_index_get(const struct _u_request *request, struct _u_response *response, v
                        "<tr><td><a href='/application/images'>/application/images</a></td><td>GET</td><td>Get all stored images</td></tr>" \
                        "<tr><td><a href='/application/apps/:id/start'>/application/apps/:id/start</a></td><td>POST</td><td>Start a specific app</td></tr>" \
                        "<tr><td><a href='/application/apps/:id/stop'>/application/apps/:id/stop</a></td><td>POST</td><td>Stop a specific app</td></tr>" \
+                       // TEST
+                       "<tr><th style='text-align: left;'>JUST TESTING</th></tr>" \
+                       "<tr><td><a href='/testing/add_enddevice'>/testing/add_enddevice</a></td><td>GET</td><td>TESTING: Add a dummy enddevice</td></tr>" \
                        "</table></html>";
     ulfius_set_string_body_response(response, 200, resp);
 
@@ -348,7 +357,7 @@ _api_topology_graph_get(const struct _u_request *request, struct _u_response *re
 static int
 _api_topology_discover(const struct _u_request *request, struct _u_response *response, void *user_data)
 {
-    rc = sysrepo_trigger_topology_discovery();
+    rc = sysrepo_send_notification(EVENT_TOPOLOGY_DISCOVERY_REQUESTED, NULL, NULL);
     if (rc == EXIT_FAILURE) {
         return U_CALLBACK_ERROR;
     }
@@ -411,6 +420,34 @@ _api_application_images_get(const struct _u_request *request, struct _u_response
 }
 
 
+
+// ------------------------------------
+// TESTING
+// ------------------------------------
+static int
+_api_testing_add_enddevice(const struct _u_request *request, struct _u_response *response, void *user_data)
+{
+    TSN_Enddevice e = {
+        .mac = strdup("00:00:00:00:00:01"),
+        .app_ref = NULL
+    };
+    TSN_Devices d;
+    d.count_enddevices = 1;
+    d.enddevices[0] = e;
+    TSN_Topology t;
+    t.devices = d;
+
+    rc = sysrepo_set_topology(&t);
+    if (rc == EXIT_FAILURE) {
+        printf("FEHLER BEIM SCHREIBEN DER TOPOLOGY!\n");
+        return U_CALLBACK_ERROR;
+    }
+
+
+    return U_CALLBACK_COMPLETE;
+}
+
+
 // ------------------------------------
 // Server initialization
 // ------------------------------------
@@ -447,6 +484,11 @@ _init_server()
     ulfius_add_endpoint_by_val(&server_instance, "GET", API_PREFIX, API_APPLICATION_APPS,   0, &_api_application_apps_get,      NULL);
     ulfius_add_endpoint_by_val(&server_instance, "GET", API_PREFIX, API_APPLICATION_IMAGES, 0, &_api_application_images_get,    NULL);
     
+
+    // JUST TESTING
+    ulfius_add_endpoint_by_val(&server_instance, "GET", API_PREFIX, "/testing/add_enddevice", 0, &_api_testing_add_enddevice,    NULL);
+
+
     // Default
     ulfius_set_default_endpoint(&server_instance, &_api_index_get, NULL);
 }
@@ -465,7 +507,7 @@ main(void)
     this_module.name = "REST";
     this_module.description = "Exposes a REST API to interact with the framework";
     this_module.path = "./RESTModule";
-    this_module.subscribed_events_mask = (EVENT_ERROR);
+    this_module.subscribed_events_mask = (EVENT_ERROR | EVENT_TOPOLOGY_DISCOVERY_REQUESTED);
     this_module.cb_event = _cb_event;
     
     rc = module_init(&this_module);
@@ -504,6 +546,10 @@ main(void)
 
 cleanup:
     ulfius_clean_instance(&server_instance);
+    rc = module_shutdown();
+    if (rc == EXIT_FAILURE) {
+        printf("[REST] Error shutting down the module!\n");
+    }
 
     return rc;    
 }

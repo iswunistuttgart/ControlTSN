@@ -12,22 +12,16 @@
 // -------------------------------------------------------- //
 int sysrepo_connect();
 int sysrepo_disconnect();
-//int sysrepo_start_listening();
-//int sysrepo_stop_listening();
+int sysrepo_start_listening();
+int sysrepo_stop_listening();
 //int sysrepo_save_to_startup();
 
 // -------------------------------------------------------- //
 //  Callbacks
 // -------------------------------------------------------- //
 void sysrepo_init_callback(void (*cb_event)(TSN_Event_CB_Data));
-/*
-void sysrepo_init_callbacks(
-    void (*cb_stream_requested)(TSN_Stream *),
-    void (*cb_stream_configured)(TSN_Stream *),
-    // ...
-    void (*cb_error)()
-);
-*/
+int sysrepo_send_notification(uint32_t event_id, char *entry_id, char *msg);
+
 
 // -------------------------------------------------------- //
 //  Module handling
@@ -133,6 +127,12 @@ int sysrepo_get_all_streams(TSN_Streams **streams);
  */
 int sysrepo_get_topology(TSN_Topology **topology);
 /**
+ * @brief Writes the topology to the datastore.
+ * @param topology The struct containing the devices and connections
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+ */
+int sysrepo_set_topology(TSN_Topology *topology);
+/**
  * @brief Returns all stored devices.
  * @param devices The struct to write on
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
@@ -148,7 +148,6 @@ int sysrepo_get_topology_graph(TSN_Graph **graph);
  * @brief Triggers the discovery of the topology by setting the corresponding flag in the datastore.
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
-int sysrepo_trigger_topology_discovery();
 
 // -------------------------------------------------------- //
 // Application handling

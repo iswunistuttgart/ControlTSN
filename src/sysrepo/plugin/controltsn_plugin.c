@@ -20,15 +20,30 @@ sr_subscription_ctx_t *subscriptions;
 //  Module Change Callback
 // -------------------------------------------------------- //
 static int
-_module_change_cb(sr_session_ctx_t *session, uint32_t sub_id, const char *module_name, const char *xpath,
-                  sr_event_t event, uint32_t request_id, void *private_data)
+_module_change_cb(sr_session_ctx_t *session, const char *module_name, const char *xpath, sr_event_t event,
+                  uint32_t request_id, void *private_data)
 {
-    return SR_ERR_OK;
+    (void) module_name;
+    (void) request_id;
+    (void) private_data;
+
+    int rc = SR_ERR_OK;
+
+    sr_val_t *val = NULL;
+    sr_change_iter_t *iter = NULL;
+    sr_change_oper_t op;
+
+    // Monitor changes and send corresponding notifications
+    printf("[PLUGIN] %s\n", xpath);
+
+cleanup:
+    return rc;
 }
 
 // -------------------------------------------------------- //
 //  RPC Callbacks
 // -------------------------------------------------------- //
+/*
 static int
 _rpc_trigger_topology_discovery_cb(sr_session_ctx_t *session, uint32_t sub_id, const char *path, const sr_val_t *input, const size_t input_cnt,
                                    sr_event_t event, uint32_t request_id, sr_val_t **output, size_t *output_cnt, void *private_data)
@@ -46,8 +61,10 @@ _rpc_trigger_topology_discovery_cb(sr_session_ctx_t *session, uint32_t sub_id, c
 
     // TODO Send Notification 
 
+
     return SR_ERR_OK;
 }
+*/
 
 
 // -------------------------------------------------------- //
@@ -67,13 +84,14 @@ sr_plugin_init_cb(sr_session_ctx_t *session, void **private_data)
         goto error;
     }
 
+    /*
     // Subscribe for RPC: trigger topology discovery
-    rc = sr_rpc_subscribe(session, "/control-tsn-uni:trigger-topology-discovery", _rpc_trigger_topology_discovery_cb, NULL, 0, SR_SUBSCR_CTX_REUSE, &subscriptions);
+    rc = sr_rpc_subscribe(session, "/control-tsn-uni:rpc-trigger-topology-discovery", _rpc_trigger_topology_discovery_cb, NULL, 0, SR_SUBSCR_CTX_REUSE, &subscriptions);
     if (rc != SR_ERR_OK) {
         printf("[PLUGIN] Error subscribing for RPC 'trigger-topology-discovery'!\n");
         goto error;
     }
-
+    */
 
     printf("[PLUGIN] Plugin successfully initialized!\n");
     return SR_ERR_OK;

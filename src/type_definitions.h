@@ -3,45 +3,8 @@
 
 #include <stdint.h>
 #include "ieee802_tsn_types.h"
+#include "events_definitions.h"
 #include "sysrepo.h"
-
-// ----------------------------------------------
-// Event handling
-// ----------------------------------------------
-/**
- * @brief Data for the event of a requested stream
- */
-typedef struct TSN_Event_Data_Stream_Requested
-{
-    char *stream_id;
-} TSN_Event_Data_Stream_Requested;
-
-/**
- * @brief Data for the event of a configured stream
- */
-typedef struct TSN_Event_Data_Stream_Configured
-{
-    char *stream_id;
-} TSN_Event_Data_Stream_Configured;
-
-/**
- * @brief Data for the event of an occured error
- */
-typedef struct TSN_Event_Data_Error
-{
-    int error_code;
-    char *error_msg;
-} TSN_Event_Data_Error;
-
-/**
- * @brief Union containing the data for the various events
- */
-typedef union TSN_Event_CB_Data
-{
-    TSN_Event_Data_Stream_Requested stream_requested;
-    TSN_Event_Data_Stream_Configured stream_configured;
-    TSN_Event_Data_Error error;
-} TSN_Event_CB_Data;
 
 // ---------------------------------------
 // Stream definitions
@@ -202,8 +165,8 @@ typedef struct TSN_Module
     char *path;         // Path to the modules executable       (???)
     char *name;         // Module Name
     char *description;  // Module Description
-    uint16_t subscribed_events_mask;     // Mask describing the relevant events for this module
-    void (*cb_event)(int event_id, TSN_Event_CB_Data data);     // Generic callback method for events
+    uint32_t subscribed_events_mask;     // Mask describing the relevant events for this module
+    void (*cb_event)(TSN_Event_CB_Data data);     // Generic callback method for events
     TSN_Module_Data data;
 } TSN_Module;
 

@@ -2,6 +2,7 @@
 #include <signal.h>
 
 #include "../../common.h"
+#include "../../events_definitions.h"
 #include "module_cuc.h"
 
 int rc;
@@ -20,12 +21,15 @@ signal_handler(int signum)
 // Callback handler
 // ------------------------------------
 static void
-_cb_event(int event_id, TSN_Event_CB_Data data)
+_cb_event(TSN_Event_CB_Data data)
 {
-    printf("[CUC] Triggered callback for event ID %d\n", event_id);
-
-    if (event_id == EVENT_ERROR) {
-        printf("[CUC][CB] ERROR: Code %d - '%s'\n", data.error.error_code, data.error.error_msg);
+    printf("[CUC] Triggered callback for event ID %d\n", data.event_id);
+    
+    if (data.event_id == EVENT_ERROR) {
+        printf("[CUC][CB] ERROR: %s\n", data.msg);
+    }
+    else if (data.event_id == EVENT_TOPOLOGY_DISCOVERY_REQUESTED) {
+        printf("[CUC][CB] Topology discovery requested!\n");
     }
 
     return;
@@ -51,7 +55,7 @@ main(void)
     this_module.name = "CUC";
     this_module.description = "Represents the Central User Controller in the network based on the central configuration approach of TSN";
     this_module.path ="./CUCModule";
-    this_module.subscribed_events_mask = (EVENT_ERROR);
+    this_module.subscribed_events_mask = (EVENT_ERROR | EVENT_TOPOLOGY_DISCOVERY_REQUESTED);
     this_module.cb_event = _cb_event;
 
     rc = module_init(&this_module);
@@ -59,6 +63,8 @@ main(void)
         printf("[CUC] Error initializing module!\n");
         goto cleanup;
     }
+
+    printf("[CUC] CUC module successfully started and running\n");
 
     // Keep running
     while (is_running) {
@@ -68,5 +74,10 @@ main(void)
     printf("[CUC] Stopping the module...\n");
     
 cleanup:
+    rc = module_shutdown();
+    if (rc == EXIT_FAILURE) {
+        printf("[REST] Error shutting down the module!\n");
+    }
+
     return rc;
 }

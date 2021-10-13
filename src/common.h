@@ -6,34 +6,7 @@
 #include "sysrepo/sysrepo_client.h"
 
 
-// ----------------------------------------------
-//      EVENTS
-// ----------------------------------------------
-#define EVENT_ERROR                 0x00000001
-// Stream related   
-#define EVENT_STREAM_REQUESTED      0x00000002
-#define EVENT_STREAM_CONFIGURED     0x00000004
-//#define ...                       0x00000008
-//#define ...                       0x00000010
-//#define ...                       0x00000020
-//#define ...                       0x00000040
-// Enddevice related    
-//#define ...                       0x00000080
-//#define ...                       0x00000100
-//#define ...                       0x00000200
-//#define ...                       0x00000400
-//#define ...                       0x00000800
-//#define ...                       0x00001000
-// Modules related  
-#define EVENT_MODULE_ADDED          0x00002000
-#define EVENT_MODULE_REGISTERED     0x00004000
-#define EVENT_MODULE_DATA_UPDATED   0x00008000
-#define EVENT_MODULE_UNREGISTERED   0x00010000
-#define EVENT_MODULE_DELETED        0x00020000
-//#define ...                       0x00040000
-// .
-// .
-// .
+
 
 
 
@@ -48,6 +21,12 @@
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
 int module_init(TSN_Module *this_module);
+
+/**
+ * @brief Shutdown the module by disconnecting from sysrepo and stopping the subscription of notification.
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+ */
+int module_shutdown();
 
 /**
  * @brief Registers a module in the core.
@@ -117,6 +96,7 @@ int module_start(int module_id);
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
 int module_stop(int module_id);
+
 
 /**
  * @brief Writes the module specific data to the corresponding place in the sysrepo.
