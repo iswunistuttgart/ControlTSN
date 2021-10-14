@@ -46,9 +46,9 @@ module_shutdown()
 }
 
 int
-module_register(int module_id)
+module_register(int module_id, uint32_t adjusted_subscribed_events_mask)
 {
-    ret = sysrepo_register_module(module_id);
+    ret = sysrepo_register_module(module_id, adjusted_subscribed_events_mask);
     return ret;
 }
 
@@ -230,38 +230,6 @@ application_get_images(TSN_Images **images)
     ret = sysrepo_get_application_images(images);
     return ret;
 }
-
-
-// ----------------------------------------------
-//      FUNCTIONS - Other/Helpers
-// ----------------------------------------------
-
-void
-print_module_data(TSN_Module_Data data)
-{
-    for (int i=0; i<data.count_entries; ++i) {
-        char *type_str = data_type_to_string(data.entries[i].type);
-        char *val_str = data_value_to_string(data.entries[i]);
-        printf("   %s (%s): %s\n", data.entries[i].name, type_str, val_str);
-    }
-}
-
-void
-print_module(TSN_Module module) {
-    printf("----- MODULE -----\n");
-    printf("Name:           %s\n", module.name);
-    printf("Description:    %s\n", module.description);
-    printf("ID:             %d\n", module.id);
-    printf("P_ID:           %d\n", module.p_id);
-    printf("Path:           %s\n", module.path);
-    printf("Events Mask:    %d\n", module.subscribed_events_mask);
-    printf("Data:\n");
-    print_module_data(module.data);
-    printf("\n");
-}
-
-
-
 
 
 

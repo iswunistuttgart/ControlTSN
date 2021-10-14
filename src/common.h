@@ -6,10 +6,6 @@
 #include "sysrepo/sysrepo_client.h"
 
 
-
-
-
-
 // ----------------------------------------------
 //      FUNCTIONS - Module-Handling
 // ----------------------------------------------
@@ -31,9 +27,10 @@ int module_shutdown();
 /**
  * @brief Registers a module in the core.
  * @param module_id The id of the module to register
+ * @param adjusted_subscribed_events_mask If > -1 this mask will be used instead of the stored one from the list of available modules. 
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
-int module_register(int module_id);
+int module_register(int module_id, uint32_t adjusted_subscribed_events_mask);
 
 /**
  * @brief Unregisters a module from the core. Before that the function stops the module if necessary.
@@ -174,23 +171,5 @@ int application_get_apps(TSN_Apps **apps);
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
 int application_get_images(TSN_Images **images);
-
-
-// ----------------------------------------------
-//      FUNCTIONS - Other/Helpers
-// ----------------------------------------------
-
-/**
- * @brief Prints the data of a module to the console.
- * @param module The data of the module to print
- */
-void print_module_data(TSN_Module_Data data);
-
-/**
- * @brief Prints a module to the console.
- * @param module The module struct to print
- */
-void print_module(TSN_Module module);
-
 
 #endif // __COMMON_H__

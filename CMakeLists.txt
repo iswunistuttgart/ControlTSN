@@ -7,7 +7,7 @@ project(ControlTSN_2)
 #set(CMAKE_CXX_EXTENSIONS ON)
 #add_compile_options(-fms-extensions)
 
-add_library(common SHARED src/common.c src/sysrepo/sysrepo_client.c src/type_definitions.c)
+add_library(common SHARED src/common.c src/sysrepo/sysrepo_client.c src/type_definitions.c src/logger.c)
 target_link_libraries(common sysrepo)
 
 

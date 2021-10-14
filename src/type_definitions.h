@@ -209,7 +209,7 @@ typedef struct TSN_Devices {
 } TSN_Devices;
 
 typedef struct TSN_Connection {
-    uint16_t id;
+    uint16_t id;        // simple counter
     char *from_mac;
     uint8_t from_port;
     char *to_mac;

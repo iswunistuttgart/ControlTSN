@@ -197,7 +197,7 @@ module control-tsn-uni {
 
     grouping connection {
         leaf id {
-            type uint8;
+            type uint16;
         }
         leaf from-mac {
             type string;

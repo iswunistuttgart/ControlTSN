@@ -40,9 +40,10 @@ int sysrepo_add_or_get_module(TSN_Module **module);
  * That means on the next ramp up it will be automatically started. 
  * Before that the function checks if the module is already registered.
  * @param module_id The id of the module to register (use the id stored under all-modules)
+ * @param adjusted_subscribed_events_mask If > -1 this mask will be used to write the module to the list of registered ones
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
-int sysrepo_register_module(int module_id);
+int sysrepo_register_module(int module_id, uint32_t adjusted_subscribed_events_mask);
 
 /**
  * @brief Unregisters a module by removing it from the list of registered modules in the datastore.

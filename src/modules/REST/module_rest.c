@@ -62,7 +62,7 @@ _api_index_get(const struct _u_request *request, struct _u_response *response, v
                        "<tr><td><a href='/modules/1/start'>/modules/:id/start</a></td><td>POST</td><td>Start a specific module</td></tr>" \
                        "<tr><td><a href='/modules/1/stop'>/modules/:id/stop</a></td><td>POST</td><td>Stop a specific module</td></tr>" \
                        "<tr><td><a href='/modules/1/delete'>/modules/:id/delete</a></td><td>POST</td><td>Delete a specific module</td></tr>" \
-                       "<tr><td><a href='/modules/1/register'>/modules/:id/register</a></td><td>POST</td><td>Register a specific module</td></tr>" \
+                       "<tr><td><a href='/modules/1/register'>/modules/:id/register</a></td><td>POST</td><td>Register a specific module (POST param 'mask' to adjust the subscribed events)</td></tr>" \
                        "<tr><td><a href='/modules/1/unregister'>/modules/:id/unregister</a></td><td>POST</td><td>Unregister a specific module</td></tr>" \
                        "<tr><td><a href='/modules/1/data'>/modules/:id/data</a></td><td>GET</td><td>Get the data of a specific module</td></tr>" \
                        // Topology
@@ -84,7 +84,8 @@ _api_index_get(const struct _u_request *request, struct _u_response *response, v
                        "<tr><td><a href='/application/apps/:id/stop'>/application/apps/:id/stop</a></td><td>POST</td><td>Stop a specific app</td></tr>" \
                        // TEST
                        "<tr><th style='text-align: left;'>JUST TESTING</th></tr>" \
-                       "<tr><td><a href='/testing/add_enddevice'>/testing/add_enddevice</a></td><td>GET</td><td>TESTING: Add a dummy enddevice</td></tr>" \
+                       "<tr><td><a href='/testing/set_topology'>/testing/set_topology</a></td><td>GET</td><td>TESTING: Set the topology</td></tr>" \
+                       "<tr><td><a href='/testing/remove_topology'>/testing/remove_topology</a></td><td>GET</td><td>TESTING: Remove the topology</td></tr>" \
                        "</table></html>";
     ulfius_set_string_body_response(response, 200, resp);
 
@@ -224,7 +225,14 @@ _api_modules_register(const struct _u_request *request, struct _u_response *resp
         return U_CALLBACK_ERROR;
     }
 
-    rc = module_register(module_id);
+    // Adjusting the subscribed events mask in the post parameters
+    const char *adjusted_mask_param = u_map_get(request->map_post_body, "mask");
+    int adjusted_mask = -1;
+    if (adjusted_mask_param) {
+        adjusted_mask = atoi(adjusted_mask_param);
+    }
+
+    rc = module_register(module_id, adjusted_mask);
     if (rc == EXIT_FAILURE) {
         return U_CALLBACK_ERROR;
     }
@@ -425,24 +433,81 @@ _api_application_images_get(const struct _u_request *request, struct _u_response
 // TESTING
 // ------------------------------------
 static int
-_api_testing_add_enddevice(const struct _u_request *request, struct _u_response *response, void *user_data)
+_api_testing_set_topology(const struct _u_request *request, struct _u_response *response, void *user_data)
 {
-    TSN_Enddevice e = {
-        .mac = strdup("00:00:00:00:00:01"),
-        .app_ref = NULL
-    };
-    TSN_Devices d;
-    d.count_enddevices = 1;
-    d.enddevices[0] = e;
-    TSN_Topology t;
-    t.devices = d;
+    TSN_Enddevice *e1 = NULL;
+    TSN_Enddevice *e2 = NULL;
+    TSN_Switch *s1 = NULL;
+    TSN_Devices *d = NULL;
+    TSN_Connection *c1 = NULL;
+    TSN_Connection *c2 = NULL;
+    TSN_Graph *g = NULL;
+    TSN_Topology *t = NULL;
 
-    rc = sysrepo_set_topology(&t);
+    // 2 Enddevices
+    e1 = malloc(sizeof(TSN_Enddevice));
+    e1->mac = strdup("00:00:00:00:00:01");
+    e1->app_ref = NULL;
+    e2 = malloc(sizeof(TSN_Enddevice));
+    e2->mac = strdup("00:00:00:00:00:02");
+    e2->app_ref = NULL;
+
+    // 1 Switch
+    s1 = malloc(sizeof(TSN_Switch));
+    s1->mac = strdup("01:02:03:04:05:06");
+    s1->ports_count = 2;
+
+    d = malloc(sizeof(TSN_Devices));
+    d->count_enddevices = 2;
+    d->enddevices = (TSN_Enddevice *) malloc(sizeof(TSN_Enddevice) * d->count_enddevices);
+    d->enddevices[0] = *e1;
+    d->enddevices[1] = *e2;
+    d->count_switches = 1;
+    d->switches[0] = *s1;
+
+    // 2 Connections (the two enddevices are connected through the switch)
+    c1 = malloc(sizeof(TSN_Connection));
+    c1->id = 1;
+    c1->from_mac = e1->mac;
+    c1->from_port = 1;
+    c1->to_mac = s1->mac;
+    c1->to_port = 1;
+    c2 = malloc(sizeof(TSN_Connection));
+    c2->id = 2;
+    c2->from_mac = s1->mac;
+    c2->from_port = 2;
+    c2->to_mac = e2->mac;
+    c2->to_port = 1;
+
+    g = malloc(sizeof(TSN_Graph));
+    g->count_connections = 2;
+    g->connections = (TSN_Connection *) malloc(sizeof(TSN_Connection) * g->count_connections);
+    g->connections[0] = *c1;
+    g->connections[1] = *c2;
+
+    t = malloc(sizeof(TSN_Topology));
+    t->devices = *d;
+    t->graph = *g;
+
+
+    rc = sysrepo_set_topology(t);
+    if (rc == EXIT_FAILURE) {
+        printf("FEHLER BEIM SCHREIBEN DER TOPOLOGY!\n");
+        goto cleanup;
+    }
+
+cleanup:
+    return rc ? U_CALLBACK_ERROR : U_CALLBACK_COMPLETE;
+}
+
+static int
+_api_testing_remove_topology(const struct _u_request *request, struct _u_response *response, void *user_data)
+{
+    rc = sysrepo_set_topology(NULL);
     if (rc == EXIT_FAILURE) {
         printf("FEHLER BEIM SCHREIBEN DER TOPOLOGY!\n");
         return U_CALLBACK_ERROR;
     }
-
 
     return U_CALLBACK_COMPLETE;
 }
@@ -469,7 +534,7 @@ _init_server()
     ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_MODULES_ID_START,       0, &_api_modules_start,             NULL);
     ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_MODULES_ID_STOP,        0, &_api_modules_stop,              NULL);
     ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_MODULES_ID_DELETE,      0, &_api_modules_delete,            NULL);
-    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_MODULES_REGISTERD_ID,   0, &_api_modules_register,          NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_MODULES_ID_REGISTER,    0, &_api_modules_register,          NULL);
     ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_MODULES_ID_UNREGISTER,  0, &_api_modules_unregister,        NULL);
     ulfius_add_endpoint_by_val(&server_instance, "GET",     API_PREFIX, API_MODULES_ID_DATA,        0, &_api_modules_get_data_id,       NULL);
     // Streams
@@ -486,7 +551,8 @@ _init_server()
     
 
     // JUST TESTING
-    ulfius_add_endpoint_by_val(&server_instance, "GET", API_PREFIX, "/testing/add_enddevice", 0, &_api_testing_add_enddevice,    NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "GET", API_PREFIX, "/testing/set_topology",    0, &_api_testing_set_topology,    NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "GET", API_PREFIX, "/testing/remove_topology", 0, &_api_testing_remove_topology, NULL);
 
 
     // Default

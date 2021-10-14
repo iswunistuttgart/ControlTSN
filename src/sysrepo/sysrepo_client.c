@@ -2,6 +2,9 @@
 #include <math.h>
 #include "sysrepo_client.h"
 
+#include "../logger.h"
+
+
 //  Sysrepo variables
 int rc; // Result
 sr_conn_ctx_t *connection = NULL;
@@ -1797,11 +1800,7 @@ _read_enddevice(char *xpath, TSN_Enddevice **enddevice)
     // App Ref
     _create_xpath(xpath, "/app-ref", &xpath_app_ref);
     rc = sr_get_item(session, xpath_app_ref, 0, &val_app_ref);
-    // Commented out because the app-ref is optional
-    //if (rc != SR_ERR_OK) {
-    //    goto cleanup;
-    //}
-    //(*enddevice)->app_ref = strdup(val_app_ref->data.string_val);
+    // App-ref is optional
     if (rc == SR_ERR_OK) {
         (*enddevice)->app_ref = strdup(val_app_ref->data.string_val);
     }
@@ -2067,6 +2066,43 @@ cleanup:
 }
 
 static int
+_write_switch(char *xpath, TSN_Switch *sw)
+{
+    int rc = SR_ERR_OK;
+    char *xpath_mac = NULL;
+    char *xpath_ports_count = NULL;
+    
+    // Mac
+    _create_xpath(xpath, "/mac", &xpath_mac);
+    rc = sr_set_item_str(session, xpath_mac, sw->mac, NULL, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+    // Ports count
+    _create_xpath(xpath, "/ports-count", &xpath_ports_count);
+    sr_val_t val_ports_count;
+    val_ports_count.type = SR_UINT8_T;
+    val_ports_count.data.uint8_val = sw->ports_count;
+    rc = sr_set_item(session, xpath_ports_count, &val_ports_count, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+    // Apply the changes
+    rc = sr_apply_changes(session, 0, 1);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+cleanup:
+    free(xpath_mac);
+    free(xpath_ports_count);
+
+    return rc;
+}
+
+static int
 _write_devices(char *xpath, TSN_Devices *devices)
 {
     int rc = SR_ERR_OK;
@@ -2087,7 +2123,17 @@ _write_devices(char *xpath, TSN_Devices *devices)
     }
 
     // Write Switches
-    
+    _create_xpath(xpath, "/switches/switch[mac='%s']", &xpath_switches);
+    for (int i=0; i<devices->count_switches; ++i) {
+        TSN_Switch *sw = &(devices->switches[i]);
+        char *xpath_entry = NULL;
+        _create_xpath_key(xpath_switches, sw->mac, &xpath_entry);
+        rc = _write_switch(xpath_entry, sw);
+        free(xpath_entry);
+        if (rc != SR_ERR_OK) {
+            goto cleanup;
+        }
+    }
 
     // Apply the changes
     rc = sr_apply_changes(session, 0, 1);
@@ -2098,6 +2144,107 @@ _write_devices(char *xpath, TSN_Devices *devices)
 cleanup:
     free(xpath_enddevices);
     free(xpath_switches);
+
+    return rc;
+}
+
+static int
+_write_connection(char *xpath, TSN_Connection *connection)
+{
+    int rc = SR_ERR_OK;
+    char *xpath_id = NULL;
+    char *xpath_from_mac = NULL;
+    char *xpath_from_port = NULL;
+    char *xpath_to_mac = NULL;
+    char *xpath_to_port = NULL;
+    
+    // ID
+    _create_xpath(xpath, "/id", &xpath_id);
+    sr_val_t val_id;
+    val_id.type = SR_UINT16_T;
+    val_id.data.uint16_val = connection->id;
+    rc = sr_set_item(session, xpath_id, &val_id, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+    // From MAC
+    _create_xpath(xpath, "/from-mac", &xpath_from_mac);
+    rc = sr_set_item_str(session, xpath_from_mac, connection->from_mac, NULL, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+    // From Port
+    _create_xpath(xpath, "/from-port", &xpath_from_port);
+    sr_val_t val_from_port;
+    val_from_port.type = SR_UINT8_T;
+    val_from_port.data.uint8_val = connection->from_port;
+    rc = sr_set_item(session, xpath_from_port, &val_from_port, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+    // To MAC
+    _create_xpath(xpath, "/to-mac", &xpath_to_mac);
+    rc = sr_set_item_str(session, xpath_to_mac, connection->to_mac, NULL, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+    // To Port
+    _create_xpath(xpath, "/to-port", &xpath_to_port);
+    sr_val_t val_to_port;
+    val_to_port.type = SR_UINT8_T;
+    val_to_port.data.uint8_val = connection->to_port;
+    rc = sr_set_item(session, xpath_to_port, &val_to_port, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+    // Apply the changes
+    rc = sr_apply_changes(session, 0, 1);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+cleanup:
+    free(xpath_id);
+    free(xpath_from_mac);
+    free(xpath_from_port);
+    free(xpath_to_mac);
+    free(xpath_to_port);
+
+    return rc;
+}
+
+static int
+_write_graph(char *xpath, TSN_Graph *graph)
+{
+    int rc = SR_ERR_OK;
+    char *xpath_connections = NULL;
+    
+    // Write Connections
+    _create_xpath(xpath, "/connections/connection[id='%d']", &xpath_connections);
+    for (int i=0; i<graph->count_connections; ++i) {
+        TSN_Connection *c = &(graph->connections[i]);
+        char *xpath_entry = NULL;
+        _create_xpath_id(xpath_connections, c->id, &xpath_entry);
+        rc = _write_connection(xpath_entry, c);
+        free(xpath_entry);
+        if (rc != SR_ERR_OK) {
+            goto cleanup;
+        }
+    }
+
+    // Apply the changes
+    rc = sr_apply_changes(session, 0, 1);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+cleanup:
+    free(xpath_connections);
 
     return rc;
 }
@@ -2116,13 +2263,36 @@ _write_topology(char *xpath, TSN_Topology *topology)
         goto cleanup;
     }
 
-
     // Write Graph
+    _create_xpath(xpath, "/graph", &xpath_graph);
+    rc = _write_graph(xpath_graph, &(topology->graph));
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
 
 cleanup:
     free(xpath_devices);
     free(xpath_graph);
 
+    return rc;
+}
+
+static int
+_remove_topology()
+{
+    int rc = SR_ERR_OK;
+
+    rc = sr_delete_item(session, "/control-tsn-uni:tsn-uni/topology", 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+    rc = sr_apply_changes(session, 0, 1);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+cleanup:
     return rc;
 }
 
@@ -2478,11 +2648,15 @@ cleanup:
 }
 
 int
-sysrepo_register_module(int module_id)
+sysrepo_register_module(int module_id, uint32_t adjusted_subscribed_events_mask)
 {
     int is_failure = 0;
-    // Get the module from the datastore
+    sr_val_t *val_module_name_check = NULL;
     char *xpath_stored_module = NULL;
+    char *xpath_module_check = NULL;
+    char *xpath_module_add = NULL;
+
+    // Get the module from the datastore
     _create_xpath_id("/control-tsn-uni:tsn-uni/modules/available-modules/mod[id='%d']", module_id, &xpath_stored_module);
     TSN_Module *stored_module = malloc(sizeof(TSN_Module));
     rc = _read_module(xpath_stored_module, &stored_module);
@@ -2492,26 +2666,28 @@ sysrepo_register_module(int module_id)
         goto cleanup;
     }
 
-    // Check if the module is already in the list of registered modules
-    char *xpath_module_check = NULL;
-    _create_xpath_id("/control-tsn-uni:tsn-uni/modules/registered-modules/mod[id='%d']/name", module_id, &xpath_module_check);
-    sr_val_t *val_module_name_check = NULL;
-    rc = sr_get_item(session, xpath_module_check, 0, &val_module_name_check);
-    if (rc == SR_ERR_OK) {
-        // A module exists already under the specified ID
-        printf("[SYSREPO] Error registering the Module. Module already exists under the specified ID!\n");
-        is_failure = 1;
-        goto cleanup;
-    }
+    if (adjusted_subscribed_events_mask < 0) {
+        // Check if the module is already in the list of registered modules
+        _create_xpath_id("/control-tsn-uni:tsn-uni/modules/registered-modules/mod[id='%d']/name", module_id, &xpath_module_check);
+        rc = sr_get_item(session, xpath_module_check, 0, &val_module_name_check);
+        if (rc == SR_ERR_OK) {
+            // A module exists already under the specified ID
+            printf("[SYSREPO] Module already exists under the specified ID and will be used!\n");
+            is_failure = 1;
+            goto cleanup;
+        }
 
-    // Otherwise add the module to the list
-    char *xpath_module_add = NULL;
-    _create_xpath_id("/control-tsn-uni:tsn-uni/modules/registered-modules/mod[id='%d']", module_id, &xpath_module_add);
-    rc = _write_module(xpath_module_add, stored_module);
-    if (rc != SR_ERR_OK) {
-        printf("[SYSREPO] Error registering the Module!\n");
-        is_failure = 1;
-        goto cleanup;
+    } else {
+        stored_module->subscribed_events_mask = adjusted_subscribed_events_mask;
+
+        // Otherwise add the module to the list
+        _create_xpath_id("/control-tsn-uni:tsn-uni/modules/registered-modules/mod[id='%d']", module_id, &xpath_module_add);
+        rc = _write_module(xpath_module_add, stored_module);
+        if (rc != SR_ERR_OK) {
+            printf("[SYSREPO] Error registering the Module!\n");
+            is_failure = 1;
+            goto cleanup;
+        }
     }
 
 cleanup:
@@ -2710,9 +2886,18 @@ cleanup:
 int 
 sysrepo_set_topology(TSN_Topology *topology)
 {
-    rc = _write_topology("/control-tsn-uni:tsn-uni/topology", topology);
+    // Clear the whole topology first
+    rc = _remove_topology();
     if (rc != SR_ERR_OK) {
         goto cleanup;
+    }
+    
+    // Write the topology
+    if (topology) {
+        rc = _write_topology("/control-tsn-uni:tsn-uni/topology", topology);
+        if (rc != SR_ERR_OK) {
+            goto cleanup;
+        }
     }
 
 cleanup:

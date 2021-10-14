@@ -8,6 +8,9 @@
  */
 
 #include <sysrepo.h>
+#include <string.h>
+
+#include "../../events_definitions.h"
 
 
 // Session
@@ -30,11 +33,38 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
     int rc = SR_ERR_OK;
 
     sr_val_t *val = NULL;
+    sr_val_t *old_val = NULL;
+    sr_val_t *new_val = NULL;
     sr_change_iter_t *iter = NULL;
     sr_change_oper_t op;
 
+    uint32_t occured_mask = 0;
+
+    rc = sr_get_changes_iter(session, "//.", &iter);
+    if (rc != SR_ERR_OK) {
+        printf("[PLUGIN] Failed to get changes!\n");
+        goto cleanup;
+    }
+
     // Monitor changes and send corresponding notifications
-    printf("[PLUGIN] %s\n", xpath);
+    while (sr_get_change_next(session, iter, &op, &old_val, &new_val) == SR_ERR_OK) {
+        val = new_val ? new_val : old_val;
+
+        printf("[PLUGIN] op: %d  |  path: %s\n", op, val->xpath);
+
+        // STREAM ---------------------------------------------------
+        if (strstr(val->xpath, "/streams/stream") != NULL) {
+            // Requested
+            if (strstr(val->xpath, "/requested/") != NULL) {
+                occured_mask |= EVENT_STREAM_REQUESTED;
+            }
+
+            // Configured
+            if (strstr(val->xpath, "/configuration/") != NULL) {
+                occured_mask |= EVENT_STREAM_CONFIGURED;
+            }
+        }
+    }
 
 cleanup:
     return rc;
