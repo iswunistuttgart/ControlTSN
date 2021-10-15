@@ -26,7 +26,7 @@ _cb_event(TSN_Event_CB_Data data)
     printf("[CUC] Triggered callback for event ID %d\n", data.event_id);
     
     if (data.event_id == EVENT_ERROR) {
-        printf("[CUC][CB] ERROR: %s\n", data.msg);
+        printf("[REST][CB] ERROR (%d): %s\n", data.entry_id, data.msg);
     }
     else if (data.event_id == EVENT_TOPOLOGY_DISCOVERY_REQUESTED) {
         printf("[CUC][CB] Topology discovery requested!\n");

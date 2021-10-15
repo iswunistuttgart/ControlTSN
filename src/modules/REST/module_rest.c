@@ -32,7 +32,7 @@ _cb_event(TSN_Event_CB_Data data)
     
     if (data.event_id == EVENT_ERROR) {
         //printf("[REST][CB] ERROR: Code %d - '%s'\n", data.error.error_code, data.error.error_msg);
-        printf("[REST][CB] ERROR: %s\n", data.msg);
+        printf("[REST][CB] ERROR (%d): %s\n", data.entry_id, data.msg);
     }
     else if (data.event_id == EVENT_TOPOLOGY_DISCOVERY_REQUESTED) {
         printf("[REST][CB] Topology discovery requested!\n");
@@ -432,6 +432,7 @@ _api_application_images_get(const struct _u_request *request, struct _u_response
 // ------------------------------------
 // TESTING
 // ------------------------------------
+
 static int
 _api_testing_set_topology(const struct _u_request *request, struct _u_response *response, void *user_data)
 {
@@ -455,7 +456,11 @@ _api_testing_set_topology(const struct _u_request *request, struct _u_response *
     // 1 Switch
     s1 = malloc(sizeof(TSN_Switch));
     s1->mac = strdup("01:02:03:04:05:06");
-    s1->ports_count = 2;
+    srand(time(NULL));
+    int test = rand() % 100;
+    printf("Random: %d\n", test);
+    s1->ports_count = test;
+    //s1->ports_count = 2;
 
     d = malloc(sizeof(TSN_Devices));
     d->count_enddevices = 2;
@@ -463,6 +468,7 @@ _api_testing_set_topology(const struct _u_request *request, struct _u_response *
     d->enddevices[0] = *e1;
     d->enddevices[1] = *e2;
     d->count_switches = 1;
+    d->switches = (TSN_Switch *) malloc(sizeof(TSN_Switch) * d->count_switches);
     d->switches[0] = *s1;
 
     // 2 Connections (the two enddevices are connected through the switch)
@@ -497,6 +503,14 @@ _api_testing_set_topology(const struct _u_request *request, struct _u_response *
     }
 
 cleanup:
+    free(e1);
+    free(e2);
+    free(s1);
+    free(d);
+    free(c1);
+    free(c2);
+    free(g);
+    free(t);
     return rc ? U_CALLBACK_ERROR : U_CALLBACK_COMPLETE;
 }
 
