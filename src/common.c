@@ -22,13 +22,13 @@ module_init(TSN_Module *this_module)
     if (this_module) {
         // Add module to the available modules
         // TODO!! This step is not necessary and should be done (e.g.) by the engineering tool
-        int rc = sysrepo_add_or_get_module(&this_module);
-        if (rc != EXIT_SUCCESS) {
-            printf("[COMMON] Module already known or error adding to the datastore!\n");
-        }
+        //int rc = sysrepo_add_or_get_module(&this_module);
+        //if (rc != EXIT_SUCCESS) {
+        //    printf("[COMMON] Module already known or error adding to the datastore!\n");
+        //}
 
         // Setting the generic callback method
-        sysrepo_init_callback(this_module->cb_event);
+        sysrepo_init_callback(this_module->subscribed_events_mask, this_module->cb_event);
 
         // Start listening to notifications
         ret = sysrepo_start_listening();

@@ -2,7 +2,7 @@
 #define __JSON_SERIALIZER_H__
 
 #include <jansson.h>
-#include "../../type_definitions.h"
+#include "../type_definitions.h"
 
 // ------------------------------------
 // Modules
@@ -26,6 +26,8 @@ json_t *serialize_devices(TSN_Devices *devices);
 json_t *serialize_connection(TSN_Connection *connection);
 json_t *serialize_graph(TSN_Graph *graph);
 json_t *serialize_topology(TSN_Topology *topology);
+
+int deserialize_topology(json_t *root, TSN_Topology **topology);
 
 // ------------------------------------
 // Application

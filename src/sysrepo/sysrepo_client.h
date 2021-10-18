@@ -19,7 +19,7 @@ int sysrepo_stop_listening();
 // -------------------------------------------------------- //
 //  Callbacks
 // -------------------------------------------------------- //
-void sysrepo_init_callback(void (*cb_event)(TSN_Event_CB_Data));
+void sysrepo_init_callback(uint32_t subscribed_events_mask, void (*cb_event)(TSN_Event_CB_Data));
 int sysrepo_send_notification(uint32_t event_id, char *entry_id, char *msg);
 
 

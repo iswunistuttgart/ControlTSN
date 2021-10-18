@@ -277,6 +277,15 @@ serialize_topology(TSN_Topology *topology)
     return root;
 }
 
+
+int
+deserialize_topology(json_t *root, TSN_Topology **topology)
+{
+    // (*topology)->devices = ...
+
+    return EXIT_SUCCESS;
+}
+
 // ------------------------------------
 // Application
 // ------------------------------------

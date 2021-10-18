@@ -11,6 +11,9 @@ sr_conn_ctx_t *connection = NULL;
 sr_session_ctx_t *session = NULL;
 sr_subscription_ctx_t *subscription = NULL;
 
+// Subscribed events mask
+uint32_t _subscribed_mask = 0;
+
 // Generic callback
 void (*_cb_event)(TSN_Event_CB_Data data);
 
@@ -63,8 +66,9 @@ sysrepo_disconnect()
 //  Callbacks
 // -------------------------------------------------------- //
 void 
-sysrepo_init_callback(void (*cb_event)(TSN_Event_CB_Data))
+sysrepo_init_callback(uint32_t subscribed_events_mask, void (*cb_event)(TSN_Event_CB_Data))
 {
+    _subscribed_mask = subscribed_events_mask;
     _cb_event = cb_event;
 }
 
@@ -114,13 +118,21 @@ static void
 _notif_listener_cb(sr_session_ctx_t *session, const sr_ev_notif_type_t notif_type, const char *path, const sr_val_t *values,
         const size_t values_cnt, time_t timestamp, void *private_data)
 {
+    // Abort if no callback function is set
     if (!_cb_event) {
         return;
     }
 
+    uint32_t _event_id = values[0].data.uint32_val;
+
+    // Check if the module subscribed to this event
+    if ((_subscribed_mask & values[0].data.uint32_val) == 0) {
+        return;
+    } 
+
     // Creating the event data
     TSN_Event_CB_Data event_data = {
-        .event_id = values[0].data.uint32_val,
+        .event_id = _event_id,
         .entry_id = values[1].data.string_val,
         .msg = values[2].data.string_val
     };

@@ -140,8 +140,22 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
 
         // STREAM ---------------------------------------------------
         if (strstr(val->xpath, "/streams/") != NULL) {
+            // Deleted
+            if (op == SR_OP_DELETED) {
+                if ((already_send_mask & EVENT_STREAM_DELETED) == 0) {
+                    char *key = _extract_key(val->xpath, "stream-id");
+                    rc = _send_notification(EVENT_STREAM_DELETED, key, NULL);
+                    if (rc == EXIT_FAILURE) {
+                        printf("[PLUGIN] Failed to send notification 'EVENT_STREAM_DELETED'!\n");
+                    } else {
+                        already_send_mask |= EVENT_STREAM_DELETED;
+                    }
+                }
+            }
+
             // Requested
-            if ((strstr(val->xpath, "/requested/") != NULL)) {       
+            if ((strstr(val->xpath, "/requested/") != NULL) &&
+                (op == SR_OP_CREATED)) {       
                 if ((already_send_mask & EVENT_STREAM_REQUESTED) == 0) {
                     char *key = _extract_key(val->xpath, "stream-id");
                     rc = _send_notification(EVENT_STREAM_REQUESTED, key, NULL);
@@ -154,7 +168,8 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
             }
 
             // Configured
-            if (strstr(val->xpath, "/configuration/") != NULL) {
+            if ((strstr(val->xpath, "/configuration/") != NULL)
+                && ((op == SR_OP_CREATED) || (op == SR_OP_MODIFIED))) {
                 if ((already_send_mask & EVENT_STREAM_CONFIGURED) == 0) {
                     char *key = _extract_key(val->xpath, "stream-id");
                     rc = _send_notification(EVENT_STREAM_CONFIGURED, key, NULL);
@@ -166,10 +181,12 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
                 }
             }
 
+
         // MODULES ---------------------------------------------------
         } else if (strstr(val->xpath, "/modules/") != NULL) {
             // Added
-            if (strstr(val->xpath, "/available-modules") != NULL) {
+            if ((strstr(val->xpath, "/available-modules") != NULL) 
+                && (op == SR_OP_CREATED)) {
                 if ((already_send_mask & EVENT_MODULE_ADDED) == 0) {
                     char *key = _extract_key(val->xpath, "id");
                     rc = _send_notification(EVENT_MODULE_ADDED, key, NULL);
@@ -180,10 +197,69 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
                     }
                 }
             }
+
+            // Registered
+            if ((strstr(val->xpath, "/registered-modules") != NULL) 
+                && (op == SR_OP_CREATED)) {
+                if ((already_send_mask & EVENT_MODULE_REGISTERED) == 0) {
+                    char *key = _extract_key(val->xpath, "id");
+                    rc = _send_notification(EVENT_MODULE_REGISTERED, key, NULL);
+                    if (rc == EXIT_FAILURE) {
+                        printf("[PLUGIN] Failed to send notification 'EVENT_MODULE_REGISTERED'!\n");
+                    } else {
+                        already_send_mask |= EVENT_MODULE_REGISTERED;
+                    }
+                }
+            }
+
+            // Data updated
+            if ((strstr(val->xpath, "/data/entry") != NULL) 
+                && ((op == SR_OP_CREATED) || (op == SR_OP_MODIFIED))) {
+                if ((already_send_mask & EVENT_MODULE_DATA_UPDATED) == 0) {
+                    char *key = _extract_key(val->xpath, "id");
+                    rc = _send_notification(EVENT_MODULE_DATA_UPDATED, key, NULL);
+                    if (rc == EXIT_FAILURE) {
+                        printf("[PLUGIN] Failed to send notification 'EVENT_MODULE_DATA_UPDATED'!\n");
+                    } else {
+                        already_send_mask |= EVENT_MODULE_DATA_UPDATED;
+                    }
+                }
+            }
+
+            // Unregistered
+            if ((strstr(val->xpath, "/registered-modules") != NULL) 
+                && (op == SR_OP_DELETED)) {
+                if ((already_send_mask & EVENT_MODULE_UNREGISTERED) == 0) {
+                    char *key = _extract_key(val->xpath, "id");
+                    rc = _send_notification(EVENT_MODULE_UNREGISTERED, key, NULL);
+                    if (rc == EXIT_FAILURE) {
+                        printf("[PLUGIN] Failed to send notification 'EVENT_MODULE_UNREGISTERED'!\n");
+                    } else {
+                        already_send_mask |= EVENT_MODULE_UNREGISTERED;
+                    }
+                }
+            }
+
+            // Deleted
+            if ((strstr(val->xpath, "/available-modules") != NULL) 
+                && (op == SR_OP_DELETED)) {
+                if ((already_send_mask & EVENT_MODULE_DELETED) == 0) {
+                    char *key = _extract_key(val->xpath, "id");
+                    rc = _send_notification(EVENT_MODULE_DELETED, key, NULL);
+                    if (rc == EXIT_FAILURE) {
+                        printf("[PLUGIN] Failed to send notification 'EVENT_MODULE_DELETED'!\n");
+                    } else {
+                        already_send_mask |= EVENT_MODULE_DELETED;
+                    }
+                }
+            }
         
+
         // TOPOLOGY ---------------------------------------------------
         } else if (strstr(val->xpath, "/topology/") != NULL) {
-            // Discoverd (any change in the topology is interpreted as a discovered topology)
+            // Discovery requested is send directly and not reflected in changes in the datastore 
+
+            // Discoverd
             if ((already_send_mask & EVENT_TOPOLOGY_DISCOVERED) == 0) {
                 rc = _send_notification(EVENT_TOPOLOGY_DISCOVERED, NULL, NULL);
                 if (rc == EXIT_FAILURE) {

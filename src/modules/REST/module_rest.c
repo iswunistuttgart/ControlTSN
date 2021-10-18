@@ -6,7 +6,7 @@
 #include "../../common.h"
 #include "../../events_definitions.h"
 #include "module_rest.h"
-#include "json_serializer.h"
+#include "../../helper/json_serializer.h"
 
 int rc;
 volatile sig_atomic_t is_running = 1;
@@ -32,11 +32,11 @@ _cb_event(TSN_Event_CB_Data data)
     
     if (data.event_id == EVENT_ERROR) {
         //printf("[REST][CB] ERROR: Code %d - '%s'\n", data.error.error_code, data.error.error_msg);
-        printf("[REST][CB] ERROR (%d): %s\n", data.entry_id, data.msg);
+        printf("[REST][CB] ERROR (%s): %s\n", data.entry_id, data.msg);
     }
-    else if (data.event_id == EVENT_TOPOLOGY_DISCOVERY_REQUESTED) {
-        printf("[REST][CB] Topology discovery requested!\n");
-    }
+    //else if (data.event_id == EVENT_TOPOLOGY_DISCOVERY_REQUESTED) {
+    //    printf("[REST][CB] Topology discovery requested!\n");
+    //}
 
     return;
 }
@@ -587,7 +587,7 @@ main(void)
     this_module.name = "REST";
     this_module.description = "Exposes a REST API to interact with the framework";
     this_module.path = "./RESTModule";
-    this_module.subscribed_events_mask = (EVENT_ERROR | EVENT_TOPOLOGY_DISCOVERY_REQUESTED);
+    this_module.subscribed_events_mask = (EVENT_ERROR);
     this_module.cb_event = _cb_event;
     
     rc = module_init(&this_module);
