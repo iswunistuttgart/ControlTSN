@@ -12,9 +12,6 @@
 
 #include "../../events_definitions.h"
 
-
-// Session
-sr_session_ctx_t *_session;
 // Subscriptions
 sr_subscription_ctx_t *_subscriptions;
 
@@ -56,7 +53,7 @@ _test_print_mask(uint32_t mask) {
 
 
 static int
-_send_notification(uint32_t event_id, char *entry_id, char *msg) 
+_send_notification(sr_session_ctx_t *session, uint32_t event_id, char *entry_id, char *msg) 
 {
     sr_val_t notif_values[3];
     notif_values[0].xpath = strdup("/control-tsn-uni:notif-generic/event-id");
@@ -69,7 +66,7 @@ _send_notification(uint32_t event_id, char *entry_id, char *msg)
     notif_values[2].type = SR_STRING_T;
     notif_values[2].data.string_val = msg;
 
-    int rc = sr_event_notif_send(_session, "/control-tsn-uni:notif-generic", notif_values, 3);
+    int rc = sr_event_notif_send(session, "/control-tsn-uni:notif-generic", notif_values, 3);
     if (rc != SR_ERR_OK) {
         printf("[SYSREPO] Failure while sending notification for event id %d!\n", event_id);
     }
@@ -118,18 +115,22 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
     uint32_t occured_mask = 0;
     uint32_t already_send_mask = 0;
 
+    //TSN_Event_CB_Data notif_data;
+    //char *notif_data_event_name = NULL;
+
     rc = sr_get_changes_iter(session, "//.", &iter);
     if (rc != SR_ERR_OK) {
         printf("[PLUGIN] Failed to get changes!\n");
         char err_code[2];
         sprintf(err_code, "%d", rc);
-        _send_notification(EVENT_ERROR, err_code, "[PLUGIN] Failed to get changes!");
+        _send_notification(session, EVENT_ERROR, err_code, "[PLUGIN] Failed to get changes!");
         goto cleanup;
     }
 
     // Monitor changes and send corresponding notifications
+    
     while (sr_get_change_next(session, iter, &op, &old_val, &new_val) == SR_ERR_OK) {
-        printf("[PLUGIN] ALREADY SENT ------> %d\n", already_send_mask);
+
         val = new_val ? new_val : old_val;
 
         // For each occured change associated with an event
@@ -144,12 +145,13 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
             if (op == SR_OP_DELETED) {
                 if ((already_send_mask & EVENT_STREAM_DELETED) == 0) {
                     char *key = _extract_key(val->xpath, "stream-id");
-                    rc = _send_notification(EVENT_STREAM_DELETED, key, NULL);
+                    rc = _send_notification(session, EVENT_STREAM_DELETED, key, NULL);
                     if (rc == EXIT_FAILURE) {
                         printf("[PLUGIN] Failed to send notification 'EVENT_STREAM_DELETED'!\n");
                     } else {
                         already_send_mask |= EVENT_STREAM_DELETED;
                     }
+                    
                 }
             }
 
@@ -158,12 +160,13 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
                 (op == SR_OP_CREATED)) {       
                 if ((already_send_mask & EVENT_STREAM_REQUESTED) == 0) {
                     char *key = _extract_key(val->xpath, "stream-id");
-                    rc = _send_notification(EVENT_STREAM_REQUESTED, key, NULL);
+                    rc = _send_notification(session, EVENT_STREAM_REQUESTED, key, NULL);
                     if (rc == EXIT_FAILURE) {
                         printf("[PLUGIN] Failed to send notification 'EVENT_STREAM_REQUESTED'!\n");
                     } else {
                         already_send_mask |= EVENT_STREAM_REQUESTED;
                     }
+                    
                 }
             }
 
@@ -172,12 +175,13 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
                 && ((op == SR_OP_CREATED) || (op == SR_OP_MODIFIED))) {
                 if ((already_send_mask & EVENT_STREAM_CONFIGURED) == 0) {
                     char *key = _extract_key(val->xpath, "stream-id");
-                    rc = _send_notification(EVENT_STREAM_CONFIGURED, key, NULL);
+                    rc = _send_notification(session, EVENT_STREAM_CONFIGURED, key, NULL);
                     if (rc == EXIT_FAILURE) {
                         printf("[PLUGIN] Failed to send notification 'EVENT_STREAM_CONFIGURED'!\n");
                     } else {
                         already_send_mask |= EVENT_STREAM_CONFIGURED;
                     }
+                    
                 }
             }
 
@@ -189,12 +193,13 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
                 && (op == SR_OP_CREATED)) {
                 if ((already_send_mask & EVENT_MODULE_ADDED) == 0) {
                     char *key = _extract_key(val->xpath, "id");
-                    rc = _send_notification(EVENT_MODULE_ADDED, key, NULL);
+                    rc = _send_notification(session, EVENT_MODULE_ADDED, key, NULL);
                     if (rc == EXIT_FAILURE) {
                         printf("[PLUGIN] Failed to send notification 'EVENT_MODULE_ADDED'!\n");
                     } else {
                         already_send_mask |= EVENT_MODULE_ADDED;
                     }
+                    
                 }
             }
 
@@ -203,12 +208,13 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
                 && (op == SR_OP_CREATED)) {
                 if ((already_send_mask & EVENT_MODULE_REGISTERED) == 0) {
                     char *key = _extract_key(val->xpath, "id");
-                    rc = _send_notification(EVENT_MODULE_REGISTERED, key, NULL);
+                    rc = _send_notification(session, EVENT_MODULE_REGISTERED, key, NULL);
                     if (rc == EXIT_FAILURE) {
                         printf("[PLUGIN] Failed to send notification 'EVENT_MODULE_REGISTERED'!\n");
                     } else {
                         already_send_mask |= EVENT_MODULE_REGISTERED;
                     }
+                    
                 }
             }
 
@@ -217,12 +223,13 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
                 && ((op == SR_OP_CREATED) || (op == SR_OP_MODIFIED))) {
                 if ((already_send_mask & EVENT_MODULE_DATA_UPDATED) == 0) {
                     char *key = _extract_key(val->xpath, "id");
-                    rc = _send_notification(EVENT_MODULE_DATA_UPDATED, key, NULL);
+                    rc = _send_notification(session, EVENT_MODULE_DATA_UPDATED, key, NULL);
                     if (rc == EXIT_FAILURE) {
                         printf("[PLUGIN] Failed to send notification 'EVENT_MODULE_DATA_UPDATED'!\n");
                     } else {
                         already_send_mask |= EVENT_MODULE_DATA_UPDATED;
                     }
+                    
                 }
             }
 
@@ -231,13 +238,14 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
                 && (op == SR_OP_DELETED)) {
                 if ((already_send_mask & EVENT_MODULE_UNREGISTERED) == 0) {
                     char *key = _extract_key(val->xpath, "id");
-                    rc = _send_notification(EVENT_MODULE_UNREGISTERED, key, NULL);
+                    rc = _send_notification(session, EVENT_MODULE_UNREGISTERED, key, NULL);
                     if (rc == EXIT_FAILURE) {
                         printf("[PLUGIN] Failed to send notification 'EVENT_MODULE_UNREGISTERED'!\n");
                     } else {
                         already_send_mask |= EVENT_MODULE_UNREGISTERED;
                     }
-                }
+                    
+                }    
             }
 
             // Deleted
@@ -245,12 +253,13 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
                 && (op == SR_OP_DELETED)) {
                 if ((already_send_mask & EVENT_MODULE_DELETED) == 0) {
                     char *key = _extract_key(val->xpath, "id");
-                    rc = _send_notification(EVENT_MODULE_DELETED, key, NULL);
+                    rc = _send_notification(session, EVENT_MODULE_DELETED, key, NULL);
                     if (rc == EXIT_FAILURE) {
                         printf("[PLUGIN] Failed to send notification 'EVENT_MODULE_DELETED'!\n");
                     } else {
                         already_send_mask |= EVENT_MODULE_DELETED;
                     }
+                    
                 }
             }
         
@@ -259,18 +268,35 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
         } else if (strstr(val->xpath, "/topology/") != NULL) {
             // Discovery requested is send directly and not reflected in changes in the datastore 
 
-            // Discoverd
+            // Discovered
             if ((already_send_mask & EVENT_TOPOLOGY_DISCOVERED) == 0) {
-                rc = _send_notification(EVENT_TOPOLOGY_DISCOVERED, NULL, NULL);
+                rc = _send_notification(session, EVENT_TOPOLOGY_DISCOVERED, NULL, NULL);
+                already_send_mask |= EVENT_TOPOLOGY_DISCOVERED;
                 if (rc == EXIT_FAILURE) {
                     printf("[PLUGIN] Failed to send notification 'EVENT_TOPOLOGY_DISCOVERED'!\n");
                 } else {
                     already_send_mask |= EVENT_TOPOLOGY_DISCOVERED;
                 }
+                
+                //notif_data.event_id = EVENT_TOPOLOGY_DISCOVERED;
+                //notif_data.entry_id = NULL;
+                //notif_data.msg = NULL;
+                //notif_data_event_name = strdup("EVENT_TOPOLOGY_DISCOVERED");
+                //already_send_mask |= EVENT_TOPOLOGY_DISCOVERED;
+                
             }
         }
     }
 
+    //rc = _send_notification(session, notif_data.event_id, notif_data.entry_id, notif_data.msg);
+    //if (rc == EXIT_FAILURE) {
+    //    printf("[PLUGIN] Failed to send notification '%s'!\n", notif_data_event_name);
+    //}
+    
+
+
+    
+    
 
 cleanup:
     return rc;
@@ -313,7 +339,6 @@ sr_plugin_init_cb(sr_session_ctx_t *session, void **private_data)
 
     (void) private_data;
 
-    _session = session;
 
     // Subscribe for module changes (also causes startup data to be copied into running and enabling the module)
     rc = sr_module_change_subscribe(session, "control-tsn-uni", NULL, _module_change_cb, NULL, 0, SR_SUBSCR_DONE_ONLY, &_subscriptions);

@@ -27,7 +27,12 @@ json_t *serialize_connection(TSN_Connection *connection);
 json_t *serialize_graph(TSN_Graph *graph);
 json_t *serialize_topology(TSN_Topology *topology);
 
-int deserialize_topology(json_t *root, TSN_Topology **topology);
+TSN_Enddevice *deserialize_enddevice(json_t *obj);
+TSN_Switch *deserialize_switch(json_t *obj);
+TSN_Devices *deserialize_devices(json_t *obj);
+TSN_Connection *deserialize_connection(json_t *obj);
+TSN_Graph *deserialize_graph(json_t *obj);
+TSN_Topology *deserialize_topology(json_t *obj);
 
 // ------------------------------------
 // Application

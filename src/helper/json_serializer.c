@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include "json_serializer.h"
 
 json_t *
@@ -277,13 +279,127 @@ serialize_topology(TSN_Topology *topology)
     return root;
 }
 
-
-int
-deserialize_topology(json_t *root, TSN_Topology **topology)
+TSN_Enddevice *
+deserialize_enddevice(json_t *obj)
 {
-    // (*topology)->devices = ...
+    TSN_Enddevice *enddevice = malloc(sizeof(TSN_Enddevice));
+    json_t *mac;
+    json_t *app_ref;
 
-    return EXIT_SUCCESS;
+    mac = json_object_get(obj, "mac");
+    enddevice->mac = strdup(json_string_value(mac));
+
+    app_ref = json_object_get(obj, "app_ref");
+    if (app_ref != NULL) {
+        enddevice->app_ref = strdup(json_string_value(app_ref));
+    }
+
+    return enddevice;
+}
+
+TSN_Switch 
+*deserialize_switch(json_t *obj)
+{
+    TSN_Switch *sw = malloc(sizeof(TSN_Switch));
+    json_t *mac;
+    json_t *ports_count;
+
+    mac = json_object_get(obj, "mac");
+    sw->mac = strdup(json_string_value(mac));
+
+    ports_count = json_object_get(obj, "ports_count");
+    sw->ports_count = json_integer_value(ports_count);
+
+    return sw;
+}
+
+TSN_Devices 
+*deserialize_devices(json_t *obj)
+{
+    TSN_Devices *devices = malloc(sizeof(TSN_Devices));
+    json_t *enddevices;
+    json_t *switches;
+
+    enddevices = json_object_get(obj, "enddevices");
+    devices->count_enddevices = json_array_size(enddevices);
+    devices->enddevices = (TSN_Enddevice *) malloc(sizeof(TSN_Enddevice) * devices->count_enddevices);
+    for (int i=0; i<devices->count_enddevices; ++i) {
+        json_t *entry = json_array_get(enddevices, i);
+        TSN_Enddevice *x = deserialize_enddevice(entry);
+        devices->enddevices[i] = *x;
+    }
+
+    switches = json_object_get(obj, "switches");
+    devices->count_switches = json_array_size(switches);
+    devices->switches = (TSN_Switch *) malloc(sizeof(TSN_Switch) * devices->count_switches);
+    for (int i=0; i<devices->count_switches; ++i) {
+        json_t *entry = json_array_get(switches, i);
+        TSN_Switch *x = deserialize_switch(entry);
+        devices->switches[i] = *x;
+    }    
+
+    return devices;
+}
+
+TSN_Connection 
+*deserialize_connection(json_t *obj)
+{
+    TSN_Connection *connection = malloc(sizeof(TSN_Connection));
+    json_t *id;
+    json_t *from_mac;
+    json_t *from_port;
+    json_t *to_mac;
+    json_t *to_port;
+
+    id = json_object_get(obj, "id");
+    connection->id = json_integer_value(id);
+
+    from_mac = json_object_get(obj, "from_mac");
+    connection->from_mac = strdup(json_string_value(from_mac));
+
+    from_port = json_object_get(obj, "from_port");
+    connection->from_port = json_integer_value(from_port);
+
+    to_mac = json_object_get(obj, "to_mac");
+    connection->to_mac = strdup(json_string_value(to_mac));
+
+    to_port = json_object_get(obj, "to_port");
+    connection->to_port = json_integer_value(to_port);
+
+    return connection;
+}
+
+TSN_Graph *deserialize_graph(json_t *obj)
+{
+    TSN_Graph *graph = malloc(sizeof(TSN_Graph));
+    json_t *connections;
+    connections = json_object_get(obj, "connections");
+    graph->count_connections = json_array_size(connections);
+    graph->connections = (TSN_Connection *) malloc(sizeof(TSN_Connection) * graph->count_connections);
+    for (int i=0; i<graph->count_connections; ++i) {
+        json_t *entry = json_array_get(connections, i);
+        TSN_Connection *x = deserialize_connection(entry);
+        graph->connections[i] = *x;
+    }
+
+    return graph;
+}
+
+TSN_Topology *deserialize_topology(json_t *obj)
+{
+    TSN_Topology *topology = malloc(sizeof(TSN_Topology));
+    json_t *devices;
+    json_t *graph;
+
+    devices = json_object_get(obj, "devices");
+    TSN_Devices *d = deserialize_devices(devices);
+    topology->devices = *d;
+
+    graph = json_object_get(obj, "graph");
+    TSN_Graph *g = deserialize_graph(graph);
+    topology->graph = *g;
+
+    return topology;
 }
 
 // ------------------------------------

@@ -2065,10 +2065,10 @@ _write_enddevice(char *xpath, TSN_Enddevice *enddevice)
     }
 
     // Apply the changes
-    rc = sr_apply_changes(session, 0, 1);
-    if (rc != SR_ERR_OK) {
-        goto cleanup;
-    }
+    //rc = sr_apply_changes(session, 0, 1);
+    //if (rc != SR_ERR_OK) {
+    //    goto cleanup;
+    //}
 
 cleanup:
     free(xpath_mac);
@@ -2102,10 +2102,10 @@ _write_switch(char *xpath, TSN_Switch *sw)
     }
 
     // Apply the changes
-    rc = sr_apply_changes(session, 0, 1);
-    if (rc != SR_ERR_OK) {
-        goto cleanup;
-    }
+    //rc = sr_apply_changes(session, 0, 1);
+    //if (rc != SR_ERR_OK) {
+    //    goto cleanup;
+    //}
 
 cleanup:
     free(xpath_mac);
@@ -2148,10 +2148,10 @@ _write_devices(char *xpath, TSN_Devices *devices)
     }
 
     // Apply the changes
-    rc = sr_apply_changes(session, 0, 1);
-    if (rc != SR_ERR_OK) {
-        goto cleanup;
-    }
+    //rc = sr_apply_changes(session, 0, 1);
+    //if (rc != SR_ERR_OK) {
+    //    goto cleanup;
+    //}
 
 cleanup:
     free(xpath_enddevices);
@@ -2215,10 +2215,10 @@ _write_connection(char *xpath, TSN_Connection *connection)
     }
 
     // Apply the changes
-    rc = sr_apply_changes(session, 0, 1);
-    if (rc != SR_ERR_OK) {
-        goto cleanup;
-    }
+    //rc = sr_apply_changes(session, 0, 1);
+    //if (rc != SR_ERR_OK) {
+    //    goto cleanup;
+    //}
 
 cleanup:
     free(xpath_id);
@@ -2250,10 +2250,10 @@ _write_graph(char *xpath, TSN_Graph *graph)
     }
 
     // Apply the changes
-    rc = sr_apply_changes(session, 0, 1);
-    if (rc != SR_ERR_OK) {
-        goto cleanup;
-    }
+    //rc = sr_apply_changes(session, 0, 1);
+    //if (rc != SR_ERR_OK) {
+    //    goto cleanup;
+    //}
 
 cleanup:
     free(xpath_connections);
@@ -2299,10 +2299,10 @@ _remove_topology()
         goto cleanup;
     }
 
-    rc = sr_apply_changes(session, 0, 1);
-    if (rc != SR_ERR_OK) {
-        goto cleanup;
-    }
+    //rc = sr_apply_changes(session, 0, 1);
+    //if (rc != SR_ERR_OK) {
+    //    goto cleanup;
+    //}
 
 cleanup:
     return rc;
@@ -2910,6 +2910,11 @@ sysrepo_set_topology(TSN_Topology *topology)
         if (rc != SR_ERR_OK) {
             goto cleanup;
         }
+    }
+
+    rc = sr_apply_changes(session, 0, 1);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
     }
 
 cleanup:

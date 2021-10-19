@@ -29,8 +29,6 @@ signal_handler(int signum)
 }
 
 
-
-
 static char *
 _concat_strings(char *s1, const char *s2)
 {
@@ -54,25 +52,15 @@ cnc_discover_topology()
 
     int res = ulfius_send_http_request(&request, &response);
     if (res == U_OK) {
-        printf("[CUC] Successfully send request to CNC\n");
-
-        // Process response
-        printf("Headers:\n");
-        char **keys = u_map_enum_keys(response.map_header);
-        for (int i=0; keys[i] != NULL; i++) {
-            printf("%s --> %s\n", keys[i], u_map_get(response.map_header, keys[i]));
-        }
+        // Get JSON body containing the topology
         json_t *json_body = ulfius_get_json_body_response(&response, NULL);
-        TSN_Topology *discovered_topology = NULL;
-        discovered_topology = malloc(sizeof(TSN_Topology));
-        int ret = deserialize_topology(json_body, &discovered_topology);
-        if (ret == EXIT_SUCCESS) {
-            printf("Topology successfull deserialized!");
-            print_topology(*discovered_topology);
-        } else {
-            printf("ERROR DESERIALIZING TOPOLOGY!\n");
+        // Deserialize the topology
+        TSN_Topology *discovered_topology = deserialize_topology(json_body);
+        // Write the topology to sysrepo
+        rc = sysrepo_set_topology(discovered_topology);
+        if (rc != EXIT_SUCCESS) {
+            printf("[CUC] Error writing topology to the datastore!\n");
         }
-
 
     } else {
         printf("[CUC] Failure sending request to CNC at '%s'\n", cnc_url);
@@ -90,15 +78,15 @@ cnc_discover_topology()
 static void
 _cb_event(TSN_Event_CB_Data data)
 {
-    printf("[CUC] Triggered callback for event ID %d\n", data.event_id);
-    
     if (data.event_id == EVENT_ERROR) {
         printf("[REST][CB] ERROR (%s): %s\n", data.entry_id, data.msg);
     }
     else if (data.event_id == EVENT_TOPOLOGY_DISCOVERY_REQUESTED) {
         printf("[CUC][CB] Topology discovery requested!\n");
         cnc_discover_topology();
-
+    }
+    else if (data.event_id == EVENT_TOPOLOGY_DISCOVERED) {
+        printf("[CUC][CB] Topology discovered!\n");
     }
 
     return;
@@ -124,7 +112,7 @@ main(void)
     this_module.name = "CUC";
     this_module.description = "Represents the Central User Controller in the network based on the central configuration approach of TSN";
     this_module.path ="./CUCModule";
-    this_module.subscribed_events_mask = (EVENT_ERROR | EVENT_TOPOLOGY_DISCOVERY_REQUESTED);
+    this_module.subscribed_events_mask = (EVENT_ERROR | EVENT_TOPOLOGY_DISCOVERY_REQUESTED | EVENT_TOPOLOGY_DISCOVERED);
     this_module.cb_event = _cb_event;
 
     rc = module_init(&this_module);
@@ -145,7 +133,7 @@ main(void)
 cleanup:
     rc = module_shutdown();
     if (rc == EXIT_FAILURE) {
-        printf("[REST] Error shutting down the module!\n");
+        printf("[CUC] Error shutting down the module!\n");
     }
 
     return rc;
