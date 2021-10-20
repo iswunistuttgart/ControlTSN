@@ -1454,10 +1454,10 @@ _write_module_data_entry(char *xpath, TSN_Module_Data_Entry *entry)
     }
 
     // Apply the changes
-    rc = sr_apply_changes(session, 0, 1);
-    if (rc != SR_ERR_OK) {
-        goto cleanup;
-    }
+    //rc = sr_apply_changes(session, 0, 1);
+    //if (rc != SR_ERR_OK) {
+    //    goto cleanup;
+    //}
 
 cleanup:
     free(xpath_data_name);
@@ -1698,10 +1698,10 @@ _write_module(char *xpath, TSN_Module *mod)
     }
     
     // Apply the changes
-    rc = sr_apply_changes(session, 0, 1);
-    if (rc != SR_ERR_OK) {
-        goto cleanup;
-    }
+    //rc = sr_apply_changes(session, 0, 1);
+    //if (rc != SR_ERR_OK) {
+    //    goto cleanup;
+    //}
 
 cleanup:
     free(xpath_id);
