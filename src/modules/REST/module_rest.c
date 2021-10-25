@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "../../common.h"
+#include "../../logger.h"
 #include "../../events_definitions.h"
 #include "module_rest.h"
 #include "../../helper/json_serializer.h"
@@ -11,7 +12,7 @@
 int rc;
 volatile sig_atomic_t is_running = 1;
 
-TSN_Module this_module;
+TSN_Module *this_module;
 struct _u_instance server_instance;
 
 
@@ -48,42 +49,44 @@ _cb_event(TSN_Event_CB_Data data)
 static int
 _api_index_get(const struct _u_request *request, struct _u_response *response, void *user_data)
 {
-    const char *resp = "<html><b>This is the ControlTSN REST Server.</b></br>" \
+    const char *resp = "<style>td {padding-right: 20px;} th {text-align: left;}</style><html><b>This is the ControlTSN REST Server.</b></br>" \
                        "Following endpoints are provided:</br></br>" \
                        "<table>" \
+                       "<tr><th>URI</th><th>Type</th><th>Description</th><th>POST Body</th></tr>" \
                        // Index
-                       "<tr><th style='text-align: left;'>Index</th></tr>" \
+                       "<tr><th>Index</th></tr>" \
                        "<tr><td><a href='/'>/</a></td><td>GET</td><td>This site</td></tr>" \
                        // Modules
-                       "<tr><th style='text-align: left;'>Modules</th></tr>" \
+                       "<tr><th>Modules</th></tr>" \
                        "<tr><td><a href='/modules'>/modules</a></td><td>GET</td><td>Get all available and registered modules</td></tr>" \
                        "<tr><td><a href='/modules/registered/1'>/modules/registered/:id</a></td><td>GET</td><td>Get a specific registered module based on the id</td></tr>" \
                        "<tr><td><a href='/modules/available/1'>/modules/available/:id</a></td><td>GET</td><td>Get a specific available module based on the id</td></tr>" \
+                       "<tr><td><a href='/modules/add'>/modules/add</a></td><td>POST</td><td>Add a new module to the list of available modules</td><td>name (string), description (string), path (string), subscribed_events_mask (int)</td></tr>" \
                        "<tr><td><a href='/modules/1/start'>/modules/:id/start</a></td><td>POST</td><td>Start a specific module</td></tr>" \
                        "<tr><td><a href='/modules/1/stop'>/modules/:id/stop</a></td><td>POST</td><td>Stop a specific module</td></tr>" \
                        "<tr><td><a href='/modules/1/delete'>/modules/:id/delete</a></td><td>POST</td><td>Delete a specific module</td></tr>" \
-                       "<tr><td><a href='/modules/1/register'>/modules/:id/register</a></td><td>POST</td><td>Register a specific module (POST param 'mask' to adjust the subscribed events)</td></tr>" \
+                       "<tr><td><a href='/modules/1/register'>/modules/:id/register</a></td><td>POST</td><td>Register a specific module (use 'mask' to adjust the subscribed events)</td><td>mask (int)</td></tr>" \
                        "<tr><td><a href='/modules/1/unregister'>/modules/:id/unregister</a></td><td>POST</td><td>Unregister a specific module</td></tr>" \
                        "<tr><td><a href='/modules/1/data'>/modules/:id/data</a></td><td>GET</td><td>Get the data of a specific module</td></tr>" \
                        // Topology
-                       "<tr><th style='text-align: left;'>Topology</th></tr>" \
+                       "<tr><th>Topology</th></tr>" \
                        "<tr><td><a href='/topology'>/topology</a></td><td>GET</td><td>Get the stored topology data</td></tr>" \
                        "<tr><td><a href='/topology/discover'>/topology/discover</a></td><td>POST</td><td>Trigger the topology discovery</td></tr>" \
                        "<tr><td><a href='/topology/devices'>/topology/devices</a></td><td>GET</td><td>Get the stored devices</td></tr>" \
                        "<tr><td><a href='/topology/graph'>/topology/graph</a></td><td>GET</td><td>Get the topology graph containing all connections</td></tr>" \
                        // Streams
-                       "<tr><th style='text-align: left;'>Streams</th></tr>" \
+                       "<tr><th>Streams</th></tr>" \
                        "<tr><td><a href='/streams'>/streams</a></td><td>GET</td><td>Get all streams</td></tr>" \
                        "<tr><td><a href='/streams/request'>/streams/request</a></td><td>POST</td><td>Request a new stream</td></tr>" \
                        // Applications
-                       "<tr><th style='text-align: left;'>Applications</th></tr>" \
+                       "<tr><th>Applications</th></tr>" \
                        "<tr><td><a href='/application'>/application</a></td><td>GET</td><td>Get the application containing all apps and images</td></tr>" \
                        "<tr><td><a href='/application/apps'>/application/apps</a></td><td>GET</td><td>Get all stored apps</td></tr>" \
                        "<tr><td><a href='/application/images'>/application/images</a></td><td>GET</td><td>Get all stored images</td></tr>" \
                        "<tr><td><a href='/application/apps/:id/start'>/application/apps/:id/start</a></td><td>POST</td><td>Start a specific app</td></tr>" \
                        "<tr><td><a href='/application/apps/:id/stop'>/application/apps/:id/stop</a></td><td>POST</td><td>Stop a specific app</td></tr>" \
                        // TEST
-                       "<tr><th style='text-align: left;'>JUST TESTING</th></tr>" \
+                       "<tr><th>JUST TESTING</th></tr>" \
                        "<tr><td><a href='/testing/set_topology'>/testing/set_topology</a></td><td>GET</td><td>TESTING: Set the topology</td></tr>" \
                        "<tr><td><a href='/testing/remove_topology'>/testing/remove_topology</a></td><td>GET</td><td>TESTING: Remove the topology</td></tr>" \
                        "</table></html>";
@@ -163,6 +166,34 @@ _api_modules_get_registered_id(const struct _u_request *request, struct _u_respo
     json_decref(json_body);
 
     return U_CALLBACK_COMPLETE;
+}
+
+static int
+_api_modules_add(const struct _u_request *request, struct _u_response *response, void *user_data)
+{
+    // Get the post params
+    const char *name = u_map_get(request->map_post_body, "name");
+    const char *description = u_map_get(request->map_post_body, "description");
+    const char *path = u_map_get(request->map_post_body, "path");
+    const char *subscribed_events_mask = u_map_get(request->map_post_body, "subscribed_events_mask");
+
+    TSN_Module *module = malloc(sizeof(TSN_Module));
+
+    if (name && description && path && subscribed_events_mask) {
+        module->name = strdup(name);
+        module->description = strdup(description);
+        module->path = strdup(path);
+        module->subscribed_events_mask = atoi(subscribed_events_mask);
+
+        print_module(*module);
+
+        rc = sysrepo_add_or_get_module(&module);
+        if (rc == EXIT_SUCCESS) {
+            return U_CALLBACK_COMPLETE;
+        }
+    }
+
+    return U_CALLBACK_ERROR;
 }
 
 static int
@@ -545,6 +576,7 @@ _init_server()
     ulfius_add_endpoint_by_val(&server_instance, "GET",     API_PREFIX, API_MODULES,                0, &_api_modules_get,               NULL);
     ulfius_add_endpoint_by_val(&server_instance, "GET",     API_PREFIX, API_MODULES_AVAILABLE_ID,   0, &_api_modules_get_available_id,  NULL);
     ulfius_add_endpoint_by_val(&server_instance, "GET",     API_PREFIX, API_MODULES_REGISTERD_ID,   0, &_api_modules_get_registered_id, NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_MODULES_ADD,            0, &_api_modules_add,               NULL);
     ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_MODULES_ID_START,       0, &_api_modules_start,             NULL);
     ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_MODULES_ID_STOP,        0, &_api_modules_stop,              NULL);
     ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_MODULES_ID_DELETE,      0, &_api_modules_delete,            NULL);
@@ -584,6 +616,7 @@ main(void)
     signal(SIGKILL, signal_handler);
 
     // Init this module
+    /*
     this_module.name = "REST";
     this_module.description = "Exposes a REST API to interact with the framework";
     this_module.path = "./RESTModule";
@@ -591,10 +624,14 @@ main(void)
     this_module.cb_event = _cb_event;
     
     rc = module_init(&this_module);
+    */
+    this_module = malloc(sizeof(TSN_Module));
+    rc = module_init("REST", &this_module, (EVENT_ERROR), _cb_event);
     if (rc == EXIT_FAILURE) {
         printf("[REST] Error initializing module!\n");
         goto cleanup;
     }
+
 
     // Init the web server instance
     rc = _init_server();

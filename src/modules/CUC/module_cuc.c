@@ -14,7 +14,7 @@
 int rc;
 volatile sig_atomic_t is_running = 1;
 
-TSN_Module this_module;
+TSN_Module *this_module;
 TSN_Module_Data *this_module_data = NULL;
 
 // THESE VARIABLES SHOULD BE STORED AS MODULE DATA ---------------
@@ -95,7 +95,17 @@ _cb_event(TSN_Event_CB_Data data)
 void
 _init_cuc()
 {
+    /*
     this_module_data = malloc(sizeof(TSN_Module_Data));
+    this_module_data->count_entries = 1;
+    this_module_data->entries = (TSN_Module_Data_Entry *) malloc(sizeof(TSN_Module_Data_Entry) * this_module_data->count_entries);
+    TSN_Module_Data_Entry entry;
+    entry.name = strdup(MODULE_DATA_IDENTIFIER_CNC);
+    entry.type = STRING;
+    entry.value.string_val = strdup("http://localhost:11067");
+    this_module_data->entries[0] = entry;
+    this_module.data = *this_module_data;
+    */
 }
 
 // ------------------------------------
@@ -109,17 +119,23 @@ main(void)
     signal(SIGKILL, signal_handler);
 
     // Init this module
+    /*
     this_module.name = "CUC";
     this_module.description = "Represents the Central User Controller in the network based on the central configuration approach of TSN";
     this_module.path ="./CUCModule";
     this_module.subscribed_events_mask = (EVENT_ERROR | EVENT_TOPOLOGY_DISCOVERY_REQUESTED | EVENT_TOPOLOGY_DISCOVERED);
     this_module.cb_event = _cb_event;
 
-    rc = module_init(&this_module);
-    if (rc == EXIT_FAILURE) {
-        printf("[CUC] Error initializing module!\n");
-        goto cleanup;
-    }
+    //rc = module_init(&this_module);
+    //if (rc == EXIT_FAILURE) {
+    //    printf("[CUC] Error initializing module!\n");
+    //    goto cleanup;
+    //}
+    */
+
+    this_module = malloc(sizeof(TSN_Module));
+    rc = module_init("CUC", &this_module, (EVENT_ERROR | EVENT_TOPOLOGY_DISCOVERY_REQUESTED | EVENT_TOPOLOGY_DISCOVERED), _cb_event);
+
 
     printf("[CUC] CUC module successfully started and running\n");
 

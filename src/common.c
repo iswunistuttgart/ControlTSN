@@ -13,8 +13,9 @@ int ret;
 // ----------------------------------------------
 //      FUNCTIONS - Module-Handling
 // ----------------------------------------------
+/*
 int 
-module_init(TSN_Module *this_module)
+module_init_BACKUP(TSN_Module *this_module)
 {
     // Establish a connection to sysrepo
     ret = sysrepo_connect();
@@ -34,6 +35,48 @@ module_init(TSN_Module *this_module)
         ret = sysrepo_start_listening();
     }
 
+    return ret;
+}
+*/
+
+int
+module_connect()
+{
+    // Establish a connection to sysrepo
+    ret = sysrepo_connect();
+
+    return ret ? EXIT_FAILURE : EXIT_SUCCESS;
+}
+
+int 
+module_init(char *module_name, TSN_Module **module, uint32_t adjusted_subscribed_events_mask, void (*cb_event)(TSN_Event_CB_Data))
+{
+    // Connect (if not done yet)
+    ret = module_connect();
+
+    // Get the reegistered modules
+    TSN_Modules *all_modules = malloc(sizeof(TSN_Modules));
+    ret = sysrepo_get_all_modules(&all_modules);
+
+    // Search for the desired module
+    for (int i=0; i<all_modules->count_registered_modules; ++i) {
+        if (strcmp(module_name, all_modules->registered_modules[i].name) == 0) {
+            // Found the module
+            (*module) = &all_modules->registered_modules[i];
+
+            // Setting the generic callback method
+            uint32_t mask = (adjusted_subscribed_events_mask > -1) ? adjusted_subscribed_events_mask : (*module)->subscribed_events_mask;
+            sysrepo_init_callback(mask, cb_event);
+
+            // Start listening to notifications
+            ret = sysrepo_start_listening();
+
+            goto cleanup;
+        }
+    }
+    ret = EXIT_FAILURE;
+
+cleanup:
     return ret;
 }
 

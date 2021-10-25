@@ -9,7 +9,7 @@
 int rc;
 volatile sig_atomic_t is_running = 1;
 
-TSN_Module this_module;
+TSN_Module *this_module = NULL;
 
 static void
 signal_handler(int signum)
@@ -65,6 +65,7 @@ main(void)
     signal(SIGKILL, signal_handler);
 
     // Init this module
+    /*
     this_module.name = "Monitor";
     this_module.description = "This module monitors the network including the streams and their latency, synchronization etc.";
     this_module.path = "./MonitorModule";
@@ -74,8 +75,14 @@ main(void)
         EVENT_MODULE_ADDED | EVENT_MODULE_REGISTERED | EVENT_MODULE_DATA_UPDATED | EVENT_MODULE_UNREGISTERED | EVENT_MODULE_DELETED |
         EVENT_TOPOLOGY_DISCOVERY_REQUESTED | EVENT_TOPOLOGY_DISCOVERED);
     this_module.cb_event = _cb_event;
+    */
 
-    rc = module_init(&this_module);
+    //rc = module_init(&this_module);
+
+    this_module = malloc(sizeof(TSN_Module));
+    rc = module_init("Monitor", &this_module, (EVENT_ERROR | EVENT_STREAM_REQUESTED | EVENT_STREAM_CONFIGURED | EVENT_STREAM_DELETED | 
+        EVENT_MODULE_ADDED | EVENT_MODULE_REGISTERED | EVENT_MODULE_DATA_UPDATED | EVENT_MODULE_UNREGISTERED | EVENT_MODULE_DELETED |
+        EVENT_TOPOLOGY_DISCOVERY_REQUESTED | EVENT_TOPOLOGY_DISCOVERED), _cb_event);
     if (rc == EXIT_FAILURE) {
         printf("[Monitor] Error initializing module!\n");
         goto cleanup;

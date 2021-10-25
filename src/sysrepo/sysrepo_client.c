@@ -29,6 +29,10 @@ void (*_cb_event)(TSN_Event_CB_Data data);
 int 
 sysrepo_connect()
 {
+    if (connection != NULL) {
+        return EXIT_SUCCESS;
+    }
+
     // Turn sysrepo logging on
     sr_log_stderr(SR_LL_WRN);
     // Connect 
@@ -2650,6 +2654,12 @@ sysrepo_add_or_get_module(TSN_Module **module)
         is_failure = 1;
         goto cleanup;
     }
+
+    // Apply the changes
+    rc = sr_apply_changes(session, 0, 1);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
     
 
 cleanup:
@@ -2698,6 +2708,12 @@ sysrepo_register_module(int module_id, uint32_t adjusted_subscribed_events_mask)
         if (rc != SR_ERR_OK) {
             printf("[SYSREPO] Error registering the Module!\n");
             is_failure = 1;
+            goto cleanup;
+        }
+
+        // Apply the changes
+        rc = sr_apply_changes(session, 0, 1);
+        if (rc != SR_ERR_OK) {
             goto cleanup;
         }
     }

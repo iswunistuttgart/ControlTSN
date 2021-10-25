@@ -19,6 +19,7 @@ const char *API_INDEX                  = "/";
 const char *API_MODULES                 = "/modules";
 const char *API_MODULES_REGISTERD_ID    = "/modules/registered/:id";
 const char *API_MODULES_AVAILABLE_ID    = "/modules/available/:id";
+const char *API_MODULES_ADD             = "/modules/add";
 const char *API_MODULES_ID_START        = "/modules/:id/start";
 const char *API_MODULES_ID_STOP         = "/modules/:id/stop";
 const char *API_MODULES_ID_DELETE       = "/modules/:id/delete";

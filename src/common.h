@@ -9,6 +9,11 @@
 // ----------------------------------------------
 //      FUNCTIONS - Module-Handling
 // ----------------------------------------------
+/**
+ * @brief Connects the module to sysrepo
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+ */
+int module_connect();
 
 /**
  * @brief Initializes a module by connecting to sysrepo and writing the passed 
@@ -16,7 +21,17 @@
  * @param this_module The module information
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
-int module_init(TSN_Module *this_module);
+int module_init_BACKUP(TSN_Module *this_module);
+
+/**
+ * @brief Initializes a module by getting the stored module information from the registered modules
+ * and writing the information to the passed struct.
+ * @param module_name The name of the module to search for in the list of registered modules
+ * @param module The struct for writing the gathered information
+ * @param adjusted_subscribed_events_mask If > -1 this mask will be used instead of the stored one from the list of available modules
+ * @param cb_event The events callback function of the module
+ */
+int module_init(char *module_name, TSN_Module **module, uint32_t adjusted_subscribed_events_mask, void (*cb_event)(TSN_Event_CB_Data));
 
 /**
  * @brief Shutdown the module by disconnecting from sysrepo and stopping the subscription of notification.

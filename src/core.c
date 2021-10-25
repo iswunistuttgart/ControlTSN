@@ -148,7 +148,13 @@ void main(void)
 
     // Init the Sysrepo connection by calling the module initialization 
     // function without a module struct to add
-    ret = module_init(NULL);
+    //ret = module_init(NULL);
+    //if (ret) {
+    //    printf("[MAIN] Error initializing!\n");
+    //    goto cleanup;
+    //}
+
+    ret = module_connect();
     if (ret) {
         printf("[MAIN] Error initializing!\n");
         goto cleanup;
@@ -166,7 +172,8 @@ void main(void)
     if (modules->count_registered_modules > 0) {
         for (int i=0; i<modules->count_registered_modules; ++i) {
             printf("[MAIN] Starting module '%s' ...\n", modules->registered_modules[i].name);
-            ret = module_start(modules->registered_modules[i].id);
+            //ret = module_start(modules->registered_modules[i].id);
+            ret = 0;
             if (ret) {
                 printf("[MAIN] Could not start module '%s' ...\n", modules->registered_modules[i].name);
             }

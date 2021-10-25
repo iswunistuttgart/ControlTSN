@@ -13,8 +13,7 @@
 #include "../../events_definitions.h"
 
 // Subscriptions
-sr_subscription_ctx_t *_subscriptions;
-
+sr_subscription_ctx_t *_subscriptions = NULL;
 
 
 
@@ -91,6 +90,32 @@ _extract_key(char *xpath, char *search_key)
     }
 
     return ptr;
+}
+
+static int
+_save_to_startup(sr_session_ctx_t *session)
+{
+    // Switch to startup datastore
+    int rc = sr_session_switch_ds(session, SR_DS_STARTUP);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+    // Copy configuration from running to startup
+    rc = sr_copy_config(session, "control-tsn-uni", SR_DS_RUNNING, 0, 1);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+    // Switch back to running
+    // (TODO: is this even necessary?)
+    rc = sr_session_switch_ds(session, SR_DS_RUNNING);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+cleanup:
+    return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
 // -------------------------------------------------------- //
@@ -371,7 +396,14 @@ sr_plugin_cleanup_cb(sr_session_ctx_t *session, void *private_data)
     (void) session;
     (void) private_data;
 
+    int rc;
+
+    // Saving the current configuration by writing the data to the startup datastore
+    rc = _save_to_startup(session);
+
     // Freeing the subscriptions
-    sr_unsubscribe(_subscriptions);
+    rc = sr_unsubscribe(_subscriptions);
     printf("[PLUGIN] Plugin cleanup finished.\n");
+
+    return rc;
 }
