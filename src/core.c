@@ -21,6 +21,12 @@ signal_handler(int signum)
 
 void main(void)
 {
+
+    // Signal handling
+    signal(SIGINT, signal_handler);
+    signal(SIGKILL, signal_handler);
+    signal(SIGTERM, signal_handler);
+
     /*
     TSN_Modules *modules = NULL;
 
@@ -172,8 +178,7 @@ void main(void)
     if (modules->count_registered_modules > 0) {
         for (int i=0; i<modules->count_registered_modules; ++i) {
             printf("[MAIN] Starting module '%s' ...\n", modules->registered_modules[i].name);
-            //ret = module_start(modules->registered_modules[i].id);
-            ret = 0;
+            ret = module_start(modules->registered_modules[i].id);
             if (ret) {
                 printf("[MAIN] Could not start module '%s' ...\n", modules->registered_modules[i].name);
             }
@@ -183,9 +188,25 @@ void main(void)
         printf("[MAIN] No registered modules to start.\n");
     }
 
+
+    // Keep running
+    while (is_running) {
+        sleep(1);
+    }
+
+
+    // Stop all modules when shutting down this main module
+    printf("-------------------------------------------------------------\n");
+    for (int i=0; i<modules->count_registered_modules; ++i) {
+        printf("[MAIN] Stopping module '%s' ...\n", modules->registered_modules[i].name);
+        ret = module_stop(modules->registered_modules[i].id);
+        if (ret) {
+            printf("[MAIN] Could not stop module '%s' ...\n", modules->registered_modules[i].name);
+        }
+    }
+
 cleanup:
     free(modules);
 
-    printf("[MAIN] Exiting Main module. The framework is now left to its own... \n");
     return;
 }

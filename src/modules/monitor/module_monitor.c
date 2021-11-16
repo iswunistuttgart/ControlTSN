@@ -63,6 +63,7 @@ main(void)
     // Signal handling
     signal(SIGINT, signal_handler);
     signal(SIGKILL, signal_handler);
+    signal(SIGTERM, signal_handler);
 
     // Init this module
     /*

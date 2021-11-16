@@ -1587,7 +1587,7 @@ _read_module(char *xpath, TSN_Module **mod)
     if (rc != SR_ERR_OK) {
         goto cleanup;
     }
-    (*mod)->subscribed_events_mask = val_subscribed_events_mask->data.uint16_val;
+    (*mod)->subscribed_events_mask = val_subscribed_events_mask->data.uint32_val;
 
     // ONLY READ PID & DATA OF REGISTERED MODULES
     if (strstr(xpath, "/registered-modules/") != NULL) {
@@ -1674,8 +1674,8 @@ _write_module(char *xpath, TSN_Module *mod)
     // Write Subscribed Events Mask
     _create_xpath(xpath, "/subscribed-events-mask", &xpath_subscribed_events_mask);
     sr_val_t val_subscribed_events_mask;
-    val_subscribed_events_mask.type = SR_UINT16_T;
-    val_subscribed_events_mask.data.uint16_val = mod->subscribed_events_mask;
+    val_subscribed_events_mask.type = SR_UINT32_T;
+    val_subscribed_events_mask.data.uint32_val = mod->subscribed_events_mask;
     rc = sr_set_item(session, xpath_subscribed_events_mask, &val_subscribed_events_mask, 0);
     if (rc != SR_ERR_OK) {
         goto cleanup;

@@ -146,22 +146,28 @@ module_start(int module_id)
     pid_t pid = fork();
     if (pid == 0) {
         // Parameters for the call
-        static char *argv[] = {};
+        char *arg = malloc(strlen(module->name) + strlen("[ControlTSN Module] ") + 1);
+        sprintf(arg, "[ControlTSN Module] %s", module->name);
+        char *argv[] = {arg, NULL};
         // Start the module 
         if (execv(module->path, argv) == -1) {
             printf("[COMMON] Error starting module '%s'!\n", module->name);
             return EXIT_FAILURE;
         }
 
-        // Write the PID to sysrepo
-        ret = sysrepo_set_module_pid(module->id, pid);
-        if (ret) {
-            printf("[COMMON] Error writing PID (%d) to module '%s' with ID %d!\n", pid, module->name, module->id);
-            return EXIT_FAILURE;
-        }
-        printf("[COMMON] Successfully started module '%s' with PID %d\n", module->name, module->p_id);
+    } else if (pid < 0) {
+        printf("[COMMON] Error creating a process for module '%s'\n", module->name);
+        return EXIT_FAILURE;
     }
 
+    // Write the PID to sysrepo
+    ret = sysrepo_set_module_pid(module->id, pid);
+    if (ret) {
+        printf("[COMMON] Error writing PID (%d) to module '%s' with ID %d!\n", pid, module->name, module->id);
+        return EXIT_FAILURE;
+    }
+    printf("[COMMON] Successfully started module '%s' with PID %d\n", module->name, pid);
+    
     return EXIT_SUCCESS;
 }
 
@@ -183,7 +189,7 @@ module_stop(int module_id)
         return EXIT_FAILURE;
     }
 
-    if (kill(module->p_id, SIGUSR1) != 0) {
+    if (kill(module->p_id, SIGTERM) != 0) {
         printf("[COMMON] Error stopping process of module '%s' with PID %d!\n", module->name, module->p_id);
         return EXIT_FAILURE;
     }

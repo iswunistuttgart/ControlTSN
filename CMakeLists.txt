@@ -36,9 +36,3 @@ target_link_libraries(MonitorModule common)
 ##### This is just for Testing purposes #####
 add_executable(CNCPrototype src/CNC/cnc_prototype.c)
 target_link_libraries(CNCPrototype ulfius json_serializer)
-
-
-
-
-add_executable(Test src/testing/test_b.c)
-target_link_libraries(Test ulfius common json_serializer)

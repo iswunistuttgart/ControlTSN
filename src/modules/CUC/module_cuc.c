@@ -117,6 +117,7 @@ main(void)
     // Signal handling
     signal(SIGINT, signal_handler);
     signal(SIGKILL, signal_handler);
+    signal(SIGTERM, signal_handler);
 
     // Init this module
     /*
@@ -135,7 +136,6 @@ main(void)
 
     this_module = malloc(sizeof(TSN_Module));
     rc = module_init("CUC", &this_module, (EVENT_ERROR | EVENT_TOPOLOGY_DISCOVERY_REQUESTED | EVENT_TOPOLOGY_DISCOVERED), _cb_event);
-
 
     printf("[CUC] CUC module successfully started and running\n");
 
