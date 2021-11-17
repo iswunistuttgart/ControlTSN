@@ -125,6 +125,9 @@ main(void)
     this_module.description = "Represents the Central User Controller in the network based on the central configuration approach of TSN";
     this_module.path ="./CUCModule";
     this_module.subscribed_events_mask = (EVENT_ERROR | EVENT_TOPOLOGY_DISCOVERY_REQUESTED | EVENT_TOPOLOGY_DISCOVERED);
+
+    // sub mask = 196609
+
     this_module.cb_event = _cb_event;
 
     //rc = module_init(&this_module);

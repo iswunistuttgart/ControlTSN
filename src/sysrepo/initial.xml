@@ -1,15 +1,23 @@
 <tsn-uni xmlns="urn:isw:controltsn">
-    <stream-list></stream-list>
-    <modules>
-        <all-modules>
-            <mod>
-                <id>1</id>
-                <name>Test</name>
-                <desc>Test Description</desc>
-                <executable-path>./test</executable-path>
-                <subscribed-events-mask>515</subscribed-events-mask>
-            </mod>
-        </all-modules>
-        <registered-modules></registered-modules>
-    </modules>
+  <modules>
+    <available-modules>
+      <mod>
+        <id>1</id>
+        <name>REST</name>
+        <desc>Exposes a REST API to interact with the framework</desc>
+        <executable-path>./RESTModule</executable-path>
+        <subscribed-events-mask>65535</subscribed-events-mask>
+      </mod>
+    </available-modules>
+    <registered-modules>
+      <mod>
+        <id>1</id>
+        <name>REST</name>
+        <desc>Exposes a REST API to interact with the framework</desc>
+        <executable-path>./RESTModule</executable-path>
+        <subscribed-events-mask>65535</subscribed-events-mask>
+        <pid>0</pid>
+      </mod>
+    </registered-modules>
+  </modules>
 </tsn-uni>

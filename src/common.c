@@ -65,7 +65,7 @@ module_init(char *module_name, TSN_Module **module, uint32_t adjusted_subscribed
             (*module) = &all_modules->registered_modules[i];
 
             // Setting the generic callback method
-            uint32_t mask = (adjusted_subscribed_events_mask > -1) ? adjusted_subscribed_events_mask : (*module)->subscribed_events_mask;
+            uint32_t mask = (adjusted_subscribed_events_mask == -1) ? adjusted_subscribed_events_mask : (*module)->subscribed_events_mask;
             sysrepo_init_callback(mask, cb_event);
 
             // Start listening to notifications

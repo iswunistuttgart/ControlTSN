@@ -68,6 +68,7 @@ _api_index_get(const struct _u_request *request, struct _u_response *response, v
                        "<tr><td><a href='/modules/1/register'>/modules/:id/register</a></td><td>POST</td><td>Register a specific module (use 'mask' to adjust the subscribed events)</td><td>mask (int)</td></tr>" \
                        "<tr><td><a href='/modules/1/unregister'>/modules/:id/unregister</a></td><td>POST</td><td>Unregister a specific module</td></tr>" \
                        "<tr><td><a href='/modules/1/data'>/modules/:id/data</a></td><td>GET</td><td>Get the data of a specific module</td></tr>" \
+                       "<tr><td><a href='/modules/1/update'>/modules/:id/update</a></td><td>POST</td><td>Update the attributes of a specific module</td><td>name (string), description (string), path (string), subscribed_events_mask (int)</td></tr>" \
                        // Topology
                        "<tr><th>Topology</th></tr>" \
                        "<tr><td><a href='/topology'>/topology</a></td><td>GET</td><td>Get the stored topology data</td></tr>" \
@@ -313,6 +314,30 @@ _api_modules_get_data_id(const struct _u_request *request, struct _u_response *r
     free(data);
 
     return U_CALLBACK_COMPLETE;
+}
+
+static int
+_api_modules_update(const struct _u_request *request, struct _u_response *response, void *user_data)
+{
+    // Get ID from URL
+    const char *param_id = u_map_get(request->map_url, "id");
+    int module_id = atoi(param_id);
+    if (module_id <= 0) {
+        return U_CALLBACK_ERROR;
+    }
+
+    // Get the post params
+    const char *name = u_map_get(request->map_post_body, "name");
+    const char *description = u_map_get(request->map_post_body, "description");
+    const char *path = u_map_get(request->map_post_body, "path");
+    const char *subscribed_events_mask = u_map_get(request->map_post_body, "subscribed_events_mask");
+
+    rc = sysrepo_update_module_attributes(module_id, name, description, path, subscribed_events_mask);
+    if (rc == EXIT_SUCCESS) {
+        return U_CALLBACK_COMPLETE;
+    }
+
+    return U_CALLBACK_ERROR;
 }
 
 // ------------------------------------
@@ -583,6 +608,7 @@ _init_server()
     ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_MODULES_ID_REGISTER,    0, &_api_modules_register,          NULL);
     ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_MODULES_ID_UNREGISTER,  0, &_api_modules_unregister,        NULL);
     ulfius_add_endpoint_by_val(&server_instance, "GET",     API_PREFIX, API_MODULES_ID_DATA,        0, &_api_modules_get_data_id,       NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_MODULES_ID_UPDATE,      0, &_api_modules_update,            NULL);
     // Streams
     ulfius_add_endpoint_by_val(&server_instance, "GET", API_PREFIX, API_STREAMS, 0, &_api_streams_get, NULL);
     // Topology
@@ -622,6 +648,9 @@ main(void)
     this_module.description = "Exposes a REST API to interact with the framework";
     this_module.path = "./RESTModule";
     this_module.subscribed_events_mask = (EVENT_ERROR);
+
+    // sub mask = 1
+
     this_module.cb_event = _cb_event;
     
     rc = module_init(&this_module);

@@ -42,7 +42,7 @@ int module_shutdown();
 /**
  * @brief Registers a module in the core.
  * @param module_id The id of the module to register
- * @param adjusted_subscribed_events_mask If > -1 this mask will be used instead of the stored one from the list of available modules. 
+ * @param adjusted_subscribed_events_mask If -1 this mask will be used instead of the stored one from the list of available modules. 
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
 int module_register(int module_id, uint32_t adjusted_subscribed_events_mask);

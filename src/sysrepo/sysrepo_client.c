@@ -2675,7 +2675,7 @@ sysrepo_register_module(int module_id, uint32_t adjusted_subscribed_events_mask)
     int is_failure = 0;
     sr_val_t *val_module_name_check = NULL;
     char *xpath_stored_module = NULL;
-    char *xpath_module_check = NULL;
+    //char *xpath_module_check = NULL;
     char *xpath_module_add = NULL;
 
     // Get the module from the datastore
@@ -2688,7 +2688,28 @@ sysrepo_register_module(int module_id, uint32_t adjusted_subscribed_events_mask)
         goto cleanup;
     }
 
-    if (adjusted_subscribed_events_mask < 0) {
+
+    if (adjusted_subscribed_events_mask != -1) {
+        stored_module->subscribed_events_mask = adjusted_subscribed_events_mask; 
+    }
+
+    // Write module to list of registered modules
+    _create_xpath_id("/control-tsn-uni:tsn-uni/modules/registered-modules/mod[id='%d']", module_id, &xpath_module_add);
+    rc = _write_module(xpath_module_add, stored_module);
+    if (rc != SR_ERR_OK) {
+        printf("[SYSREPO] Error registering the Module!\n");
+        is_failure = 1;
+        goto cleanup;
+    }
+
+    // Apply the changes
+    rc = sr_apply_changes(session, 0, 1);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    } 
+
+    /*
+    if (adjusted_subscribed_events_mask == -1) {
         // Check if the module is already in the list of registered modules
         _create_xpath_id("/control-tsn-uni:tsn-uni/modules/registered-modules/mod[id='%d']/name", module_id, &xpath_module_check);
         rc = sr_get_item(session, xpath_module_check, 0, &val_module_name_check);
@@ -2717,11 +2738,12 @@ sysrepo_register_module(int module_id, uint32_t adjusted_subscribed_events_mask)
             goto cleanup;
         }
     }
+    */
 
 cleanup:
     free(xpath_stored_module);
     free(stored_module);
-    free(xpath_module_check);
+    //free(xpath_module_check);
     sr_free_val(val_module_name_check);
     free(xpath_module_add);
 
@@ -2879,6 +2901,126 @@ cleanup:
     return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
+/*
+int
+sysrepo_set_module_pid(int module_id, pid_t pid)
+{
+    char *xpath_module_pid = NULL;
+    _create_xpath_id("/control-tsn-uni:tsn-uni/modules/registered-modules/mod[id='%d']/pid", module_id, &xpath_module_pid);
+
+    // Set the PID
+    sr_val_t val_pid;
+    val_pid.type = SR_UINT32_T;
+    val_pid.data.uint32_val = pid;
+    rc = sr_set_item(session, xpath_module_pid, &val_pid, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+    rc = sr_apply_changes(session, 0, 1);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+cleanup:
+    free(xpath_module_pid);
+
+    return rc ? EXIT_FAILURE : EXIT_SUCCESS;
+}
+*/
+
+int 
+sysrepo_update_module_attributes(int module_id, const char *name, const char *description, const char *path, const char *subscribed_events_mask)
+{
+    char *xpath_name = NULL;
+    char *xpath_name_reg = NULL;
+    char *xpath_description = NULL;
+    char *xpath_description_reg = NULL;
+    char *xpath_path = NULL;
+    char *xpath_path_reg = NULL;
+    char *xpath_subscribed_events_mask = NULL;
+    char *xpath_subscribed_events_mask_reg = NULL;
+
+    // Set name
+    if (name != NULL) {
+        _create_xpath_id("/control-tsn-uni:tsn-uni/modules/available-modules/mod[id='%d']/name", module_id, &xpath_name);
+        rc = sr_set_item_str(session, xpath_name, name, NULL, 0);
+        if (rc != SR_ERR_OK) {
+            goto cleanup;
+        }
+        // Update also registered modules if they exist
+        _create_xpath_id("/control-tsn-uni:tsn-uni/modules/registered-modules/mod[id='%d']/name", module_id, &xpath_name_reg);
+        rc = sr_set_item_str(session, xpath_name_reg, name, NULL, SR_EDIT_NON_RECURSIVE);
+        if (rc != SR_ERR_OK) {
+            goto cleanup;
+        }
+    }
+
+    // Set description
+    if (description != NULL) {
+        _create_xpath_id("/control-tsn-uni:tsn-uni/modules/available-modules/mod[id='%d']/desc", module_id, &xpath_description);
+        rc = sr_set_item_str(session, xpath_description, description, NULL, 0);
+        if (rc != SR_ERR_OK) {
+            goto cleanup;
+        }
+        // Update also registered modules if they exist
+        _create_xpath_id("/control-tsn-uni:tsn-uni/modules/registered-modules/mod[id='%d']/desc", module_id, &xpath_description_reg);
+        rc = sr_set_item_str(session, xpath_description_reg, description, NULL, SR_EDIT_NON_RECURSIVE);
+        if (rc != SR_ERR_OK) {
+            goto cleanup;
+        }
+    }
+
+    // Set path
+    if (path != NULL) {
+        _create_xpath_id("/control-tsn-uni:tsn-uni/modules/available-modules/mod[id='%d']/executable-path", module_id, &xpath_path);
+        rc = sr_set_item_str(session, xpath_path, path, NULL, 0);
+        if (rc != SR_ERR_OK) {
+            goto cleanup;
+        }
+        // Update also registered modules if they exist
+        _create_xpath_id("/control-tsn-uni:tsn-uni/modules/registered-modules/mod[id='%d']/executable-path", module_id, &xpath_path_reg);
+        rc = sr_set_item_str(session, xpath_path_reg, path, NULL, SR_EDIT_NON_RECURSIVE);
+        if (rc != SR_ERR_OK) {
+            goto cleanup;
+        }
+    }
+
+    // Set subscribed events mask
+    if (subscribed_events_mask != NULL) {
+        _create_xpath_id("/control-tsn-uni:tsn-uni/modules/available-modules/mod[id='%d']/subscribed-events-mask", module_id, &xpath_subscribed_events_mask);
+        rc = sr_set_item_str(session, xpath_subscribed_events_mask, subscribed_events_mask, NULL, 0);
+        if (rc != SR_ERR_OK) {
+            goto cleanup;
+        }
+        // Update also registered modules if they exist
+        _create_xpath_id("/control-tsn-uni:tsn-uni/modules/registered-modules/mod[id='%d']/subscribed-events-mask", module_id, &xpath_subscribed_events_mask_reg);
+        rc = sr_set_item_str(session, xpath_subscribed_events_mask_reg, subscribed_events_mask, NULL, SR_EDIT_NON_RECURSIVE);
+        if (rc != SR_ERR_OK) {
+            goto cleanup;
+        }
+    }
+
+    // Apply changes
+    if (name != NULL || description != NULL || path != NULL || subscribed_events_mask != NULL) {
+        rc = sr_apply_changes(session, 0, 1);
+        if (rc != SR_ERR_OK) {
+            goto cleanup;
+        }
+    }
+
+cleanup:
+    free(xpath_name);
+    free(xpath_name_reg);
+    free(xpath_description);
+    free(xpath_description_reg);
+    free(xpath_path);
+    free(xpath_path_reg);
+    free(xpath_subscribed_events_mask);
+    free(xpath_subscribed_events_mask_reg);
+
+    return rc ? EXIT_FAILURE : EXIT_SUCCESS;
+}
 
 // -------------------------------------------------------- //
 //  Stream handling

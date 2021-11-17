@@ -40,7 +40,7 @@ int sysrepo_add_or_get_module(TSN_Module **module);
  * That means on the next ramp up it will be automatically started. 
  * Before that the function checks if the module is already registered.
  * @param module_id The id of the module to register (use the id stored under all-modules)
- * @param adjusted_subscribed_events_mask If > -1 this mask will be used to write the module to the list of registered ones
+ * @param adjusted_subscribed_events_mask If -1 this mask will be used to write the module to the list of registered ones
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
 int sysrepo_register_module(int module_id, uint32_t adjusted_subscribed_events_mask);
@@ -105,6 +105,18 @@ int sysrepo_get_module_data(int module_id, TSN_Module_Data **data);
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
 int sysrepo_update_module_data(int module_id, TSN_Module_Data data);
+
+/**
+ * @brief Updates the attributes of a specific module in the datastore. 
+ * Only the attributes of passed parameters that are not NULL will be updated. 
+ * @param module_id The id of the module
+ * @param name The new name or NULL
+ * @param description The new description or NULL
+ * @param path The new path or NULL
+ * @param subscribed_events_mask The new subscribed events mask or NULL
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+ */
+int sysrepo_update_module_attributes(int module_id, const char *name, const char *description, const char *path, const char *subscribed_events_mask);
 
 
 // -------------------------------------------------------- //

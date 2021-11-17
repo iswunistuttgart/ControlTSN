@@ -157,6 +157,10 @@ typedef struct TSN_Module_Data
     TSN_Module_Data_Entry *entries;
 } TSN_Module_Data;
 
+typedef struct TSN_Module_Reg {
+    uint16_t id;
+    uint32_t pid;
+} TSN_Module_Reg;
 
 typedef struct TSN_Module
 {

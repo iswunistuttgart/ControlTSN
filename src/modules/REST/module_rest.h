@@ -26,6 +26,7 @@ const char *API_MODULES_ID_DELETE       = "/modules/:id/delete";
 const char *API_MODULES_ID_REGISTER     = "/modules/:id/register";
 const char *API_MODULES_ID_UNREGISTER   = "/modules/:id/unregister";
 const char *API_MODULES_ID_DATA         = "/modules/:id/data";
+const char *API_MODULES_ID_UPDATE       = "/modules/:id/update";
 
 // Topology
 const char *API_TOPOLOGY            = "/topology";
