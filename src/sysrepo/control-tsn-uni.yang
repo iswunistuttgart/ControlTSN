@@ -156,10 +156,14 @@ module control-tsn-uni {
             type uint32;
         }
 
+        leaf registered {
+            type uint8;
+            default 0;
+        }
+
         leaf pid {
             type uint32;
         }
-
         container data {
             list entry {
                 key "data-name";
@@ -327,6 +331,13 @@ module control-tsn-uni {
         }
 
         container modules {
+
+            list mod {
+                key "id";
+                uses module-def;
+            }
+
+            /*
             container available-modules {
                 list mod {
                     key "id";
@@ -339,17 +350,9 @@ module control-tsn-uni {
                 list mod {
                     key "id";
                     uses module-def;
-                    
-                    /*
-                    leaf id {
-                        type uint16;
-                    }
-                    leaf pid {
-                        type uint32;
-                    }
-                    */
                 }
             }
+            */
         }
 
         container topology {

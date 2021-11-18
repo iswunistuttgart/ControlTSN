@@ -89,6 +89,7 @@ serialize_module(TSN_Module *module)
     json_object_set_new(root, "p_id", json_integer(module->p_id));
     json_object_set_new(root, "path", json_string(module->path));
     json_object_set_new(root, "name", json_string(module->name));
+    json_object_set_new(root, "registered", json_integer(module->registered));
     json_object_set_new(root, "description", json_string(module->description));
     json_object_set_new(root, "subscribed_events_mask", json_integer(module->subscribed_events_mask));
 
@@ -98,6 +99,7 @@ serialize_module(TSN_Module *module)
 json_t * 
 serialize_modules(TSN_Modules *modules)
 {
+    /*
     json_t *root = NULL;
     root = json_object();
     json_object_set_new(root, "count_available_modules", json_integer(modules->count_available_modules));
@@ -123,6 +125,23 @@ serialize_modules(TSN_Modules *modules)
         json_array_append_new(array_registered, mod);
     }
     json_object_set_new(root, "registered_modules", array_registered);
+
+    return root;
+    */
+
+    json_t *root = NULL;
+    root = json_object();
+    json_object_set_new(root, "count_modules", json_integer(modules->count_modules));
+
+    json_t *array_modules = NULL;
+    array_modules = json_array();
+
+    for (int i=0; i<modules->count_modules; ++i) {
+        json_t *mod = NULL;
+        mod = serialize_module(&modules->modules[i]);
+        json_array_append_new(array_modules, mod);
+    }
+    json_object_set_new(root, "modules", array_modules);
 
     return root;
 }

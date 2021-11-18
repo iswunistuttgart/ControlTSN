@@ -214,6 +214,7 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
         // MODULES ---------------------------------------------------
         } else if (strstr(val->xpath, "/modules/") != NULL) {
             // Added
+            /*
             if ((strstr(val->xpath, "/available-modules") != NULL) 
                 && (op == SR_OP_CREATED)) {
                 if ((already_send_mask & EVENT_MODULE_ADDED) == 0) {
@@ -227,7 +228,22 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
                     
                 }
             }
+            */
+            if ((strstr(val->xpath, "/id") != NULL)
+                && (op = SR_OP_CREATED)) {
 
+                if ((already_send_mask & EVENT_MODULE_ADDED) == 0) {
+                    char *key = _extract_key(val->xpath, "id");
+                    rc = _send_notification(session, EVENT_MODULE_ADDED, key, NULL);
+                    if (rc == EXIT_FAILURE) {
+                        printf("[PLUGIN] Failed to send notification 'EVENT_MODULE_ADDED'!\n");
+                    } else {
+                        already_send_mask |= EVENT_MODULE_ADDED;
+                    }
+                }
+            }
+
+            /*
             // Registered
             if ((strstr(val->xpath, "/registered-modules") != NULL) 
                 && (op == SR_OP_CREATED)) {
@@ -238,21 +254,6 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
                         printf("[PLUGIN] Failed to send notification 'EVENT_MODULE_REGISTERED'!\n");
                     } else {
                         already_send_mask |= EVENT_MODULE_REGISTERED;
-                    }
-                    
-                }
-            }
-
-            // Data updated
-            if ((strstr(val->xpath, "/data/entry") != NULL) 
-                && ((op == SR_OP_CREATED) || (op == SR_OP_MODIFIED))) {
-                if ((already_send_mask & EVENT_MODULE_DATA_UPDATED) == 0) {
-                    char *key = _extract_key(val->xpath, "id");
-                    rc = _send_notification(session, EVENT_MODULE_DATA_UPDATED, key, NULL);
-                    if (rc == EXIT_FAILURE) {
-                        printf("[PLUGIN] Failed to send notification 'EVENT_MODULE_DATA_UPDATED'!\n");
-                    } else {
-                        already_send_mask |= EVENT_MODULE_DATA_UPDATED;
                     }
                     
                 }
@@ -271,6 +272,31 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
                     }
                     
                 }    
+            }
+            */
+
+            // Registered / Unregistered
+            // Check if /registered is at the end of the xpath
+            if ((!strcmp(val->xpath + strlen(val->xpath) - strlen("/registered"), "/registered")) 
+                && (op == SR_OP_MODIFIED)) {
+                
+                printf("REGISTERD ----------------------------- %d\n", val->data.uint8_val);
+
+            } 
+
+            // Data updated
+            if ((strstr(val->xpath, "/data/entry") != NULL) 
+                && ((op == SR_OP_CREATED) || (op == SR_OP_MODIFIED))) {
+                if ((already_send_mask & EVENT_MODULE_DATA_UPDATED) == 0) {
+                    char *key = _extract_key(val->xpath, "id");
+                    rc = _send_notification(session, EVENT_MODULE_DATA_UPDATED, key, NULL);
+                    if (rc == EXIT_FAILURE) {
+                        printf("[PLUGIN] Failed to send notification 'EVENT_MODULE_DATA_UPDATED'!\n");
+                    } else {
+                        already_send_mask |= EVENT_MODULE_DATA_UPDATED;
+                    }
+                    
+                }
             }
 
             // Deleted

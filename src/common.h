@@ -42,10 +42,9 @@ int module_shutdown();
 /**
  * @brief Registers a module in the core.
  * @param module_id The id of the module to register
- * @param adjusted_subscribed_events_mask If -1 this mask will be used instead of the stored one from the list of available modules. 
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
-int module_register(int module_id, uint32_t adjusted_subscribed_events_mask);
+int module_register(int module_id);
 
 /**
  * @brief Unregisters a module from the core. Before that the function stops the module if necessary.
@@ -60,7 +59,7 @@ int module_unregister(int module_id);
  * @param module The TSN_Module struct to write on
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
-int module_get_registered(int module_id, TSN_Module **module);
+//int module_get_registered(int module_id, TSN_Module **module);
 
 /**
  * @brief Get a specific module based on the id from the list of available modules.
@@ -68,7 +67,7 @@ int module_get_registered(int module_id, TSN_Module **module);
  * @param module The TSN_Module struct to write on
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
-int module_get_available(int module_id, TSN_Module **module);
+//int module_get_available(int module_id, TSN_Module **module);
 
 /**
  * @brief Get all modules stored in the datastore
@@ -83,7 +82,7 @@ int module_get_all(TSN_Modules **modules);
  * @param module The TSN_Module struct to write on
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
-int module_get_id(int module_id, TSN_Modules **modules);
+int module_get_id(int module_id, TSN_Modules **module);
 
 
 /**

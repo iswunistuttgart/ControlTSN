@@ -59,8 +59,9 @@ _api_index_get(const struct _u_request *request, struct _u_response *response, v
                        // Modules
                        "<tr><th>Modules</th></tr>" \
                        "<tr><td><a href='/modules'>/modules</a></td><td>GET</td><td>Get all available and registered modules</td></tr>" \
-                       "<tr><td><a href='/modules/registered/1'>/modules/registered/:id</a></td><td>GET</td><td>Get a specific registered module based on the id</td></tr>" \
-                       "<tr><td><a href='/modules/available/1'>/modules/available/:id</a></td><td>GET</td><td>Get a specific available module based on the id</td></tr>" \
+                       //"<tr><td><a href='/modules/registered/1'>/modules/registered/:id</a></td><td>GET</td><td>Get a specific registered module based on the id</td></tr>" 
+                       //"<tr><td><a href='/modules/available/1'>/modules/available/:id</a></td><td>GET</td><td>Get a specific available module based on the id</td></tr>" 
+                       "<tr><td><a href='/modules/1'>/modules/:id</a></td><td>GET</td><td>Get a specific module based on the id</td></tr>" \
                        "<tr><td><a href='/modules/add'>/modules/add</a></td><td>POST</td><td>Add a new module to the list of available modules</td><td>name (string), description (string), path (string), subscribed_events_mask (int)</td></tr>" \
                        "<tr><td><a href='/modules/1/start'>/modules/:id/start</a></td><td>POST</td><td>Start a specific module</td></tr>" \
                        "<tr><td><a href='/modules/1/stop'>/modules/:id/stop</a></td><td>POST</td><td>Stop a specific module</td></tr>" \
@@ -119,6 +120,7 @@ _api_modules_get(const struct _u_request *request, struct _u_response *response,
     return U_CALLBACK_COMPLETE;
 }
 
+/*
 static int
 _api_modules_get_available_id(const struct _u_request *request, struct _u_response *response, void *user_data)
 {
@@ -168,6 +170,33 @@ _api_modules_get_registered_id(const struct _u_request *request, struct _u_respo
 
     return U_CALLBACK_COMPLETE;
 }
+*/
+
+static int
+_api_modules_get_id(const struct _u_request *request, struct _u_response *response, void *user_data)
+{
+    const char *param_id = u_map_get(request->map_url, "id");
+    int module_id = atoi(param_id);
+    if (module_id <= 0) {
+        return U_CALLBACK_ERROR;
+    }
+    
+    // Get the specific module from the list of modules
+    TSN_Module *module = malloc(sizeof(TSN_Module));
+    rc = module_get_id(module_id, &module);
+    if (rc == EXIT_FAILURE) {
+        return U_CALLBACK_ERROR;
+    }
+
+    // Return module as JSON
+    json_t *json_body = serialize_module(module);
+    ulfius_set_json_body_response(response, 200, json_body);
+
+    json_decref(json_body);
+
+    return U_CALLBACK_COMPLETE;
+}
+
 
 static int
 _api_modules_add(const struct _u_request *request, struct _u_response *response, void *user_data)
@@ -188,7 +217,8 @@ _api_modules_add(const struct _u_request *request, struct _u_response *response,
 
         print_module(*module);
 
-        rc = sysrepo_add_or_get_module(&module);
+        //rc = sysrepo_add_or_get_module(&module);
+        rc = sysrepo_add_module(&module);
         if (rc == EXIT_SUCCESS) {
             return U_CALLBACK_COMPLETE;
         }
@@ -264,7 +294,7 @@ _api_modules_register(const struct _u_request *request, struct _u_response *resp
         adjusted_mask = atoi(adjusted_mask_param);
     }
 
-    rc = module_register(module_id, adjusted_mask);
+    rc = module_register(module_id);
     if (rc == EXIT_FAILURE) {
         return U_CALLBACK_ERROR;
     }
@@ -599,8 +629,9 @@ _init_server()
     
     // Modules
     ulfius_add_endpoint_by_val(&server_instance, "GET",     API_PREFIX, API_MODULES,                0, &_api_modules_get,               NULL);
-    ulfius_add_endpoint_by_val(&server_instance, "GET",     API_PREFIX, API_MODULES_AVAILABLE_ID,   0, &_api_modules_get_available_id,  NULL);
-    ulfius_add_endpoint_by_val(&server_instance, "GET",     API_PREFIX, API_MODULES_REGISTERD_ID,   0, &_api_modules_get_registered_id, NULL);
+    //ulfius_add_endpoint_by_val(&server_instance, "GET",     API_PREFIX, API_MODULES_AVAILABLE_ID,   0, &_api_modules_get_available_id,  NULL);
+    //ulfius_add_endpoint_by_val(&server_instance, "GET",     API_PREFIX, API_MODULES_REGISTERD_ID,   0, &_api_modules_get_registered_id, NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "GET",     API_PREFIX, API_MODULES_ID,             0, &_api_modules_get_id,            NULL);
     ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_MODULES_ADD,            0, &_api_modules_add,               NULL);
     ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_MODULES_ID_START,       0, &_api_modules_start,             NULL);
     ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_MODULES_ID_STOP,        0, &_api_modules_stop,              NULL);

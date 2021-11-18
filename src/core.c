@@ -175,6 +175,7 @@ void main(void)
     }
 
     // Start all registered modules
+    /*
     if (modules->count_registered_modules > 0) {
         for (int i=0; i<modules->count_registered_modules; ++i) {
             printf("[MAIN] Starting module '%s' ...\n", modules->registered_modules[i].name);
@@ -187,6 +188,22 @@ void main(void)
     } else {
         printf("[MAIN] No registered modules to start.\n");
     }
+    */
+
+    uint16_t count_registered_modules = 0;
+    for (int i=0; i<modules->count_modules; ++i) {
+        if (modules->modules[i].registered) {
+            count_registered_modules += 1;
+            printf("[MAIN] Starting module '%s' ...\n", modules->modules[i].name);
+            ret = module_start(modules->modules[i].id);
+            if (ret) {
+                printf("[MAIN] Could not start module '%s' ...\n", modules->modules[i].name);
+            }
+        }
+    }
+    if (count_registered_modules == 0) {
+        printf("[MAIN] No registered modules to start.\n");
+    }
 
 
     // Keep running
@@ -197,11 +214,23 @@ void main(void)
 
     // Stop all modules when shutting down this main module
     printf("-------------------------------------------------------------\n");
+    /*
     for (int i=0; i<modules->count_registered_modules; ++i) {
         printf("[MAIN] Stopping module '%s' ...\n", modules->registered_modules[i].name);
         ret = module_stop(modules->registered_modules[i].id);
         if (ret) {
             printf("[MAIN] Could not stop module '%s' ...\n", modules->registered_modules[i].name);
+        }
+    }
+    */
+
+    for (int i=0; i<modules->count_modules; ++i) {
+        if (modules->modules[i].registered && modules->modules[i].p_id) {
+            printf("[MAIN] Stopping module '%s' ...\n", modules->modules[i].name);
+            ret = module_stop(modules->modules[i].id);
+            if (ret) {
+                printf("[MAIN] Could not stop module '%s' ...\n", modules->modules[i].name);
+            }
         }
     }
 

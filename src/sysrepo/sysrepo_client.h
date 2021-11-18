@@ -33,17 +33,24 @@ int sysrepo_send_notification(uint32_t event_id, char *entry_id, char *msg);
  * @param module The module to add (the id of the module is determined automatically and ignored if already set)
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
-int sysrepo_add_or_get_module(TSN_Module **module);
+//int sysrepo_add_or_get_module(TSN_Module **module);
+
+/**
+ * @brief Adds a new module to the list of available modules in the datastore. 
+ * Before that it is checked if the module already exists. 
+ * @param module The module to add (the id of the module is determined automatically and ignored if already set)
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+ */
+int sysrepo_add_module(TSN_Module **module);
 
 /**
  * @brief Registers a module by adding it to the list of registered modules in the datastore. 
  * That means on the next ramp up it will be automatically started. 
  * Before that the function checks if the module is already registered.
  * @param module_id The id of the module to register (use the id stored under all-modules)
- * @param adjusted_subscribed_events_mask If -1 this mask will be used to write the module to the list of registered ones
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
-int sysrepo_register_module(int module_id, uint32_t adjusted_subscribed_events_mask);
+int sysrepo_register_module(int module_id);
 
 /**
  * @brief Unregisters a module by removing it from the list of registered modules in the datastore.
@@ -58,7 +65,7 @@ int sysrepo_unregister_module(int module_id);
  * @param module The struct to write on
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
-int sysrepo_get_module_from_registered(int module_id, TSN_Module **module);
+//int sysrepo_get_module_from_registered(int module_id, TSN_Module **module);
 
 /**
  * @brief Gets a specific module from the list of available modules.
@@ -66,7 +73,7 @@ int sysrepo_get_module_from_registered(int module_id, TSN_Module **module);
  * @param module The struct to write on
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
-int sysrepo_get_module_from_available(int module_id, TSN_Module **module);
+//int sysrepo_get_module_from_available(int module_id, TSN_Module **module);
 
 /**
  * @brief Returns all stored modules (contains the available and the registered).
@@ -74,6 +81,14 @@ int sysrepo_get_module_from_available(int module_id, TSN_Module **module);
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
 int sysrepo_get_all_modules(TSN_Modules **modules);
+
+/**
+ * @brief Gets a specific module from the list of modules.
+ * @param module_id The id of the module to get
+ * @param module The struct to write on
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+ */
+int sysrepo_get_module(int module_id, TSN_Module **module);
 
 /**
  * @brief Removes a module from the list of available modules in the datastore. The function also unregisters the module. 

@@ -59,10 +59,27 @@ module_init(char *module_name, TSN_Module **module, uint32_t adjusted_subscribed
     ret = sysrepo_get_all_modules(&all_modules);
 
     // Search for the desired module
+    /*
     for (int i=0; i<all_modules->count_registered_modules; ++i) {
         if (strcmp(module_name, all_modules->registered_modules[i].name) == 0) {
             // Found the module
             (*module) = &all_modules->registered_modules[i];
+
+            // Setting the generic callback method
+            uint32_t mask = (adjusted_subscribed_events_mask == -1) ? adjusted_subscribed_events_mask : (*module)->subscribed_events_mask;
+            sysrepo_init_callback(mask, cb_event);
+
+            // Start listening to notifications
+            ret = sysrepo_start_listening();
+
+            goto cleanup;
+        }
+    }
+    */
+    for (int i=0; i<all_modules->count_modules; ++i) {
+        if (strcmp(module_name, all_modules->modules[i].name) == 0) {
+            // Found the module
+            (*module) = &all_modules->modules[i];
 
             // Setting the generic callback method
             uint32_t mask = (adjusted_subscribed_events_mask == -1) ? adjusted_subscribed_events_mask : (*module)->subscribed_events_mask;
@@ -89,9 +106,9 @@ module_shutdown()
 }
 
 int
-module_register(int module_id, uint32_t adjusted_subscribed_events_mask)
+module_register(int module_id)
 {
-    ret = sysrepo_register_module(module_id, adjusted_subscribed_events_mask);
+    ret = sysrepo_register_module(module_id);
     return ret;
 }
 
@@ -102,6 +119,7 @@ module_unregister(int module_id)
     return ret;
 }
 
+/*
 int
 module_get_registered(int module_id, TSN_Module **module)
 {
@@ -113,6 +131,14 @@ int
 module_get_available(int module_id, TSN_Module **module)
 {
     ret = sysrepo_get_module_from_available(module_id, module);
+    return ret;
+}
+*/
+
+int 
+module_get_id(int module_id, TSN_Modules **module)
+{
+    ret = sysrepo_get_module(module_id, module);
     return ret;
 }
 
@@ -136,7 +162,8 @@ module_start(int module_id)
     // Get the module from sysrepo
     TSN_Module *module = NULL;
     module = malloc(sizeof(TSN_Module));
-    ret = sysrepo_get_module_from_registered(module_id, &module);
+    //ret = sysrepo_get_module_from_registered(module_id, &module);
+    ret = sysrepo_get_module(module_id, &module);
     if (ret) {
         printf("[COMMON] Error reading module with ID %d from sysrepo!\n", module_id);
         return EXIT_FAILURE;
@@ -177,7 +204,8 @@ module_stop(int module_id)
     // Get the module from sysrepo
     TSN_Module *module = NULL;
     module = malloc(sizeof(TSN_Module));
-    ret = sysrepo_get_module_from_registered(module_id, &module);
+    //ret = sysrepo_get_module_from_registered(module_id, &module);
+    ret = sysrepo_get_module(module_id, &module);
     if (ret) {
         printf("[COMMON] Error reading module with ID %d from sysrepo!\n", module_id);
         return EXIT_FAILURE;
