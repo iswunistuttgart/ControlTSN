@@ -136,7 +136,7 @@ module_get_available(int module_id, TSN_Module **module)
 */
 
 int 
-module_get_id(int module_id, TSN_Modules **module)
+module_get_id(int module_id, TSN_Module **module)
 {
     ret = sysrepo_get_module(module_id, module);
     return ret;
@@ -219,6 +219,13 @@ module_stop(int module_id)
 
     if (kill(module->p_id, SIGTERM) != 0) {
         printf("[COMMON] Error stopping process of module '%s' with PID %d!\n", module->name, module->p_id);
+        return EXIT_FAILURE;
+    }
+
+    // Reset pid in datastore
+    ret = sysrepo_set_module_pid(module_id, 0);
+    if (ret) {
+        printf("[COMMON] Error resetting pid of module with ID %d in sysrepo!\n", module_id);
         return EXIT_FAILURE;
     }
 

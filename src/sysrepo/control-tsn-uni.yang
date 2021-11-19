@@ -163,6 +163,7 @@ module control-tsn-uni {
 
         leaf pid {
             type uint32;
+            default 0;
         }
         container data {
             list entry {

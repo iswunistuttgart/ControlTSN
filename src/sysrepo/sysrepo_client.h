@@ -29,15 +29,6 @@ int sysrepo_send_notification(uint32_t event_id, char *entry_id, char *msg);
 /**
  * @brief Adds a new module to the list of available modules in the datastore. 
  * Before that it is checked if the module already exists. 
- * If the module exists the passed struct will be overwritten by the stored module information.
- * @param module The module to add (the id of the module is determined automatically and ignored if already set)
- * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
- */
-//int sysrepo_add_or_get_module(TSN_Module **module);
-
-/**
- * @brief Adds a new module to the list of available modules in the datastore. 
- * Before that it is checked if the module already exists. 
  * @param module The module to add (the id of the module is determined automatically and ignored if already set)
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
@@ -58,22 +49,6 @@ int sysrepo_register_module(int module_id);
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
 int sysrepo_unregister_module(int module_id);
-
-/**
- * @brief Gets a specific module from the list of registered modules.
- * @param module_id The id of the module to get
- * @param module The struct to write on
- * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
- */
-//int sysrepo_get_module_from_registered(int module_id, TSN_Module **module);
-
-/**
- * @brief Gets a specific module from the list of available modules.
- * @param module_id The id of the module to get
- * @param module The struct to write on
- * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
- */
-//int sysrepo_get_module_from_available(int module_id, TSN_Module **module);
 
 /**
  * @brief Returns all stored modules (contains the available and the registered).
@@ -199,29 +174,6 @@ int sysrepo_get_application_apps(TSN_Apps **apps);
  */
 int sysrepo_get_application_images(TSN_Images **images);
 
-
-
-
-
-// OLD VVVVVVVVVVVVVVVVVVVV
-
-// -------------------------------------------------------- //
-//  CRUD methods
-// -------------------------------------------------------- //
-// The yang module root containing the stream-list
-//int sysrepo_get_root(TSN_Uni **root);
-
-// Stream
-// int sysrepo_write_stream(TSN_Stream stream);
-// int sysrepo_read_stream(char *stream_id, TSN_Stream **stream);
-// int sysrepo_delete_stream(char *stream_id);
-
-// Modules
-//int sysrepo_register_module(TSN_Module module);
-//int sysrepo_add_available_module(TSN_Module module);
-//int sysrepo_get_modules(TSN_Modules **modules);
-
-// Topology
 
 
 #endif // __SYSREPO_CLIENT_H__

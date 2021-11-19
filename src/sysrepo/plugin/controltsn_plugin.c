@@ -280,7 +280,15 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
             if ((!strcmp(val->xpath + strlen(val->xpath) - strlen("/registered"), "/registered")) 
                 && (op == SR_OP_MODIFIED)) {
                 
-                printf("REGISTERD ----------------------------- %d\n", val->data.uint8_val);
+                char *key = _extract_key(val->xpath, "id");
+
+                uint8_t registered = val->data.uint8_val;
+                rc = _send_notification(session, registered ? EVENT_MODULE_REGISTERED : EVENT_MODULE_UNREGISTERED, key, NULL);
+                if (rc == EXIT_FAILURE) {
+                    printf("[PLUGIN] Failed to send notification '%s'!\n", (registered ? "EVENT_MODULE_REGISTERED" : "EVENT_MODULE_UNREGISTERED"));
+                } else {
+                    already_send_mask |= (registered ? EVENT_MODULE_REGISTERED : EVENT_MODULE_UNREGISTERED);
+                }
 
             } 
 

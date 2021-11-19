@@ -82,7 +82,7 @@ int module_get_all(TSN_Modules **modules);
  * @param module The TSN_Module struct to write on
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
-int module_get_id(int module_id, TSN_Modules **module);
+int module_get_id(int module_id, TSN_Module **module);
 
 
 /**
