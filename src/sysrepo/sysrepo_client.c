@@ -3081,7 +3081,7 @@ cleanup:
 */
 
 int 
-sysrepo_update_module_attributes(int module_id, const char *name, const char *description, const char *path, const char *subscribed_events_mask)
+sysrepo_update_module_attributes(int module_id, const char *name, const char *description, const char *path, const uint32_t *subscribed_events_mask)
 {
     char *xpath_name = NULL;
     char *xpath_name_reg = NULL;
@@ -3150,7 +3150,10 @@ sysrepo_update_module_attributes(int module_id, const char *name, const char *de
     if (subscribed_events_mask != NULL) {
         //_create_xpath_id("/control-tsn-uni:tsn-uni/modules/available-modules/mod[id='%d']/subscribed-events-mask", module_id, &xpath_subscribed_events_mask);
         _create_xpath_id("/control-tsn-uni:tsn-uni/modules/mod[id='%d']/subscribed-events-mask", module_id, &xpath_subscribed_events_mask);
-        rc = sr_set_item_str(session, xpath_subscribed_events_mask, subscribed_events_mask, NULL, 0);
+        sr_val_t val_mask;
+        val_mask.type = SR_UINT32_T;
+        val_mask.data.uint32_val = subscribed_events_mask;
+        rc = sr_set_item(session, xpath_subscribed_events_mask, &val_mask, 0);
         if (rc != SR_ERR_OK) {
             goto cleanup;
         }

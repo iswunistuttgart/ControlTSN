@@ -294,6 +294,7 @@ _api_modules_delete(const struct _u_request *request, struct _u_response *respon
 static int
 _api_modules_register(const struct _u_request *request, struct _u_response *response, void *user_data)
 {
+ 
     const char *param_id = u_map_get(request->map_url, "id");
     int module_id = atoi(param_id);
     if (module_id <= 0) {
@@ -301,13 +302,22 @@ _api_modules_register(const struct _u_request *request, struct _u_response *resp
     }
 
     // Adjusting the subscribed events mask in the post parameters
+    /*
     const char *adjusted_mask_param = u_map_get(request->map_post_body, "mask");
     int adjusted_mask = -1;
     if (adjusted_mask_param) {
         adjusted_mask = atoi(adjusted_mask_param);
     }
+    */
+
+    json_t *json_post_body = ulfius_get_json_body_request(request, NULL);
+    int adjusted_mask = -1;
+    if (json_post_body) {
+        adjusted_mask = json_number_value(json_object_get(json_post_body, "mask"));
+    }
 
     rc = module_register(module_id);
+    json_decref(json_post_body);
     if (rc == EXIT_FAILURE) {
         return U_CALLBACK_ERROR;
     }
@@ -370,12 +380,19 @@ _api_modules_update(const struct _u_request *request, struct _u_response *respon
     }
 
     // Get the post params
-    const char *name = u_map_get(request->map_post_body, "name");
-    const char *description = u_map_get(request->map_post_body, "description");
-    const char *path = u_map_get(request->map_post_body, "path");
-    const char *subscribed_events_mask = u_map_get(request->map_post_body, "subscribed_events_mask");
+    json_t *json_post_body = ulfius_get_json_body_request(request, NULL);
+    if (json_post_body == NULL) {
+        return U_CALLBACK_ERROR;
+    } 
+    
+    const char *name = json_string_value(json_object_get(json_post_body, "name"));
+    const char *description = json_string_value(json_object_get(json_post_body, "description"));
+    const char *path = json_string_value(json_object_get(json_post_body, "path"));
+    const uint32_t subscribed_events_mask = json_number_value(json_object_get(json_post_body, "subscribed_events_mask"));
+
 
     rc = sysrepo_update_module_attributes(module_id, name, description, path, subscribed_events_mask);
+    json_decref(json_post_body);
     if (rc == EXIT_SUCCESS) {
         return U_CALLBACK_COMPLETE;
     }
