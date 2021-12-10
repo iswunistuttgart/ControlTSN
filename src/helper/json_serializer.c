@@ -50,6 +50,54 @@ _data_value_to_json(TSN_Module_Data_Entry_Type type, TSN_Module_Data_Entry_Value
     return root;
 }
 
+TSN_Module_Data_Entry_Value 
+_json_to_data_value(json_t *val, TSN_Module_Data_Entry_Type type)
+{
+    TSN_Module_Data_Entry_Value value;
+
+    if (type == BINARY) {
+        value.binary_val = json_string_value(val);
+    }
+    else if (type == BOOLEAN) {
+        value.boolean_val = json_boolean_value(val);
+    }
+    else if (type == DECIMAL64) {
+        value.decimal64_val = json_real_value(val);
+    }
+    else if (type == INSTANCE_IDENTIFIER) {
+        value.instance_identifier_val = json_string_value(val);
+    }
+    else if (type == INT8) {
+        value.int8_val = json_integer_value(val);
+    }
+    else if (type == INT16) {
+        value.int16_val = json_integer_value(val);
+    }
+    else if (type == INT32) {
+        value.int32_val = json_integer_value(val);
+    }
+    else if (type == INT64) {
+        value.int64_val = json_integer_value(val);
+    }
+    else if (type == STRING) {
+        value.string_val = json_string_value(val);
+    }
+    else if (type == UINT8) {
+        value.uint8_val = json_integer_value(val);
+    }
+    else if (type == UINT16) {
+        value.uint16_val = json_integer_value(val);
+    }
+    else if (type == UINT32) {
+        value.uint32_val = json_integer_value(val);
+    }
+    else if (type == UINT64) {
+        value.uint64_val = json_integer_value(val);
+    }
+
+    return value;
+}
+
 
 // ------------------------------------
 // Module 
@@ -145,6 +193,45 @@ serialize_modules(TSN_Modules *modules)
 
     return root;
 }
+
+TSN_Module_Data_Entry *
+deserialize_module_data_entry(json_t *obj) 
+{
+    TSN_Module_Data_Entry *entry = malloc(sizeof(TSN_Module_Data_Entry));
+
+    const json_t *name = json_object_get(obj, "name");
+    entry->name = strdup(json_string_value(name));
+
+    const json_t *type = json_object_get(obj, "type");
+    entry->type = string_to_data_type(json_string_value(type));
+
+    const json_t *value = json_object_get(obj, "value");
+    entry->value = _json_to_data_value(value, entry->type);
+
+    return entry;
+}
+
+TSN_Module_Data *
+deserialize_module_data(json_t *obj)
+{
+    TSN_Module_Data *module_data = malloc(sizeof(TSN_Module_Data));
+
+    uint16_t count_entries;
+    TSN_Module_Data_Entry *entries;
+
+    count_entries = json_number_value(json_object_get(obj, "count_entries"));
+    module_data->count_entries = count_entries;
+    entries = (TSN_Module_Data_Entry *) malloc(sizeof(TSN_Module_Data_Entry) * count_entries);
+    json_t *entries_json = json_object_get(obj, "entries");
+    for (int i=0; i<count_entries; ++i) {
+        json_t *entry = json_array_get(entries_json, i);
+        TSN_Module_Data_Entry *e = deserialize_module_data_entry(entry);
+        module_data->entries[i] = *e;
+    }
+
+    return module_data;
+}
+
 
 // ------------------------------------
 // Streams

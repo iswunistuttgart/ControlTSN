@@ -106,7 +106,7 @@ int sysrepo_update_module_data(int module_id, TSN_Module_Data data);
  * @param subscribed_events_mask The new subscribed events mask or NULL
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
-int sysrepo_update_module_attributes(int module_id, const char *name, const char *description, const char *path, const uint32_t *subscribed_events_mask);
+int sysrepo_update_module_attributes(int module_id, const char *name, const char *description, const char *path, const uint32_t subscribed_events_mask);
 
 
 // -------------------------------------------------------- //

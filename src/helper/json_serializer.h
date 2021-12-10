@@ -11,6 +11,9 @@ json_t *serialize_module_data(TSN_Module_Data *module_data);
 json_t *serialize_module(TSN_Module *module);
 json_t *serialize_modules(TSN_Modules *modules);
 
+TSN_Module_Data *deserialize_module_data(json_t *obj);
+TSN_Module_Data_Entry *deserialize_module_data_entry(json_t *obj);
+
 // ------------------------------------
 // Streams
 // ------------------------------------

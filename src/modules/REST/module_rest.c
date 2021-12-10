@@ -69,6 +69,7 @@ _api_index_get(const struct _u_request *request, struct _u_response *response, v
                        "<tr><td><a href='/modules/1/register'>/modules/:id/register</a></td><td>POST</td><td>Register a specific module (use 'mask' to adjust the subscribed events)</td><td>mask (int)</td></tr>" \
                        "<tr><td><a href='/modules/1/unregister'>/modules/:id/unregister</a></td><td>POST</td><td>Unregister a specific module</td></tr>" \
                        "<tr><td><a href='/modules/1/data'>/modules/:id/data</a></td><td>GET</td><td>Get the data of a specific module</td></tr>" \
+                       "<tr><td><a href='/modules/1/data'>/modules/:id/data</a></td><td>POST</td><td>Sets the data of a specific module</td><td>count_entries (int), {name (string), type (TSN_Module_Data_Entry_Type), value (TSN_Module_Data_Entry_Value)}[]</td></tr>" \
                        "<tr><td><a href='/modules/1/update'>/modules/:id/update</a></td><td>POST</td><td>Update the attributes of a specific module</td><td>name (string), description (string), path (string), subscribed_events_mask (int)</td></tr>" \
                        // Topology
                        "<tr><th>Topology</th></tr>" \
@@ -202,8 +203,12 @@ static int
 _api_modules_add(const struct _u_request *request, struct _u_response *response, void *user_data)
 {
     // Get the post params
-    json_t *json_post_body = ulfius_get_json_body_request(request, NULL);
+    json_error_t json_error;
+    json_t *json_post_body = ulfius_get_json_body_request(request, &json_error);
     if (json_post_body == NULL) {
+        //char *error_resp = malloc(160 * sizeof(char) + 1 + strlen("ERROR:  | "));
+        //sprintf(error_resp, "ERROR: %s | %d", json_error.text, json_error.position);
+        //ulfius_set_string_body_response(response, 200, error_resp);
         return U_CALLBACK_ERROR;
     } 
     
@@ -218,10 +223,12 @@ _api_modules_add(const struct _u_request *request, struct _u_response *response,
         || description == NULL || strlen(description) <= 0 
         || path == NULL || strlen(path) <= 0 
         || subscribed_events_mask < 0) {
-            
+
         json_decref(json_post_body);
+
         return U_CALLBACK_ERROR;
     }
+
 
     module->name = strdup(name);
     module->description = strdup(description);
@@ -234,8 +241,6 @@ _api_modules_add(const struct _u_request *request, struct _u_response *response,
     if (rc != EXIT_SUCCESS) {
         return U_CALLBACK_ERROR;
     }
-
-    print_module(*module);
 
     return U_CALLBACK_COMPLETE;
 }
@@ -367,6 +372,42 @@ _api_modules_get_data_id(const struct _u_request *request, struct _u_response *r
     free(data);
 
     return U_CALLBACK_COMPLETE;
+}
+
+static int
+_api_modules_set_data_id(const struct _u_request *request, struct _u_response *response, void *user_data)
+{
+    /*
+    if (json_post_body == NULL) {
+        //char *error_resp = malloc(160 * sizeof(char) + 1 + strlen("ERROR:  | "));
+        //sprintf(error_resp, "ERROR: %s | %d", json_error.text, json_error.position);
+        //ulfius_set_string_body_response(response, 200, error_resp);
+        return U_CALLBACK_ERROR;
+    } 
+    
+    const char *name = json_string_value(json_object_get(json_post_body, "name"));
+    const char *description = json_string_value(json_object_get(json_post_body, "description"));
+    const char *path = json_string_value(json_object_get(json_post_body, "path"));
+    const uint32_t subscribed_events_mask = json_number_value(json_object_get(json_post_body, "subscribed_events_mask"));
+    */
+    const char *param_id = u_map_get(request->map_url, "id");
+    int module_id = atoi(param_id);
+    if (module_id <= 0) {
+        return U_CALLBACK_ERROR;
+    }
+
+    json_t *json_post_body = ulfius_get_json_body_request(request, NULL);
+    if (json_post_body == NULL) {
+        return U_CALLBACK_ERROR;
+    }
+
+    TSN_Module_Data *module_data = deserialize_module_data(json_post_body);
+    rc = sysrepo_update_module_data(module_id, *module_data);
+    if (rc != EXIT_SUCCESS) {
+        return U_CALLBACK_COMPLETE;
+    }
+
+    return U_CALLBACK_ERROR;    
 }
 
 static int
