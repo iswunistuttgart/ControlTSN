@@ -98,7 +98,7 @@ typedef enum TSN_Module_Data_Entry_Type {
  * @param enum_string The string to convert
  * @return The module data type enum
  */
-TSN_Module_Data_Entry_Type string_to_data_type(char *enum_string);
+TSN_Module_Data_Entry_Type string_to_data_type(const char *enum_string);
 /**
  * @brief Converts the module data type to the corresponding sysrepo enum string. 
  * @param type The module data type enum

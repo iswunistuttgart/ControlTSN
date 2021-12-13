@@ -42,11 +42,13 @@
 /**
  * @brief Data for the event of an occured error
  */
+/*
 typedef struct TSN_Event_Data_Error
 {
     int error_code;
     char *error_msg;
 } TSN_Event_Data_Error;
+*/
 
 // ----------------------------------------------
 // Streams
@@ -54,18 +56,22 @@ typedef struct TSN_Event_Data_Error
 /**
  * @brief Data for the event of a requested stream
  */
+/*
 typedef struct TSN_Event_Data_Stream_Requested
 {
     char *stream_id;
 } TSN_Event_Data_Stream_Requested;
+*/
 
 /**
  * @brief Data for the event of a configured stream
  */
+/*
 typedef struct TSN_Event_Data_Stream_Configured
 {
     char *stream_id;
 } TSN_Event_Data_Stream_Configured;
+*/
 
 // ----------------------------------------------
 // Modules
@@ -97,9 +103,9 @@ typedef union TSN_Event_CB_Data
 */
 
 typedef struct TSN_Event_CB_Data {
-    uint32_t event_id;
-    char *entry_id;
-    char *msg;
+    uint32_t event_id;  // The ID of the occured event
+    char *entry_id;     // Might contain the sysrepo key of the corresponding element (e.g. the id)
+    char *msg;          // Might contain a event specific message
 } TSN_Event_CB_Data;
 
 

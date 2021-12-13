@@ -377,19 +377,6 @@ _api_modules_get_data_id(const struct _u_request *request, struct _u_response *r
 static int
 _api_modules_set_data_id(const struct _u_request *request, struct _u_response *response, void *user_data)
 {
-    /*
-    if (json_post_body == NULL) {
-        //char *error_resp = malloc(160 * sizeof(char) + 1 + strlen("ERROR:  | "));
-        //sprintf(error_resp, "ERROR: %s | %d", json_error.text, json_error.position);
-        //ulfius_set_string_body_response(response, 200, error_resp);
-        return U_CALLBACK_ERROR;
-    } 
-    
-    const char *name = json_string_value(json_object_get(json_post_body, "name"));
-    const char *description = json_string_value(json_object_get(json_post_body, "description"));
-    const char *path = json_string_value(json_object_get(json_post_body, "path"));
-    const uint32_t subscribed_events_mask = json_number_value(json_object_get(json_post_body, "subscribed_events_mask"));
-    */
     const char *param_id = u_map_get(request->map_url, "id");
     int module_id = atoi(param_id);
     if (module_id <= 0) {
@@ -402,8 +389,9 @@ _api_modules_set_data_id(const struct _u_request *request, struct _u_response *r
     }
 
     TSN_Module_Data *module_data = deserialize_module_data(json_post_body);
+    
     rc = sysrepo_update_module_data(module_id, *module_data);
-    if (rc != EXIT_SUCCESS) {
+    if (rc == EXIT_SUCCESS) {
         return U_CALLBACK_COMPLETE;
     }
 
@@ -710,6 +698,7 @@ _init_server()
     ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_MODULES_ID_REGISTER,    0, &_api_modules_register,          NULL);
     ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_MODULES_ID_UNREGISTER,  0, &_api_modules_unregister,        NULL);
     ulfius_add_endpoint_by_val(&server_instance, "GET",     API_PREFIX, API_MODULES_ID_DATA,        0, &_api_modules_get_data_id,       NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_MODULES_ID_DATA,        0, &_api_modules_set_data_id,       NULL);
     ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_MODULES_ID_UPDATE,      0, &_api_modules_update,            NULL);
     // Streams
     ulfius_add_endpoint_by_val(&server_instance, "GET", API_PREFIX, API_STREAMS, 0, &_api_streams_get, NULL);

@@ -3,7 +3,7 @@
 #include "type_definitions.h"
 
 TSN_Module_Data_Entry_Type 
-string_to_data_type(char *enum_string)
+string_to_data_type(const char *enum_string)
 {
     if (strcmp("binary", enum_string) == 0) {
         return BINARY;

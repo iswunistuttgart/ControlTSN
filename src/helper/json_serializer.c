@@ -51,12 +51,12 @@ _data_value_to_json(TSN_Module_Data_Entry_Type type, TSN_Module_Data_Entry_Value
 }
 
 TSN_Module_Data_Entry_Value 
-_json_to_data_value(json_t *val, TSN_Module_Data_Entry_Type type)
+_json_to_data_value(const json_t *val, TSN_Module_Data_Entry_Type type)
 {
     TSN_Module_Data_Entry_Value value;
 
     if (type == BINARY) {
-        value.binary_val = json_string_value(val);
+        value.binary_val = (char *) json_string_value(val);
     }
     else if (type == BOOLEAN) {
         value.boolean_val = json_boolean_value(val);
@@ -65,7 +65,7 @@ _json_to_data_value(json_t *val, TSN_Module_Data_Entry_Type type)
         value.decimal64_val = json_real_value(val);
     }
     else if (type == INSTANCE_IDENTIFIER) {
-        value.instance_identifier_val = json_string_value(val);
+        value.instance_identifier_val = (char *) json_string_value(val);
     }
     else if (type == INT8) {
         value.int8_val = json_integer_value(val);
@@ -80,7 +80,7 @@ _json_to_data_value(json_t *val, TSN_Module_Data_Entry_Type type)
         value.int64_val = json_integer_value(val);
     }
     else if (type == STRING) {
-        value.string_val = json_string_value(val);
+        value.string_val = (char *) json_string_value(val);
     }
     else if (type == UINT8) {
         value.uint8_val = json_integer_value(val);
@@ -140,6 +140,7 @@ serialize_module(TSN_Module *module)
     json_object_set_new(root, "registered", json_integer(module->registered));
     json_object_set_new(root, "description", json_string(module->description));
     json_object_set_new(root, "subscribed_events_mask", json_integer(module->subscribed_events_mask));
+    json_object_set_new(root, "data", serialize_module_data(&module->data));
 
     return root;
 }
@@ -216,12 +217,9 @@ deserialize_module_data(json_t *obj)
 {
     TSN_Module_Data *module_data = malloc(sizeof(TSN_Module_Data));
 
-    uint16_t count_entries;
-    TSN_Module_Data_Entry *entries;
-
-    count_entries = json_number_value(json_object_get(obj, "count_entries"));
+    uint16_t count_entries = json_number_value(json_object_get(obj, "count_entries"));
     module_data->count_entries = count_entries;
-    entries = (TSN_Module_Data_Entry *) malloc(sizeof(TSN_Module_Data_Entry) * count_entries);
+    module_data->entries = (TSN_Module_Data_Entry *) malloc(sizeof(TSN_Module_Data_Entry) * count_entries);
     json_t *entries_json = json_object_get(obj, "entries");
     for (int i=0; i<count_entries; ++i) {
         json_t *entry = json_array_get(entries_json, i);

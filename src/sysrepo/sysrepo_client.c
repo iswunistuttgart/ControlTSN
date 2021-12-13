@@ -3041,6 +3041,17 @@ sysrepo_update_module_data(int module_id, TSN_Module_Data data)
     char *xpath_module_data = NULL;
     //_create_xpath_id("/control-tsn-uni:tsn-uni/modules/registered-modules/mod[id='%d']/data", module_id, &xpath_module_data);
     _create_xpath_id("/control-tsn-uni:tsn-uni/modules/mod[id='%d']/data", module_id, &xpath_module_data);
+    // clean the data first
+    rc = sr_delete_item(session, xpath_module_data, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    // Apply the changes
+    rc = sr_apply_changes(session, 0, 1);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    
     rc = _write_module_data(xpath_module_data, &data);
     if (rc != SR_ERR_OK) {
         goto cleanup;
