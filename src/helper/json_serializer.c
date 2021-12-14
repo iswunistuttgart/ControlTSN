@@ -279,7 +279,10 @@ serialize_enddevice(TSN_Enddevice *enddevice)
     root = json_object();
 
     json_object_set_new(root, "mac", json_string(enddevice->mac));
-    json_object_set_new(root, "app_ref", json_string(enddevice->app_ref));
+    json_object_set_new(root, "has_app", json_integer(enddevice->has_app));
+    if (enddevice->has_app) {
+        json_object_set_new(root, "app_ref", json_string(enddevice->app_ref));
+    }
 
     return root;
 }
@@ -388,13 +391,17 @@ deserialize_enddevice(json_t *obj)
 {
     TSN_Enddevice *enddevice = malloc(sizeof(TSN_Enddevice));
     json_t *mac;
+    json_t *has_app;
     json_t *app_ref;
 
     mac = json_object_get(obj, "mac");
     enddevice->mac = strdup(json_string_value(mac));
 
-    app_ref = json_object_get(obj, "app_ref");
-    if (app_ref != NULL) {
+    has_app = json_object_get(obj, "has_app");
+    enddevice->has_app = json_integer_value(has_app);
+
+    if (enddevice->has_app) {
+        app_ref = json_object_get(obj, "app_ref");
         enddevice->app_ref = strdup(json_string_value(app_ref));
     }
 
@@ -533,6 +540,7 @@ serialize_app(TSN_App *app)
     json_object_set_new(root, "name", json_string(app->name));
     json_object_set_new(root, "description", json_string(app->description));
     json_object_set_new(root, "version", json_string(app->version));
+    json_object_set_new(root, "has_image", json_integer(app->has_image));
     json_object_set_new(root, "image_ref", json_string(app->image_ref));
 
     json_object_set_new(root, "count_parameters", json_integer(app->count_parameters));

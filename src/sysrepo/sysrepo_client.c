@@ -1847,8 +1847,10 @@ _read_enddevice(char *xpath, TSN_Enddevice **enddevice)
 {
     int rc = SR_ERR_OK;
     sr_val_t *val_mac = NULL;
+    sr_val_t *val_has_app = NULL;
     sr_val_t *val_app_ref = NULL;
     char *xpath_mac = NULL;
+    char *xpath_has_app = NULL;
     char *xpath_app_ref = NULL;
 
     // MAC
@@ -1859,18 +1861,30 @@ _read_enddevice(char *xpath, TSN_Enddevice **enddevice)
     }
     (*enddevice)->mac = strdup(val_mac->data.string_val);
 
+    // Has App
+    _create_xpath(xpath, "/has-app", &xpath_has_app);
+    rc = sr_get_item(session, xpath_has_app, 0, &val_has_app);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*enddevice)->has_app = val_has_app->data.uint8_val;
+
     // App Ref
-    _create_xpath(xpath, "/app-ref", &xpath_app_ref);
-    rc = sr_get_item(session, xpath_app_ref, 0, &val_app_ref);
-    // App-ref is optional
-    if (rc == SR_ERR_OK) {
+    if ((*enddevice)->has_app) {
+        _create_xpath(xpath, "/app-ref", &xpath_app_ref);
+        rc = sr_get_item(session, xpath_app_ref, 0, &val_app_ref);
+        if (rc != SR_ERR_OK) {
+            goto cleanup;
+        }
         (*enddevice)->app_ref = strdup(val_app_ref->data.string_val);
     }
 
 cleanup:
     sr_free_val(val_mac);
+    sr_free_val(val_has_app);
     sr_free_val(val_app_ref);
     free(xpath_mac);
+    free(xpath_has_app);
     free(xpath_app_ref);
 
     return rc;
@@ -2096,6 +2110,7 @@ _write_enddevice(char *xpath, TSN_Enddevice *enddevice)
 {
     int rc = SR_ERR_OK;
     char *xpath_mac = NULL;
+    char *xpath_has_app = NULL;
     char *xpath_app_ref = NULL;
     
     // Mac
@@ -2105,8 +2120,18 @@ _write_enddevice(char *xpath, TSN_Enddevice *enddevice)
         goto cleanup;
     }
 
+    // Has App
+    _create_xpath(xpath, "/has-app", &xpath_has_app);
+    sr_val_t val_has_app;
+    val_has_app.type = SR_UINT8_T;
+    val_has_app.data.uint8_val = enddevice->has_app;
+    rc = sr_set_item(session, xpath_has_app, &val_has_app, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
     // App Ref
-    if (enddevice->app_ref) {
+    if (enddevice->has_app) {
         _create_xpath(xpath, "/app-ref", &xpath_app_ref);
         rc = sr_set_item_str(session, xpath_app_ref, enddevice->app_ref, NULL, 0);
         if (rc != SR_ERR_OK) {
@@ -2122,6 +2147,7 @@ _write_enddevice(char *xpath, TSN_Enddevice *enddevice)
 
 cleanup:
     free(xpath_mac);
+    free(xpath_has_app);
     free(xpath_app_ref);
 
     return rc;
@@ -2412,12 +2438,14 @@ _read_app(char *xpath, TSN_App **app)
     sr_val_t *val_name = NULL;
     sr_val_t *val_desc = NULL;
     sr_val_t *val_version = NULL;
+    sr_val_t *val_has_image = NULL;
     sr_val_t *val_image_ref = NULL;
     sr_val_t *val_parameters = NULL;
     char *xpath_id = NULL;
     char *xpath_name = NULL;
     char *xpath_desc = NULL;
     char *xpath_version = NULL;
+    char *xpath_has_image = NULL;
     char *xpath_image_ref = NULL;
     char *xpath_parameters = NULL;
 
@@ -2453,13 +2481,23 @@ _read_app(char *xpath, TSN_App **app)
     }
     (*app)->version = strdup(val_version->data.string_val);
 
-    // Image Reference
-    _create_xpath(xpath, "/image-ref", &xpath_image_ref);
-    rc = sr_get_item(session, xpath_image_ref, 0, &val_image_ref);
+    // Has Image
+    _create_xpath(xpath, "/has-image", &xpath_has_image);
+    rc = sr_get_item(session, xpath_has_image, 0, &val_has_image);
     if (rc != SR_ERR_OK) {
         goto cleanup;
     }
-    (*app)->image_ref = strdup(val_image_ref->data.string_val);
+    (*app)->has_image = val_has_image->data.uint8_val;
+
+    // Image Reference
+    if ((*app)->has_image) {
+        _create_xpath(xpath, "/image-ref", &xpath_image_ref);
+        rc = sr_get_item(session, xpath_image_ref, 0, &val_image_ref);
+        if (rc != SR_ERR_OK) {
+            goto cleanup;
+        }
+        (*app)->image_ref = strdup(val_image_ref->data.string_val);
+    }
 
     // Parameters
     _create_xpath(xpath, "/parameters/*", &xpath_parameters);
@@ -2481,11 +2519,15 @@ cleanup:
     sr_free_val(val_name);
     sr_free_val(val_desc);
     sr_free_val(val_version);
+    sr_free_val(val_has_image);
+    sr_free_val(val_image_ref);
     sr_free_val(val_parameters);
     free(xpath_id);
     free(xpath_name);
     free(xpath_desc);
     free(xpath_version);
+    free(xpath_has_image);
+    free(xpath_image_ref);
     free(xpath_parameters);
 
     return rc;

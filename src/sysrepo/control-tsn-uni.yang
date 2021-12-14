@@ -182,9 +182,14 @@ module control-tsn-uni {
                 pattern '[0-9a-fA-F]{2}(:[0-9a-fA-F]{2}){5}';
             }
         }
+        leaf has-app {
+            type uint8;
+            default 0;
+        }
         leaf app-ref {
             type leafref {
                 path "/control-tsn-uni:tsn-uni/application/apps/app/id";
+                require-instance "false";
             }
         }
     }
@@ -279,6 +284,10 @@ module control-tsn-uni {
         }
         leaf version {
             type string;
+        }
+        leaf has-image {
+            type uint8;
+            default 0;
         }
         leaf image-ref {
             type leafref {

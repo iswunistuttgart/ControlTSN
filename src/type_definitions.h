@@ -205,6 +205,7 @@ typedef struct TSN_Streams {
 // ---------------------------------------
 typedef struct TSN_Enddevice {
     char *mac;
+    uint8_t has_app;
     char *app_ref;
 } TSN_Enddevice;
 
@@ -253,6 +254,7 @@ typedef struct TSN_App {
     char *name;
     char *description;
     char *version;      // {X}.{Y}.{Z}
+    uint8_t has_image;
     char *image_ref;
     uint8_t count_parameters;
     TSN_App_Parameter *parameters;

@@ -593,9 +593,11 @@ _api_testing_set_topology(const struct _u_request *request, struct _u_response *
     // 2 Enddevices
     e1 = malloc(sizeof(TSN_Enddevice));
     e1->mac = strdup("00:00:00:00:00:01");
+    e1->has_app = 0;
     e1->app_ref = NULL;
     e2 = malloc(sizeof(TSN_Enddevice));
     e2->mac = strdup("00:00:00:00:00:02");
+    e2->has_app = 0;
     e2->app_ref = NULL;
 
     // 1 Switch
