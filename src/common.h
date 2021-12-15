@@ -125,6 +125,13 @@ int module_update_data(int module_id, TSN_Module_Data module_data);
  */
 int module_get_data(int module_id, TSN_Module_Data **module_data);
 
+/**
+ * @brief Find and return a specific entry from the module data.
+ * @param module_data The whole module data struct
+ * @param entry_name The name of the entry to search for
+ * @return The specific entry or NULL
+ */
+TSN_Module_Data_Entry *module_get_data_entry(TSN_Module_Data *module_data, const char *entry_name);
 
 // ----------------------------------------------
 //      FUNCTIONS - Stream-Handling

@@ -9,5 +9,23 @@
         <registered>1</registered>
         <pid>0</pid>
       </mod>
+      <mod>
+        <id>2</id>
+        <name>CUC</name>
+        <desc>Represents the Central User Controller in the network based on the central configuration approach of TSN</desc>
+        <executable-path>./CUCModule</executable-path>
+        <subscribed-events-mask>196609</subscribed-events-mask>
+        <registered>1</registered>
+        <pid>0</pid>
+      </mod>
+      <mod>
+        <id>3</id>
+        <name>Monitor</name>
+        <desc>This module monitors the network including the streams and their latency, synchronization etc.</desc>
+        <executable-path>./MonitorModule</executable-path>
+        <subscribed-events-mask>203535</subscribed-events-mask>
+        <registered>1</registered>
+        <pid>0</pid>
+      </mod>
   </modules>
 </tsn-uni>

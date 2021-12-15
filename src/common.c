@@ -248,6 +248,20 @@ module_get_data(int module_id, TSN_Module_Data **module_data)
     return ret;
 }
 
+TSN_Module_Data_Entry *
+module_get_data_entry(TSN_Module_Data *module_data, const char *entry_name)
+{
+    TSN_Module_Data_Entry *entry = NULL;
+
+    for (int i=0; i<module_data->count_entries; ++i) {
+        if (strcmp(module_data->entries[i].name, entry_name) == 0) {
+            return &(module_data->entries[i]);
+        }
+    }
+
+    return entry;
+}
+
 
 // ----------------------------------------------
 //      FUNCTIONS - Stream

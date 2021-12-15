@@ -18,8 +18,9 @@ TSN_Module *this_module;
 TSN_Module_Data *this_module_data = NULL;
 
 // THESE VARIABLES SHOULD BE STORED AS MODULE DATA ---------------
-char cnc_url[] = "http://localhost:11067";
+//char cnc_url[] = "http://localhost:11067";
 // ---------------------------------------------------------------
+char *cnc_url = NULL;
 
 
 static void 
@@ -139,6 +140,21 @@ main(void)
 
     this_module = malloc(sizeof(TSN_Module));
     rc = module_init("CUC", &this_module, (EVENT_ERROR | EVENT_TOPOLOGY_DISCOVERY_REQUESTED | EVENT_TOPOLOGY_DISCOVERED), _cb_event);
+    if (rc != EXIT_SUCCESS) {
+        goto cleanup;
+    }
+
+    // Get saved module data
+    TSN_Module_Data *module_data = malloc(sizeof(TSN_Module_Data));
+    rc = module_get_data(this_module->id, &module_data);
+    if (rc != EXIT_SUCCESS) {
+        goto cleanup;
+    }
+    // Find cnc url
+    TSN_Module_Data_Entry *cnc_entry = module_get_data_entry(module_data, "cnc_url");
+    if (cnc_entry) {
+        cnc_url = strdup(cnc_entry->value.string_val);
+    }
 
     printf("[CUC] CUC module successfully started and running\n");
 
