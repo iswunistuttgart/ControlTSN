@@ -92,6 +92,7 @@ _api_index_get(const struct _u_request *request, struct _u_response *response, v
                        "<tr><th>JUST TESTING</th></tr>" \
                        "<tr><td><a href='/testing/set_topology'>/testing/set_topology</a></td><td>GET</td><td>TESTING: Set the topology</td></tr>" \
                        "<tr><td><a href='/testing/remove_topology'>/testing/remove_topology</a></td><td>GET</td><td>TESTING: Remove the topology</td></tr>" \
+                       "<tr><td><a href='/testing/websocket'>/testing/websocket</a></td><td>GET</td><td>TESTING: Open WebSocket</td></tr>" \
                        "</table></html>";
     ulfius_set_string_body_response(response, 200, resp);
 
@@ -673,6 +674,61 @@ _api_testing_remove_topology(const struct _u_request *request, struct _u_respons
     return U_CALLBACK_COMPLETE;
 }
 
+void
+_websocket_manager_cb(const struct _u_request *request, struct _websocket_manager *websocket_manager, void *websocket_manager_user_data)
+{
+    if (websocket_manager_user_data != NULL) {
+        printf("[REST][WS]: websocket_manager_user_data is %s\n", websocket_manager_user_data);
+    }
+
+    if (ulfius_websocket_wait_close(websocket_manager, 2000) == U_WEBSOCKET_STATUS_OPEN) {
+        if (ulfius_websocket_send_message(websocket_manager, U_WEBSOCKET_OPCODE_TEXT, strlen("Message without fragmentation from server"), "Message without fragmentation from server") != U_OK) {
+            printf("[REST][WS]: Error send message without fragmentation\n");
+        }
+        if (ulfius_websocket_send_message(websocket_manager, U_WEBSOCKET_OPCODE_TEXT, strlen("Message without fragmentation from server #2"), "Message without fragmentation from server #2") != U_OK) {
+            printf("[REST][WS]: Error send message without fragmentation\n");
+        }
+    }
+
+    printf("[REST][WS]: Closing websocket_manager_callback\n");
+}
+
+void
+_websocket_incoming_cb(const struct _u_request *request, struct _websocket_manager *websocket_manager, const struct _websocket_message *last_message, void *websocket_incoming_message_user_data)
+{
+    if (websocket_incoming_message_user_data != NULL) {
+        printf("[REST][WS]: websocket_manager_user_data is %s\n", websocket_incoming_message_user_data);
+    }
+    printf("[REST][WS]: Incoming message, opcode: 0x%02x, mask: %d, len: %zu\n", last_message->opcode, last_message->has_mask, last_message->data_len);
+    if (last_message->opcode == U_WEBSOCKET_OPCODE_TEXT) {
+        printf("[REST][WS]: text payload '%.*s'\n", last_message->data_len, last_message->data);
+    } else if (last_message->opcode == U_WEBSOCKET_OPCODE_BINARY) {
+        printf("[REST][WS]: binary payload\n");
+    }
+}
+
+void
+_websocket_onclose_cb(const struct _u_request *request, struct _websocket_manager *websocket_manager, void *websocket_onclose_user_data)
+{
+    if (websocket_onclose_user_data != NULL) {
+        printf("[REST][WS]: websocket_manager_user_data is %s\n", websocket_onclose_user_data);
+        free(websocket_onclose_user_data);
+    }
+}
+
+static int
+_api_testing_websocket(const struct _u_request *request, struct _u_response *response, void *user_data)
+{
+    int ret;
+    
+    if ((ret = ulfius_set_websocket_response(response, NULL, NULL, &_websocket_manager_cb, NULL, &_websocket_incoming_cb, NULL, &_websocket_onclose_cb, NULL)) == U_OK) {
+        // ulfius_add_websocket_deflate_extension
+        return U_CALLBACK_CONTINUE;
+    } else {
+        U_CALLBACK_ERROR;
+    }
+}
+
 
 // ------------------------------------
 // Server initialization
@@ -718,7 +774,7 @@ _init_server()
     // JUST TESTING
     ulfius_add_endpoint_by_val(&server_instance, "GET", API_PREFIX, "/testing/set_topology",    0, &_api_testing_set_topology,    NULL);
     ulfius_add_endpoint_by_val(&server_instance, "GET", API_PREFIX, "/testing/remove_topology", 0, &_api_testing_remove_topology, NULL);
-
+    ulfius_add_endpoint_by_val(&server_instance, "GET", API_PREFIX, "/testing/websocket",       0, &_api_testing_websocket,       NULL);
 
     // Default
     ulfius_set_default_endpoint(&server_instance, &_api_index_get, NULL);
