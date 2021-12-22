@@ -15,6 +15,9 @@ volatile sig_atomic_t is_running = 1;
 TSN_Module *this_module;
 struct _u_instance server_instance;
 
+// WebSocket test
+struct _websocket_manager *_websocket_manager = NULL;
+
 
 static void 
 signal_handler(int signum)
@@ -31,6 +34,23 @@ _cb_event(TSN_Event_CB_Data data)
 {
     printf("[REST] Triggered callback for event ID %d\n", data.event_id);
     
+    // Sending events in the websocket if it's open
+    if (_websocket_manager) {
+        // TODO: Newer version of ulfius supports sending json message 'ulfius_websocket_send_json_message'
+        json_t *serialized_data = serialize_event_cb_data(&data);
+        char *event_dump = json_dumps(serialized_data, 0);
+
+        Websocket_Message ws_msg = {
+            .timestamp = time(NULL),
+            .msg = event_dump
+        };
+        char *msg_dump = json_dumps(serialize_websocket_message(&ws_msg), 0);
+
+        if (ulfius_websocket_send_message(_websocket_manager, U_WEBSOCKET_OPCODE_TEXT, strlen(msg_dump), msg_dump) != U_OK) {
+            printf("[REST][WS]: Error sending websocket message\n");
+        }
+    }
+    
     if (data.event_id == EVENT_ERROR) {
         //printf("[REST][CB] ERROR: Code %d - '%s'\n", data.error.error_code, data.error.error_msg);
         printf("[REST][CB] ERROR (%s): %s\n", data.entry_id, data.msg);
@@ -40,6 +60,12 @@ _cb_event(TSN_Event_CB_Data data)
     //}
 
     return;
+}
+
+static char *
+_generate_websocket_msg(TSN_Event_CB_Data data)
+{
+
 }
 
 // ------------------------------------
@@ -677,6 +703,7 @@ _api_testing_remove_topology(const struct _u_request *request, struct _u_respons
 void
 _websocket_manager_cb(const struct _u_request *request, struct _websocket_manager *websocket_manager, void *websocket_manager_user_data)
 {
+    /*
     if (websocket_manager_user_data != NULL) {
         printf("[REST][WS]: websocket_manager_user_data is %s\n", websocket_manager_user_data);
     }
@@ -691,11 +718,30 @@ _websocket_manager_cb(const struct _u_request *request, struct _websocket_manage
     }
 
     printf("[REST][WS]: Closing websocket_manager_callback\n");
+    */
+
+    _websocket_manager = websocket_manager;
+    
+    while(is_running) {
+        /*
+        Websocket_Message ws_msg = {
+            .timestamp = time(NULL),
+            .msg = "MSG from server"
+        };
+        char *msg_dump = json_dumps(serialize_websocket_message(&ws_msg), 0);
+
+        if (ulfius_websocket_send_message(websocket_manager, U_WEBSOCKET_OPCODE_TEXT, strlen(msg_dump), msg_dump) != U_OK) {
+            printf("[REST][WS]: Error send message without fragmentation\n");
+        }
+        */
+        sleep(1);
+    }
 }
 
 void
 _websocket_incoming_cb(const struct _u_request *request, struct _websocket_manager *websocket_manager, const struct _websocket_message *last_message, void *websocket_incoming_message_user_data)
 {
+    /*
     if (websocket_incoming_message_user_data != NULL) {
         printf("[REST][WS]: websocket_manager_user_data is %s\n", websocket_incoming_message_user_data);
     }
@@ -705,24 +751,21 @@ _websocket_incoming_cb(const struct _u_request *request, struct _websocket_manag
     } else if (last_message->opcode == U_WEBSOCKET_OPCODE_BINARY) {
         printf("[REST][WS]: binary payload\n");
     }
+    */
 }
 
 void
 _websocket_onclose_cb(const struct _u_request *request, struct _websocket_manager *websocket_manager, void *websocket_onclose_user_data)
 {
-    if (websocket_onclose_user_data != NULL) {
-        printf("[REST][WS]: websocket_manager_user_data is %s\n", websocket_onclose_user_data);
-        free(websocket_onclose_user_data);
-    }
+    printf("[REST][WS]: Closing WebSocket connection\n");
 }
 
 static int
 _api_testing_websocket(const struct _u_request *request, struct _u_response *response, void *user_data)
 {
     int ret;
-    
+
     if ((ret = ulfius_set_websocket_response(response, NULL, NULL, &_websocket_manager_cb, NULL, &_websocket_incoming_cb, NULL, &_websocket_onclose_cb, NULL)) == U_OK) {
-        // ulfius_add_websocket_deflate_extension
         return U_CALLBACK_CONTINUE;
     } else {
         U_CALLBACK_ERROR;
@@ -838,7 +881,7 @@ main(void)
         rc = EXIT_FAILURE;
         goto cleanup;
     }
-    
+
 
 cleanup:
     ulfius_clean_instance(&server_instance);

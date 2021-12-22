@@ -631,3 +631,40 @@ serialize_application(TSN_Application *application)
 
     return root;
 }
+
+
+// ------------------------------------
+// Other
+// ------------------------------------
+json_t *
+serialize_event_cb_data(TSN_Event_CB_Data *data)
+{
+    json_t *root = NULL;
+    root = json_object();
+
+    // Event ID
+    json_object_set_new(root, "event_id", json_integer(data->event_id));
+
+    // Entry ID
+    json_object_set_new(root, "entry_id", json_string(data->entry_id));
+
+    // Message
+    json_object_set_new(root, "msg", json_string(data->msg));
+
+    return root;
+}
+
+json_t *
+serialize_websocket_message(Websocket_Message *ws_msg)
+{
+    json_t *root = NULL;
+    root = json_object();
+
+    // Timestamp
+    json_object_set_new(root, "timestamp", json_integer(ws_msg->timestamp));
+
+    // Message
+    json_object_set_new(root, "msg", json_string(ws_msg->msg));
+
+    return root;
+}

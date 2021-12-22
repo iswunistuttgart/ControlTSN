@@ -293,4 +293,13 @@ typedef struct TSN_Uni {
 } TSN_Uni;
 
 
+// ----------------------------------------------
+// Other
+// ----------------------------------------------
+typedef struct Websocket_Message {
+    time_t timestamp;
+    char *msg;
+} Websocket_Message;
+
+
 #endif // __TYPE_DEFINITIONS_H__

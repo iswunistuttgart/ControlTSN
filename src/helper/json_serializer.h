@@ -47,4 +47,11 @@ json_t *serialize_image(TSN_Image *image);
 json_t *serialize_images(TSN_Images *images);
 json_t *serialize_application(TSN_Application *application);
 
+// ------------------------------------
+// Other
+// ------------------------------------
+json_t *serialize_event_cb_data(TSN_Event_CB_Data *data);
+json_t *serialize_websocket_message(Websocket_Message *ws_msg);
+
+
 #endif // __JSON_SERIALIZER_H__

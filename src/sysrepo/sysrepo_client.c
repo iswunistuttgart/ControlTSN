@@ -3200,7 +3200,7 @@ sysrepo_update_module_attributes(int module_id, const char *name, const char *de
     }
 
     // Set subscribed events mask
-    if (subscribed_events_mask >= -1) {
+    if (subscribed_events_mask >= 0) {
         //_create_xpath_id("/control-tsn-uni:tsn-uni/modules/available-modules/mod[id='%d']/subscribed-events-mask", module_id, &xpath_subscribed_events_mask);
         _create_xpath_id("/control-tsn-uni:tsn-uni/modules/mod[id='%d']/subscribed-events-mask", module_id, &xpath_subscribed_events_mask);
         sr_val_t val_mask;
@@ -3226,7 +3226,7 @@ sysrepo_update_module_attributes(int module_id, const char *name, const char *de
         if (rc != SR_ERR_OK) {
             goto cleanup;
         }
-    }
+    } 
 
 cleanup:
     free(xpath_name);
