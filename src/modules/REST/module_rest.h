@@ -37,7 +37,7 @@ const char *API_TOPOLOGY_DISCOVER   = "/topology/discover";
 
 // Streams
 const char *API_STREAMS         = "/streams";
-//const char *API_STREAMS_REQUEST = "/streams/request";
+const char *API_STREAMS_REQUEST = "/streams/request";
 
 // Application
 const char *API_APPLICATION             = "/application";

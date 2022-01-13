@@ -249,6 +249,21 @@ serialize_stream(TSN_Stream *stream)
     return root;
 }
 
+TSN_Stream *
+deserialize_stream(json_t *obj)
+{
+    TSN_Stream *stream = malloc(sizeof(TSN_Stream));
+
+    const json_t *stream_id = json_object_get(obj, "stream_id");
+    stream->stream_id = strdup(json_string_value(stream_id));
+
+    // Request          TODO
+
+    // Configuration    TODO
+
+    return stream;
+}
+
 json_t *
 serialize_streams(TSN_Streams *streams)
 {
@@ -267,6 +282,24 @@ serialize_streams(TSN_Streams *streams)
     json_object_set_new(root, "streams", array_streams);
 
     return root;
+}
+
+TSN_Streams *
+deserialize_streams(json_t *obj)
+{
+    TSN_Streams *streams = malloc(sizeof(TSN_Streams));
+
+    uint16_t count_streams = json_number_value(json_object_get(obj, "count_streams"));
+    streams->count_streams = count_streams;
+    streams->streams = (TSN_Stream *) malloc(sizeof(TSN_Stream) * count_streams);
+    json_t *streams_json = json_object_get(obj, "streams");
+    for (int i=0; i<count_streams; ++i) {
+        json_t *stream = json_array_get(streams_json, i);
+        TSN_Stream *s = deserialize_stream(stream);
+        streams->streams[i] = *s;
+    }
+
+    return streams;
 }
 
 // ------------------------------------

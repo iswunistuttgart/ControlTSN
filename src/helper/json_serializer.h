@@ -20,6 +20,9 @@ TSN_Module_Data_Entry *deserialize_module_data_entry(json_t *obj);
 json_t *serialize_stream(TSN_Stream *stream);
 json_t *serialize_streams(TSN_Streams *streams);
 
+TSN_Stream *deserialize_stream(json_t *obj);
+TSN_Streams *deserialize_streams(json_t *obj);
+
 // ------------------------------------
 // Topology
 // ------------------------------------

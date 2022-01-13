@@ -6,6 +6,7 @@
 //#include <sys/wait.h>   // wait
 
 #include "common.h"
+#include "logger.h"
 
 int ret;
 
@@ -87,6 +88,27 @@ module_init(char *module_name, TSN_Module **module, uint32_t adjusted_subscribed
 
             // Start listening to notifications
             ret = sysrepo_start_listening();
+
+            /*
+            ret = sysrepo_set_module_pid(module->id, pid);
+            if (ret) {
+                printf("[COMMON] Error writing PID (%d) to module '%s' with ID %d!\n", pid, module->name, module->id);
+                return EXIT_FAILURE;
+            }
+            printf("[COMMON] Successfully started module '%s' with PID %d\n", module->name, pid);
+            */
+
+            // Write the PID to sysrepo
+            pid_t module_pid = getpid();
+            (*module)->p_id = module_pid;
+            ret = sysrepo_set_module_pid((*module)->id, module_pid);
+            if (ret) {
+                printf("[COMMON] Error writing PID (%d) to module '%s' with ID %d!\n", module_pid, (*module)->name, (*module)->id);
+                ret = EXIT_FAILURE;
+            } else {
+                printf("[COMMON] Successfully started module '%s' with PID %d\n", (*module)->name, module_pid);
+            }
+
 
             goto cleanup;
         }
@@ -187,6 +209,7 @@ module_start(int module_id)
         return EXIT_FAILURE;
     }
 
+    /*
     // Write the PID to sysrepo
     ret = sysrepo_set_module_pid(module->id, pid);
     if (ret) {
@@ -194,6 +217,8 @@ module_start(int module_id)
         return EXIT_FAILURE;
     }
     printf("[COMMON] Successfully started module '%s' with PID %d\n", module->name, pid);
+    */
+    
     
     return EXIT_SUCCESS;
 }

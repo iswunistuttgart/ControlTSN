@@ -201,6 +201,10 @@ _create_xpath_key(char *xpath_base, char *key, char **result)
     sprintf((*result), xpath_base, key); 
 }
 
+
+// -------------------------------
+// Streams
+// -------------------------------
 static int
 _read_interface_id(char *xpath, IEEE_InterfaceId **interface_id)
 {
@@ -229,6 +233,32 @@ _read_interface_id(char *xpath, IEEE_InterfaceId **interface_id)
 cleanup:
     sr_free_val(val_mac_address);
     sr_free_val(val_interface_name);
+    free(xpath_mac_address);
+    free(xpath_interface_name);
+
+    return rc;
+}
+
+static int
+_write_interface_id(char *xpath, IEEE_InterfaceId *interface_id)
+{
+    int rc =SR_ERR_OK;
+    char *xpath_mac_address = NULL;
+    char *xpath_interface_name = NULL;
+
+    _create_xpath(xpath, "/mac-address", &xpath_mac_address);
+    rc = sr_set_item_str(session, xpath_mac_address, interface_id->mac_address, NULL, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+    _create_xpath(xpath, "/interface-name", &xpath_interface_name);
+    rc = sr_set_item_str(session, xpath_interface_name, interface_id->interface_name, NULL, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+cleanup:
     free(xpath_mac_address);
     free(xpath_interface_name);
 
@@ -270,6 +300,32 @@ cleanup:
 }
 
 static int
+_write_ieee802_mac_addresses(char *xpath, IEEE_MacAddresses *ma)
+{
+    int rc =SR_ERR_OK;
+    char *xpath_destination_mac_address = NULL;
+    char *xpath_source_mac_address = NULL;
+
+    _create_xpath(xpath, "/destination-mac-address", &xpath_destination_mac_address);
+    rc = sr_set_item_str(session, xpath_destination_mac_address, ma->destination_mac_address, NULL, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+    _create_xpath(xpath, "/source-mac-address", &xpath_source_mac_address);
+    rc = sr_set_item_str(session, xpath_source_mac_address, ma->source_mac_address, NULL, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+cleanup:
+    free(xpath_destination_mac_address);
+    free(xpath_source_mac_address);
+
+    return rc;
+}
+
+static int
 _read_ieee802_vlan_tag(char *xpath, IEEE_VlanTag **vt)
 {
     int rc;
@@ -297,6 +353,38 @@ _read_ieee802_vlan_tag(char *xpath, IEEE_VlanTag **vt)
 cleanup:
     sr_free_val(val_priority_code_point);
     sr_free_val(val_vlan_id);
+    free(xpath_priority_code_point);
+    free(xpath_vlan_id);
+
+    return rc;
+}
+
+static int
+_write_ieee802_vlan_tag(char *xpath, IEEE_VlanTag *vt)
+{
+    int rc =SR_ERR_OK;
+    char *xpath_priority_code_point = NULL;
+    char *xpath_vlan_id = NULL;
+
+    _create_xpath(xpath, "/priority-code-point", &xpath_priority_code_point);
+    sr_val_t val_priority_code_point;
+    val_priority_code_point.type = SR_UINT8_T;
+    val_priority_code_point.data.uint8_val = vt->priority_code_point;
+    rc = sr_set_item(session, xpath_priority_code_point, &val_priority_code_point, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+    _create_xpath(xpath, "/vlan-id", &xpath_vlan_id);
+    sr_val_t val_vlan_id;
+    val_vlan_id.type = SR_UINT16_T;
+    val_vlan_id.data.uint16_val = vt->vlan_id;
+    rc = sr_set_item(session, xpath_vlan_id, &val_vlan_id, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+cleanup:
     free(xpath_priority_code_point);
     free(xpath_vlan_id);
 
@@ -375,6 +463,76 @@ cleanup:
     sr_free_val(val_protocol);
     sr_free_val(val_source_port);
     sr_free_val(val_destination_port);
+    free(xpath_source_ip_address);
+    free(xpath_destination_ip_address);
+    free(xpath_dscp);
+    free(xpath_protocol);
+    free(xpath_source_port);
+    free(xpath_destination_port);
+
+    return rc;
+}
+
+static int
+_write_ipv4_tuple(char *xpath, IEEE_IPv4Tuple *ipv4)
+{
+    int rc =SR_ERR_OK;
+    char *xpath_source_ip_address = NULL;
+    char *xpath_destination_ip_address = NULL;
+    char *xpath_dscp = NULL;
+    char *xpath_protocol = NULL;
+    char *xpath_source_port = NULL;
+    char *xpath_destination_port = NULL;
+
+    _create_xpath(xpath, "/source-ip-address", &xpath_source_ip_address);
+    rc = sr_set_item_str(session, xpath_source_ip_address, ipv4->source_ip_address, NULL, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+    _create_xpath(xpath, "/destination-ip-address", &xpath_destination_ip_address);
+    rc = sr_set_item_str(session, xpath_destination_ip_address, ipv4->destination_ip_address, NULL, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+    _create_xpath(xpath, "/dscp", &xpath_dscp);
+    sr_val_t val_dscp;
+    val_dscp.type = SR_UINT8_T;
+    val_dscp.data.uint8_val = ipv4->dscp;
+    rc = sr_set_item(session, xpath_dscp, &val_dscp, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+    _create_xpath(xpath, "/protocol", &xpath_protocol);
+    sr_val_t val_protocol;
+    val_protocol.type = SR_UINT16_T;
+    val_protocol.data.uint16_val = ipv4->protocol;
+    rc = sr_set_item(session, xpath_protocol, &val_protocol, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+    _create_xpath(xpath, "/source-port", &xpath_source_port);
+    sr_val_t val_source_port;
+    val_source_port.type = SR_UINT16_T;
+    val_source_port.data.uint16_val = ipv4->source_port;
+    rc = sr_set_item(session, xpath_source_port, &val_source_port, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+    _create_xpath(xpath, "/destination-port", &xpath_destination_port);
+    sr_val_t val_destination_port;
+    val_destination_port.type = SR_UINT16_T;
+    val_destination_port.data.uint16_val = ipv4->destination_port;
+    rc = sr_set_item(session, xpath_destination_port, &val_destination_port, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+cleanup:
     free(xpath_source_ip_address);
     free(xpath_destination_ip_address);
     free(xpath_dscp);
@@ -465,6 +623,12 @@ cleanup:
     free(xpath_destination_port);
 
     return rc;
+}
+
+static int
+_write_ipv6_tuple(char *xpath, IEEE_IPv6Tuple *ipv6)
+{
+    // TODO 13.01.2022
 }
 
 static int
@@ -1375,7 +1539,37 @@ cleanup:
     return rc;
 }
 
+static int
+_read_streams(char *xpath, TSN_Streams **streams) 
+{
+    int rc = SR_ERR_OK;
+    sr_val_t *val_streams = NULL;
+    char *xpath_streams = NULL;
 
+    _create_xpath(xpath, "/*", &xpath_streams);
+    size_t count_streams = 0;
+    rc = sr_get_items(session, xpath_streams, 0, 0, &val_streams, &count_streams);
+    (*streams)->count_streams = count_streams;
+    (*streams)->streams = (TSN_Stream *) malloc(sizeof(TSN_Stream) * count_streams);
+    for (int i=0; i<count_streams; ++i) {
+        TSN_Stream *s = malloc(sizeof(TSN_Stream));
+        rc = _read_stream((&val_streams[i])->xpath, &s);
+        if (rc != SR_ERR_OK) {
+            goto cleanup;
+        }
+        (*streams)->streams[i] = *s;
+    }
+
+cleanup:
+    sr_free_val(val_streams);
+    free(xpath_streams);
+
+    return rc;
+}
+
+// -------------------------------
+// Modules
+// -------------------------------
 static int
 _read_module_data_entry(char *xpath, TSN_Module_Data_Entry **entry)
 {
@@ -1814,34 +2008,9 @@ cleanup:
     return rc;
 }
 
-static int
-_read_streams(char *xpath, TSN_Streams **streams) 
-{
-    int rc = SR_ERR_OK;
-    sr_val_t *val_streams = NULL;
-    char *xpath_streams = NULL;
-
-    _create_xpath(xpath, "/*", &xpath_streams);
-    size_t count_streams = 0;
-    rc = sr_get_items(session, xpath_streams, 0, 0, &val_streams, &count_streams);
-    (*streams)->count_streams = count_streams;
-    (*streams)->streams = (TSN_Stream *) malloc(sizeof(TSN_Stream) * count_streams);
-    for (int i=0; i<count_streams; ++i) {
-        TSN_Stream *s = malloc(sizeof(TSN_Stream));
-        rc = _read_stream((&val_streams[i])->xpath, &s);
-        if (rc != SR_ERR_OK) {
-            goto cleanup;
-        }
-        (*streams)->streams[i] = *s;
-    }
-
-cleanup:
-    sr_free_val(val_streams);
-    free(xpath_streams);
-
-    return rc;
-}
-
+// -------------------------------
+// Topology
+// -------------------------------
 static int
 _read_enddevice(char *xpath, TSN_Enddevice **enddevice)
 {
@@ -2384,6 +2553,9 @@ cleanup:
     return rc;
 }
 
+// -------------------------------
+// Application
+// -------------------------------
 static int
 _read_app_parameter(char *xpath, TSN_App_Parameter **parameter)
 {
@@ -3254,6 +3426,13 @@ sysrepo_get_all_streams(TSN_Streams **streams)
 
 cleanup:
     return rc ? EXIT_FAILURE : EXIT_SUCCESS;
+}
+
+int 
+sysrepo_write_stream_request(TSN_Stream *stream)
+{
+    // TODO 13.01.2022
+    //rc = 
 }
 
 

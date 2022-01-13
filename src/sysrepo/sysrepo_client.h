@@ -119,6 +119,13 @@ int sysrepo_update_module_attributes(int module_id, const char *name, const char
  */
 int sysrepo_get_all_streams(TSN_Streams **streams);
 
+/**
+ * @brief Writes the request information for a new stream to the datastore.
+ * @param stream The struct containint the request information
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+ */
+int sysrepo_write_stream_request(TSN_Stream *stream);
+
 
 // -------------------------------------------------------- //
 // Topology handling

@@ -4,12 +4,12 @@
 
 #include <ulfius.h>
 
-#include "../../common.h"
 #include "../../logger.h"
 #include "../../events_definitions.h"
 #include "module_cuc.h"
 
 #include "../../helper/json_serializer.h"
+
 
 int rc;
 volatile sig_atomic_t is_running = 1;
@@ -17,9 +17,7 @@ volatile sig_atomic_t is_running = 1;
 TSN_Module *this_module;
 TSN_Module_Data *this_module_data = NULL;
 
-// THESE VARIABLES SHOULD BE STORED AS MODULE DATA ---------------
-//char cnc_url[] = "http://localhost:11067";
-// ---------------------------------------------------------------
+// Variables from module data stored in sysrepo
 char *cnc_url = NULL;
 
 
@@ -71,6 +69,32 @@ cnc_discover_topology()
     ulfius_clean_request(&request);
 
     return;
+}
+
+void 
+cnc_compute_request(TSN_Stream *stream)
+{
+    // Make HTTP Request to the CNC
+    struct _u_response response;
+    struct _u_request request;
+    ulfius_init_request(&request);
+    ulfius_init_response(&response);
+
+    request.http_url = _concat_strings(cnc_url, CNC_INTERFACE_COMPUTE_REQUEST);
+    request.http_verb = strdup("POST");
+
+    int res = ulfius_send_http_request(&request, &response);
+    if (res == U_OK) {
+        // get JSON body containing the computed configuration
+        json_t *json_body = ulfius_get_json_body_response(&response, NULL);
+        printf("Response:\n%s\n", json_dumps(json_body, JSON_INDENT(4)));
+    }
+}
+
+void 
+cnc_compute_requests(TSN_Streams *streams)
+{
+
 }
 
 // ------------------------------------
@@ -150,8 +174,9 @@ main(void)
     if (rc != EXIT_SUCCESS) {
         goto cleanup;
     }
+
     // Find cnc url
-    TSN_Module_Data_Entry *cnc_entry = module_get_data_entry(module_data, "cnc_url");
+    TSN_Module_Data_Entry *cnc_entry = module_get_data_entry(module_data, MODULE_DATA_IDENTIFIER_CNC);
     if (cnc_entry) {
         cnc_url = strdup(cnc_entry->value.string_val);
     }
