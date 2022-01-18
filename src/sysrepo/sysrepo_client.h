@@ -126,6 +126,22 @@ int sysrepo_get_all_streams(TSN_Streams **streams);
  */
 int sysrepo_write_stream_request(TSN_Stream *stream);
 
+/**
+ * @brief Writes the computed configuration to an existing stream in the datastore.
+ * @param stream_id The ID of the stream for which the configuration was calculated
+ * @param configuration The computed configuration
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+ */
+int sysrepo_write_stream_configuration(char *stream_id, TSN_Configuration *configuration);
+
+/**
+ * @brief Gets a specific stream from the list of streams.
+ * @param stream_id The unique ID of the stream
+ * @param stream The struct to write on
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+ */
+int sysrepo_get_stream(char *stream_id, TSN_Stream **stream);
+
 
 // -------------------------------------------------------- //
 // Topology handling

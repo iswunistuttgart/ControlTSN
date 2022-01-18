@@ -4,20 +4,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-/*
-typedef enum IEEE_TalkerStatus {
-    talker_none = 0,
-    talker_ready = 1,
-    talker_failed = 2
-} IEEE_TalkerStatus;
-
-typedef enum IEEE_ListenerStatus {
-    listener_none = 0,
-    listener_ready = 1,
-    listener_partial_failed = 2,
-    listener_failed = 3
-} IEEE_ListenerStatus;
-*/
 
 typedef struct IEEE_StatusInfo {
     //IEEE_TalkerStatus talker_status;
@@ -72,7 +58,8 @@ typedef enum ConfigList_FieldType {
     CONFIG_LIST_MAC_ADDRESSES = 0,
     CONFIG_LIST_VLAN_TAG = 1,
     CONFIG_LIST_IPV4_TUPLE = 2,
-    CONFIG_LIST_IPV6_TUPLE = 3
+    CONFIG_LIST_IPV6_TUPLE = 3,
+    CONFIG_LIST_TIME_AWARE_OFFSET = 4,
 } ConfigList_FieldType;
 
 typedef struct IEEE_ConfigList {

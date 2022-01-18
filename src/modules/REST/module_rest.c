@@ -62,11 +62,6 @@ _cb_event(TSN_Event_CB_Data data)
     return;
 }
 
-static char *
-_generate_websocket_msg(TSN_Event_CB_Data data)
-{
-
-}
 
 // ------------------------------------
 // API Endpoint Callback Functions
@@ -489,11 +484,13 @@ _api_streams_request(const struct _u_request *request, struct _u_response *respo
 
     TSN_Stream *stream = deserialize_stream(json_object_get(json_post_body, "stream"));
     // Write stream request to sysrepo
-    // TODO 13.01.2022
-
+    rc = sysrepo_write_stream_request(stream);
     json_decref(json_post_body);
+    if (rc == EXIT_SUCCESS) {
+        return U_CALLBACK_COMPLETE;
+    }
 
-    return U_CALLBACK_COMPLETE;
+    return U_CALLBACK_ERROR;
 }
 
 // ------------------------------------

@@ -48,14 +48,15 @@ typedef struct TSN_StatusListener {
 
 typedef struct TSN_Configuration {
     uint16_t count_listeners;
-    uint16_t count_failed_interfaces;
+    //uint16_t count_failed_interfaces;
 
     TSN_StatusTalker talker;
     TSN_StatusListener *listener_list;
 
     // ieee802-dot1q-tsn-types -> group-status-stream
-    IEEE_StatusInfo status_info;
-    IEEE_InterfaceId *failed_interfaces;
+    //IEEE_StatusInfo status_info;
+    //IEEE_InterfaceId *failed_interfaces;
+    IEEE_StatusStream status_stream;
 } TSN_Configuration;
 
 typedef struct TSN_Request {
@@ -70,7 +71,7 @@ typedef struct TSN_Stream {
     // where XX is the MAC of the Talker and YY a unique number
     char *stream_id;   
     TSN_Request request;
-    TSN_Configuration configuration;
+    TSN_Configuration *configuration;
 } TSN_Stream;
 
 

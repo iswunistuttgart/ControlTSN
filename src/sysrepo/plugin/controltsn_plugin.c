@@ -181,7 +181,7 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
             }
 
             // Requested
-            if ((strstr(val->xpath, "/requested/") != NULL) &&
+            if ((strstr(val->xpath, "/request/") != NULL) &&
                 (op == SR_OP_CREATED)) {       
                 if ((already_send_mask & EVENT_STREAM_REQUESTED) == 0) {
                     char *key = _extract_key(val->xpath, "stream-id");

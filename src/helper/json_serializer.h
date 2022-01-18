@@ -17,9 +17,55 @@ TSN_Module_Data_Entry *deserialize_module_data_entry(json_t *obj);
 // ------------------------------------
 // Streams
 // ------------------------------------
+json_t *serialize_status_info(IEEE_StatusInfo *si);
+json_t *serialize_interface_id(IEEE_InterfaceId *ii);
+json_t *serialize_status_stream(IEEE_StatusStream *ss);
+json_t *serialize_mac_addresses(IEEE_MacAddresses *ma);
+json_t *serialize_vlan_tag(IEEE_VlanTag *vt);
+json_t *serialize_ipv4_tuple(IEEE_IPv4Tuple *ipv4);
+json_t *serialize_ipv6_tuple(IEEE_IPv6Tuple *ipv6);
+json_t *serialize_config_list(IEEE_ConfigList *cl);
+json_t *serialize_interface_list(IEEE_InterfaceList *il);
+json_t *serialize_interface_configuration(IEEE_InterfaceConfiguration *ic);
+json_t *serialize_stream_rank(IEEE_StreamRank *stream_rank);
+json_t *serialize_data_frame_specification(IEEE_DataFrameSpecification *dfs);
+json_t *serialize_interval(IEEE_Interval *i);
+json_t *serialize_time_aware(IEEE_TimeAware *ta);
+json_t *serialize_traffic_specification(IEEE_TrafficSpecification *ts);
+json_t *serialize_user_to_network_requirements(IEEE_UserToNetworkRequirements *utnr);
+json_t *serialize_interface_capabilities(IEEE_InterfaceCapabilities *ic);
+json_t *serialize_talker(TSN_Talker *talker);
+json_t *serialize_listener(TSN_Listener *listener);
+json_t *serialize_stream_request(TSN_Request *request);
+json_t *serialize_status_talker(TSN_StatusTalker *st);
+json_t *serialize_status_listener(TSN_StatusListener *sl);
+json_t *serialize_stream_configuration(TSN_Configuration *configuration);
 json_t *serialize_stream(TSN_Stream *stream);
 json_t *serialize_streams(TSN_Streams *streams);
 
+IEEE_StatusInfo *deserialize_status_info(json_t *obj);
+IEEE_InterfaceId *deserialize_interface_id(json_t *obj);
+IEEE_StatusStream *deserialize_status_stream(json_t *obj);
+IEEE_MacAddresses *deserialize_mac_addresses(json_t *obj);
+IEEE_VlanTag *deserialize_vlan_tag(json_t *obj);
+IEEE_IPv4Tuple *deserialize_ipv4_tuple(json_t *obj);
+IEEE_IPv6Tuple *deserialize_ipv6_tuple(json_t *obj);
+IEEE_ConfigList *deserialize_config_list(json_t *obj);
+IEEE_InterfaceList *deserialize_interface_list(json_t *obj);
+IEEE_InterfaceConfiguration *deserialize_interface_configuration(json_t *obj);
+IEEE_StreamRank *deserialize_stream_rank(json_t *obj);
+IEEE_DataFrameSpecification *deserialize_data_frame_specification(json_t *obj);
+IEEE_Interval *deserialize_interval(json_t *obj);
+IEEE_TimeAware *deserialize_time_aware(json_t *obj);
+IEEE_TrafficSpecification *deserialize_traffic_specification(json_t *obj);
+IEEE_UserToNetworkRequirements *deserialize_user_to_network_requirements(json_t *obj);
+IEEE_InterfaceCapabilities *deserialize_interface_capabilities(json_t *obj);
+TSN_Talker *deserialize_talker(json_t *obj);
+TSN_Listener *deserialize_listener(json_t *obj);
+TSN_StatusTalker *deserialize_status_talker(json_t *obj);
+TSN_StatusListener *deserialize_status_listener(json_t *obj);
+TSN_Request *deserialize_stream_request(json_t *obj);
+TSN_Configuration *deserialize_stream_configuration(json_t *obj);
 TSN_Stream *deserialize_stream(json_t *obj);
 TSN_Streams *deserialize_streams(json_t *obj);
 

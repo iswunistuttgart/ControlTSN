@@ -2077,7 +2077,7 @@ _read_status_talker(char *xpath, TSN_StatusTalker **st)
     (*st)->accumulated_latency = val_accumulated_latency->data.uint32_val;
 
     // Interface configuration
-    _create_xpath(xpath_accumulated_latency, "/interface-configuration", &xpath_interface_configuration);
+    _create_xpath(xpath, "/interface-configuration", &xpath_interface_configuration);
     IEEE_InterfaceConfiguration *ic = malloc(sizeof(IEEE_InterfaceConfiguration));
     rc = _read_interface_configuration(xpath_interface_configuration, &ic);
     if (rc != SR_ERR_OK) {
@@ -2096,7 +2096,30 @@ cleanup:
 static int
 _write_status_talker(char *xpath, TSN_StatusTalker *st)
 {
-    // TODO 17.01.2022
+    int rc = SR_ERR_OK;
+    char *xpath_accumulated_latency = NULL;
+    char *xpath_interface_configuration = NULL;
+
+    _create_xpath(xpath, "/accumulated-latency", &xpath_accumulated_latency);
+    sr_val_t val_accumulated_latency;
+    val_accumulated_latency.type = SR_UINT32_T;
+    val_accumulated_latency.data.uint32_val = st->accumulated_latency;
+    rc = sr_set_item(session, xpath_accumulated_latency, &val_accumulated_latency, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    
+    _create_xpath(xpath, "/interface-configuration", &xpath_interface_configuration);
+    rc = _write_interface_configuration(xpath_interface_configuration, &(st->interface_configuration));
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+cleanup:
+    free(xpath_accumulated_latency);
+    free(xpath_interface_configuration);
+
+    return rc;
 }
 
 static int
@@ -2124,7 +2147,7 @@ _read_status_listener(char *xpath, TSN_StatusListener **sl)
     (*sl)->accumulated_latency = val_accumulated_latency->data.uint32_val;
 
     // Interface configuration
-    _create_xpath(xpath_accumulated_latency, "/interface-configuration", &xpath_interface_configuration);
+    _create_xpath(xpath, "/interface-configuration", &xpath_interface_configuration);
     IEEE_InterfaceConfiguration *ic = malloc(sizeof(IEEE_InterfaceConfiguration));
     rc = _read_interface_configuration(xpath_interface_configuration, &ic);
     if (rc != SR_ERR_OK) {
@@ -2135,6 +2158,46 @@ _read_status_listener(char *xpath, TSN_StatusListener **sl)
 cleanup:
     sr_free_val(val_index);
     sr_free_val(val_accumulated_latency);
+    free(xpath_index);
+    free(xpath_accumulated_latency);
+    free(xpath_interface_configuration);
+
+    return rc;
+}
+
+static int 
+_write_status_listener(char *xpath, TSN_StatusListener *sl)
+{
+    int rc = SR_ERR_OK;
+    char *xpath_index = NULL;
+    char *xpath_accumulated_latency = NULL;
+    char *xpath_interface_configuration = NULL;
+
+    _create_xpath(xpath, "/index", &xpath_index);
+    sr_val_t val_index;
+    val_index.type = SR_UINT16_T;
+    val_index.data.uint16_val = sl->index;
+    rc = sr_set_item(session, xpath_index, &val_index, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+    _create_xpath(xpath, "/accumulated-latency", &xpath_accumulated_latency);
+    sr_val_t val_accumulated_latency;
+    val_accumulated_latency.type = SR_UINT32_T;
+    val_accumulated_latency.data.uint32_val = sl->accumulated_latency;
+    rc = sr_set_item(session, xpath_accumulated_latency, &val_accumulated_latency, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    
+    _create_xpath(xpath, "/interface-configuration", &xpath_interface_configuration);
+    rc = _write_interface_configuration(xpath_interface_configuration, &(sl->interface_configuration));
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+cleanup:
     free(xpath_index);
     free(xpath_accumulated_latency);
     free(xpath_interface_configuration);
@@ -2158,9 +2221,10 @@ _read_configuration(char *xpath, TSN_Configuration **con)
     if (rc != SR_ERR_OK) {
         goto cleanup;
     }
-    (*con)->status_info = ss->status_info;
-    (*con)->count_failed_interfaces = ss->count_failed_interfaces;
-    (*con)->failed_interfaces = ss->failed_interfaces;
+    //(*con)->status_info = ss->status_info;
+    //(*con)->count_failed_interfaces = ss->count_failed_interfaces;
+    //(*con)->failed_interfaces = ss->failed_interfaces;
+    (*con)->status_stream = *ss;
 
     // Read Talker
     _create_xpath(xpath, "/talker", &xpath_status_talker);
@@ -2188,6 +2252,45 @@ _read_configuration(char *xpath, TSN_Configuration **con)
 
 cleanup:
     sr_free_val(val_listener_list);
+    free(xpath_status_stream);
+    free(xpath_status_talker);
+    free(xpath_listener_list);
+
+    return rc;
+}
+
+static int
+_write_configuration(char *xpath, TSN_Configuration *con)
+{
+    int rc = SR_ERR_OK;
+    char *xpath_status_stream = NULL;
+    char *xpath_status_talker = NULL;
+    char *xpath_listener_list = NULL;
+
+    _create_xpath(xpath, "", &xpath_status_stream);
+    rc = _write_status_stream(xpath_status_stream, &(con->status_stream));
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+    _create_xpath(xpath, "/talker", &xpath_status_talker);
+    rc = _write_status_talker(xpath_status_talker, &(con->talker));
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    
+    _create_xpath(xpath, "/listener-list/listener[index='%d']", &xpath_listener_list);
+    for (int i=0; i<con->count_listeners; ++i) {
+        char *xpath_entry = NULL;
+        _create_xpath_id(xpath_listener_list, con->listener_list[i].index, &xpath_entry);
+        rc = _write_status_listener(xpath_entry, &(con->listener_list[i]));
+        free(xpath_entry);
+        if (rc != SR_ERR_OK) {
+            goto cleanup;
+        }
+    }
+
+cleanup:
     free(xpath_status_stream);
     free(xpath_status_talker);
     free(xpath_listener_list);
@@ -2228,10 +2331,46 @@ _read_stream(char *xpath, TSN_Stream **stream)
     if (rc != SR_ERR_OK) {
         goto cleanup;
     }
-    (*stream)->configuration = *con;
+    (*stream)->configuration = con;
 
 cleanup:
     sr_free_val(val_stream_id);
+    free(xpath_stream_id);
+    free(xpath_request);
+    free(xpath_configuration);
+
+    return rc;
+}
+
+static int
+_write_stream(char *xpath, TSN_Stream *stream)
+{
+    int rc = SR_ERR_OK;
+    char *xpath_stream_id = NULL;
+    char *xpath_request = NULL;
+    char *xpath_configuration = NULL;
+
+    _create_xpath(xpath, "/stream-id", &xpath_stream_id);
+    rc = sr_set_item_str(session, xpath_stream_id, stream->stream_id, NULL, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+    _create_xpath(xpath, "/request", &xpath_request);
+    rc = _write_request(xpath_request, &(stream->request));
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    
+    if (stream->configuration) {
+        _create_xpath(xpath, "/configuration", &xpath_configuration);
+        rc = _write_configuration(xpath_configuration, &(stream->configuration));
+        if (rc != SR_ERR_OK) {
+            goto cleanup;
+        }
+    }
+
+cleanup:
     free(xpath_stream_id);
     free(xpath_request);
     free(xpath_configuration);
@@ -2262,6 +2401,29 @@ _read_streams(char *xpath, TSN_Streams **streams)
 
 cleanup:
     sr_free_val(val_streams);
+    free(xpath_streams);
+
+    return rc;
+}
+
+static int
+_write_streams(char *xpath, TSN_Streams *streams)
+{
+    int rc = SR_ERR_OK;
+    char *xpath_streams = NULL;
+    
+    _create_xpath(xpath, "/stream[stream-id='%s']", &xpath_streams);
+    for (int i=0; i<streams->count_streams; ++i) {
+        char *xpath_entry = NULL;
+        _create_xpath_key(xpath_streams, streams->streams[i].stream_id, &xpath_entry);
+        rc = _write_stream(xpath_entry, &(streams->streams[i]));
+        free(xpath_entry);
+        if (rc != SR_ERR_OK) {
+            goto cleanup;
+        }
+    }
+
+cleanup:
     free(xpath_streams);
 
     return rc;
@@ -4113,6 +4275,7 @@ cleanup:
     return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
+
 // -------------------------------------------------------- //
 //  Stream handling
 // -------------------------------------------------------- //
@@ -4131,8 +4294,69 @@ cleanup:
 int 
 sysrepo_write_stream_request(TSN_Stream *stream)
 {
-    // TODO 13.01.2022
-    //rc = 
+    char *xpath_stream_root = NULL;
+    char *xpath_stream_id = NULL;
+    char *xpath_request = NULL;
+
+    _create_xpath_key("/control-tsn-uni:tsn-uni/streams/stream[stream-id='%s']", stream->stream_id, &xpath_stream_root);
+
+    // Write stream id
+    _create_xpath(xpath_stream_root, "/stream-id", &xpath_stream_id);
+    rc = sr_set_item_str(session, xpath_stream_id, stream->stream_id, NULL, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+    // Write request
+    _create_xpath(xpath_stream_root, "/request", &xpath_request);
+    rc = _write_request(xpath_request, &(stream->request));
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+cleanup:
+    free(xpath_stream_root);
+    free(xpath_stream_id);
+    free(xpath_request);
+
+    return rc ? EXIT_FAILURE : EXIT_SUCCESS;
+}
+
+int sysrepo_write_stream_configuration(char *stream_id, TSN_Configuration *configuration)
+{
+    char *xpath_stream_root = NULL;
+    char *xpath_configuration = NULL;
+
+    _create_xpath_key("/control-tsn-uni:tsn-uni/streams/stream[stream-id='%s']", stream_id, &xpath_stream_root);
+
+    // Write configuration
+    _create_xpath(xpath_stream_root, "/configuration", &xpath_configuration);
+    rc = _write_configuration(xpath_configuration, configuration);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+cleanup:
+    free(xpath_stream_root);
+    free(xpath_configuration);
+
+    return rc ? EXIT_FAILURE : EXIT_SUCCESS;
+}
+
+int sysrepo_get_stream(char *stream_id, TSN_Stream **stream)
+{
+    char *xpath_stream = NULL;
+
+    _create_xpath_key("/control-tsn-uni:tsn-uni/streams/stream[stream-id='%s']", stream_id, &xpath_stream);
+    rc = _read_stream(xpath_stream, stream);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+cleanup:
+    free(xpath_stream);
+
+    return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
 
