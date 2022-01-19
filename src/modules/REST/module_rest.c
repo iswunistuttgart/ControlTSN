@@ -101,7 +101,7 @@ _api_index_get(const struct _u_request *request, struct _u_response *response, v
                        // Streams
                        "<tr><th>Streams</th></tr>" \
                        "<tr><td><a href='/streams'>/streams</a></td><td>GET</td><td>Get all streams</td></tr>" \
-                       "<tr><td><a href='/streams/request'>/streams/request</a></td><td>POST</td><td>Request a new stream</td><tr>stream (TSN_Stream)</td></tr>" \
+                       "<tr><td><a href='/streams/request'>/streams/request</a></td><td>POST</td><td>Request a new stream</td><tr>request (TSN_Request)</td></tr>" \
                        // Applications
                        "<tr><th>Applications</th></tr>" \
                        "<tr><td><a href='/application'>/application</a></td><td>GET</td><td>Get the application containing all apps and images</td></tr>" \
@@ -482,9 +482,9 @@ _api_streams_request(const struct _u_request *request, struct _u_response *respo
         return U_CALLBACK_ERROR;
     }
 
-    TSN_Stream *stream = deserialize_stream(json_object_get(json_post_body, "stream"));
+    TSN_Request *stream_request = deserialize_stream_request(json_object_get(json_post_body, "request"));
     // Write stream request to sysrepo
-    rc = sysrepo_write_stream_request(stream);
+    rc = sysrepo_write_stream_request(stream_request);
     json_decref(json_post_body);
     if (rc == EXIT_SUCCESS) {
         return U_CALLBACK_COMPLETE;

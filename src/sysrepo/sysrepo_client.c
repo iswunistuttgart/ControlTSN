@@ -210,6 +210,44 @@ _create_xpath_key_multi(char *xpath_base, char *key1, char *key2, char **result)
 }
 
 
+// -------------------------------------------------------- //
+//  Stream ID generation method
+// -------------------------------------------------------- //
+static char *
+_generate_stream_id(TSN_Request stream_request)
+{
+    char *stream_id = NULL;
+    char *talker_mac = strdup(stream_request.talker.end_station_interfaces[0].mac_address);
+
+    // Get a list of all streams
+    TSN_Streams *all_streams = malloc(sizeof(TSN_Streams));
+    rc = sysrepo_get_all_streams(all_streams);
+    if (rc != EXIT_SUCCESS) {
+        goto cleanup;
+    }
+
+    uint16_t count_talker_streams = 0; // The number of streams with the same talker mac
+    for (int i=0; i<all_streams->count_streams; ++i) {
+        if (strstr(all_streams->streams[i].stream_id, talker_mac) != NULL) {
+            count_talker_streams += 1;
+        }
+    }
+    char talker_number[4];
+    count_talker_streams += 1; // Add one for the new stream
+    sprintf(talker_number, "%04d", count_talker_streams);
+
+    // Merge talker mac and the talker number for the new stream id
+    size_t size_needed = snprintf(NULL, 0, "XX-XX-XX-XX-XX-XX:YY-YY") + 1;
+    stream_id = malloc(size_needed);
+    sprintf(stream_id, "%s:%c%c-%c%c", talker_mac, talker_number[0], talker_number[1], talker_number[2], talker_number[3]);
+
+cleanup:
+    free(all_streams);
+
+    return stream_id;
+}
+
+
 // -------------------------------
 // Streams
 // -------------------------------
@@ -4292,24 +4330,31 @@ cleanup:
 }
 
 int 
-sysrepo_write_stream_request(TSN_Stream *stream)
+sysrepo_write_stream_request(TSN_Request *request)
 {
     char *xpath_stream_root = NULL;
     char *xpath_stream_id = NULL;
     char *xpath_request = NULL;
 
-    _create_xpath_key("/control-tsn-uni:tsn-uni/streams/stream[stream-id='%s']", stream->stream_id, &xpath_stream_root);
+    // Generate a new stream id based on the talker mac and already stored streams from this talker
+    char *new_stream_id = _generate_stream_id(*request);
+    if (new_stream_id == NULL) {
+        printf("[SYSREPO] Error generating new Stream ID!\n");
+        return EXIT_FAILURE;
+    }
+
+    _create_xpath_key("/control-tsn-uni:tsn-uni/streams/stream[stream-id='%s']", new_stream_id, &xpath_stream_root);
 
     // Write stream id
     _create_xpath(xpath_stream_root, "/stream-id", &xpath_stream_id);
-    rc = sr_set_item_str(session, xpath_stream_id, stream->stream_id, NULL, 0);
+    rc = sr_set_item_str(session, xpath_stream_id, new_stream_id, NULL, 0);
     if (rc != SR_ERR_OK) {
         goto cleanup;
     }
 
     // Write request
     _create_xpath(xpath_stream_root, "/request", &xpath_request);
-    rc = _write_request(xpath_request, &(stream->request));
+    rc = _write_request(xpath_request, request);
     if (rc != SR_ERR_OK) {
         goto cleanup;
     }

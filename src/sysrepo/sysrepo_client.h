@@ -121,10 +121,10 @@ int sysrepo_get_all_streams(TSN_Streams **streams);
 
 /**
  * @brief Writes the request information for a new stream to the datastore.
- * @param stream The struct containint the request information
+ * @param request The struct containing the request information
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
-int sysrepo_write_stream_request(TSN_Stream *stream);
+int sysrepo_write_stream_request(TSN_Request *request);
 
 /**
  * @brief Writes the computed configuration to an existing stream in the datastore.
