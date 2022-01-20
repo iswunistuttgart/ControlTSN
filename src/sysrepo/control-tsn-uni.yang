@@ -346,23 +346,6 @@ module control-tsn-uni {
                 key "id";
                 uses module-def;
             }
-
-            /*
-            container available-modules {
-                list mod {
-                    key "id";
-                    uses module-def;
-                }
-            }
-
-            container registered-modules {
-                // TODO Maybe just a instance-identifier as a reference and augment it with 'data'?
-                list mod {
-                    key "id";
-                    uses module-def;
-                }
-            }
-            */
         }
 
         container topology {

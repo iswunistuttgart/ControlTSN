@@ -17,6 +17,7 @@ TSN_Module_Data_Entry *deserialize_module_data_entry(json_t *obj);
 // ------------------------------------
 // Streams
 // ------------------------------------
+json_t *serialize_stream_id(char *stream_id);
 json_t *serialize_status_info(IEEE_StatusInfo *si);
 json_t *serialize_interface_id(IEEE_InterfaceId *ii);
 json_t *serialize_status_stream(IEEE_StatusStream *ss);

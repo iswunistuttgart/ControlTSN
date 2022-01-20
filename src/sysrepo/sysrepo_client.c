@@ -221,7 +221,7 @@ _generate_stream_id(TSN_Request stream_request)
 
     // Get a list of all streams
     TSN_Streams *all_streams = malloc(sizeof(TSN_Streams));
-    rc = sysrepo_get_all_streams(all_streams);
+    rc = sysrepo_get_all_streams(&all_streams);
     if (rc != EXIT_SUCCESS) {
         goto cleanup;
     }
@@ -232,9 +232,10 @@ _generate_stream_id(TSN_Request stream_request)
             count_talker_streams += 1;
         }
     }
-    char talker_number[4];
+    char talker_number[5];
     count_talker_streams += 1; // Add one for the new stream
-    sprintf(talker_number, "%04d", count_talker_streams);
+    sprintf(talker_number, "%04x", count_talker_streams);
+    talker_number[4] = '\0';
 
     // Merge talker mac and the talker number for the new stream id
     size_t size_needed = snprintf(NULL, 0, "XX-XX-XX-XX-XX-XX:YY-YY") + 1;
@@ -878,7 +879,7 @@ _write_interface_capabilities(char *xpath, IEEE_InterfaceCapabilities *ic)
         goto cleanup;
     }
 
-    _create_xpath(xpath, "/cb-stream-iden-type-list=%d", &xpath_cb_stream_iden_type_list);
+    _create_xpath(xpath, "/cb-stream-iden-type-list[.='%d']", &xpath_cb_stream_iden_type_list);
     for (int i=0; i<ic->count_cb_stream_iden_types; ++i) {
         char *xpath_entry = NULL;
         _create_xpath_id(xpath_cb_stream_iden_type_list, ic->cb_stream_iden_type_list[i], &xpath_entry);
@@ -892,7 +893,7 @@ _write_interface_capabilities(char *xpath, IEEE_InterfaceCapabilities *ic)
         }
     }
 
-    _create_xpath(xpath, "/cb-sequence-type-list=%d", &xpath_cb_sequence_type_list);
+    _create_xpath(xpath, "/cb-sequence-type-list[.='%d']", &xpath_cb_sequence_type_list);
     for (int i=0; i<ic->count_cb_sequence_types; ++i) {
         char *xpath_entry = NULL;
         _create_xpath_id(xpath_cb_sequence_type_list, ic->cb_sequence_type_list[i], &xpath_entry);
@@ -961,7 +962,9 @@ _read_data_frame_specification(char *xpath, IEEE_DataFrameSpecification **dfs)
 {
     int rc;
     sr_val_t *val_index = NULL;
+    sr_val_t *val_root = NULL;
     char *xpath_index = NULL;
+    char *xpath_root = NULL;
     char *xpath_choice = NULL;
 
     // Read Index
@@ -973,53 +976,73 @@ _read_data_frame_specification(char *xpath, IEEE_DataFrameSpecification **dfs)
     (*dfs)->index = val_index->data.uint8_val;
 
     // Read the Choice field 
-    // Check and Read Mac Addresses
-    _create_xpath(xpath, "/ieee802-mac-addresses", &xpath_choice);
-    IEEE_MacAddresses *ma = malloc(sizeof(IEEE_MacAddresses));
-    rc = _read_ieee802_mac_addresses(xpath_choice, &ma);
-    // If no error occured then the choice was ieee802-mac-addresses and we can stop
-    if (rc == SR_ERR_OK) {
+    _create_xpath(xpath, "/*", &xpath_root);
+    size_t count_root = 0;    
+    rc = sr_get_items(session, xpath_root, 0, 0, &val_root, &count_root);
+    DataFrameSpecification_FieldType type;
+
+    for (int i=0; i<count_root; ++i) {
+        if (strstr(val_root[i].xpath, "/ieee802-mac-addresses") != NULL) {
+            type = DATA_FRAME_SPECIFICATION_MAC_ADDRESSES;
+        } else if (strstr(val_root[i].xpath, "/ieee802-vlan-tag") != NULL) {
+            type = DATA_FRAME_SPECIFICATION_VLAN_TAG;
+        } else if (strstr(val_root[i].xpath, "/ipv4-tuple") != NULL) {
+            type = DATA_FRAME_SPECIFICATION_IPV4_TUPLE;
+        } else if (strstr(val_root[i].xpath, "/ipv4-tuple") != NULL) {
+            type = DATA_FRAME_SPECIFICATION_IPV6_TUPLE;
+        }
+    }
+
+    (*dfs)->field_type = type;
+
+    if (type == DATA_FRAME_SPECIFICATION_MAC_ADDRESSES) {
+        // Read Mac Addresses
+        _create_xpath(xpath, "/ieee802-mac-addresses", &xpath_choice);
+        IEEE_MacAddresses *ma = malloc(sizeof(IEEE_MacAddresses));
+        rc = _read_ieee802_mac_addresses(xpath_choice, &ma);
+        if (rc != SR_ERR_OK) {
+            goto cleanup;
+        }  
         (*dfs)->field.ieee802_mac_addresses = *ma;
-        (*dfs)->field_type = DATA_FRAME_SPECIFICATION_MAC_ADDRESSES;
-        goto cleanup;
-    }  
 
-    // Check and Read VLAN Tag
-    _create_xpath(xpath, "/ieee802-vlan-tag", &xpath_choice);
-    IEEE_VlanTag *vt = malloc(sizeof(IEEE_VlanTag));
-    rc = _read_ieee802_vlan_tag(xpath_choice, &vt);
-    // If no error occured then the choice was ieee802-vlan-tag and we can stop
-    if (rc == SR_ERR_OK) {
+    } else if (type == DATA_FRAME_SPECIFICATION_VLAN_TAG) {
+        // Read VLAN Tag
+        _create_xpath(xpath, "/ieee802-vlan-tag", &xpath_choice);
+        IEEE_VlanTag *vt = malloc(sizeof(IEEE_VlanTag));
+        rc = _read_ieee802_vlan_tag(xpath_choice, &vt);
+        if (rc != SR_ERR_OK) {
+            goto cleanup;
+        }
         (*dfs)->field.ieee802_vlan_tag = *vt;
-        (*dfs)->field_type = DATA_FRAME_SPECIFICATION_VLAN_TAG;
-        goto cleanup;
-    }
 
-    // Check and Read IPv4 Tuple
-    _create_xpath(xpath, "/ipv4-tuple", &xpath_choice);
-    IEEE_IPv4Tuple *ipv4 = malloc(sizeof(IEEE_IPv4Tuple));
-    rc = _read_ipv4_tuple(xpath_choice, &ipv4);
-    // If no error occured then the choice was ipv4-tuple and we can stop
-    if (rc == SR_ERR_OK) {
+    }
+     else if (type == DATA_FRAME_SPECIFICATION_IPV4_TUPLE) {
+        // Read IPv4 Tuple
+        _create_xpath(xpath, "/ipv4-tuple", &xpath_choice);
+        IEEE_IPv4Tuple *ipv4 = malloc(sizeof(IEEE_IPv4Tuple));
+        rc = _read_ipv4_tuple(xpath_choice, &ipv4);
+        if (rc != SR_ERR_OK) {
+            goto cleanup;
+        }
         (*dfs)->field.ipv4_tuple = *ipv4;
-        (*dfs)->field_type = DATA_FRAME_SPECIFICATION_IPV4_TUPLE;
-        goto cleanup;
+
+    } else if (type == DATA_FRAME_SPECIFICATION_IPV6_TUPLE) {
+        // Read IPv6 Tuple
+        _create_xpath(xpath, "/ipv6-tuple", &xpath_choice);
+        IEEE_IPv6Tuple *ipv6 = malloc(sizeof(IEEE_IPv6Tuple));
+        rc = _read_ipv6_tuple(xpath_choice, &ipv6);
+        if (rc != SR_ERR_OK) {
+            goto cleanup;
+        }
+        (*dfs)->field.ipv6_tuple = *ipv6;
     }
 
-    // Check and Read IPv6 Tuple
-    _create_xpath(xpath, "/ipv6-tuple", &xpath_choice);
-    IEEE_IPv6Tuple *ipv6 = malloc(sizeof(IEEE_IPv6Tuple));
-    rc = _read_ipv6_tuple(xpath_choice, &ipv6);
-    // If no error occured then the choice was ipv6-tuple and we can stop
-    if (rc == SR_ERR_OK) {
-        (*dfs)->field.ipv6_tuple = *ipv6;
-        (*dfs)->field_type = DATA_FRAME_SPECIFICATION_IPV6_TUPLE;
-        goto cleanup;
-    }
 
 cleanup:
     sr_free_val(val_index);
+    sr_free_val(val_root);
     free(xpath_index);
+    free(xpath_root);
     free(xpath_choice);
 
     return rc;
@@ -1850,8 +1873,10 @@ _read_config_list(char *xpath, IEEE_ConfigList **cl)
 {
     int rc = SR_ERR_OK;
     sr_val_t *val_index = NULL;
+    sr_val_t *val_root = NULL;
     sr_val_t *val_time_aware_offset = NULL;
     char *xpath_index = NULL;
+    char *xpath_root = NULL;
     char *xpath_choice = NULL;
 
     // Read Index
@@ -1862,59 +1887,86 @@ _read_config_list(char *xpath, IEEE_ConfigList **cl)
     }
     (*cl)->index = val_index->data.uint8_val;
 
+
+    // Read the Choice field 
+    _create_xpath(xpath, "/*", &xpath_root);
+    size_t count_root = 0;    
+    rc = sr_get_items(session, xpath_root, 0, 0, &val_root, &count_root);
+    ConfigList_FieldType type;
+
+    for (int i=0; i<count_root; ++i) {
+        if (strstr(val_root[i].xpath, "/ieee802-mac-addresses") != NULL) {
+            type = CONFIG_LIST_MAC_ADDRESSES;
+        } else if (strstr(val_root[i].xpath, "/ieee802-vlan-tag") != NULL) {
+            type = CONFIG_LIST_VLAN_TAG;
+        } else if (strstr(val_root[i].xpath, "/ipv4-tuple") != NULL) {
+            type = CONFIG_LIST_IPV4_TUPLE;
+        } else if (strstr(val_root[i].xpath, "/ipv4-tuple") != NULL) {
+            type = CONFIG_LIST_IPV6_TUPLE;
+        } else if (strstr(val_root[i].xpath, "/time-aware-offset") != NULL) {
+            type = CONFIG_LIST_TIME_AWARE_OFFSET;
+        }
+    }
+
+    (*cl)->field_type = type;
+
     // Read the choice field
-    // Check and read MAC Addresses
-    _create_xpath(xpath, "/ieee802-mac-addresses", &xpath_choice);
-    IEEE_MacAddresses *ma = malloc(sizeof(IEEE_MacAddresses));
-    rc = _read_ieee802_mac_addresses(xpath_choice, &ma);
-    // If no error occured then the choice was ieee802-mac-addresses and we can stop
-    if (rc == SR_ERR_OK) {
+    if (type == CONFIG_LIST_MAC_ADDRESSES) {
+        // Read MAC Addresses
+        _create_xpath(xpath, "/ieee802-mac-addresses", &xpath_choice);
+        IEEE_MacAddresses *ma = malloc(sizeof(IEEE_MacAddresses));
+        rc = _read_ieee802_mac_addresses(xpath_choice, &ma);
+        if (rc != SR_ERR_OK) {
+            goto cleanup;
+        }  
         (*cl)->config_value.ieee802_mac_addresses = *ma;
-        goto cleanup;
-    }  
 
-    // Check and Read VLAN Tag
-    _create_xpath(xpath, "/ieee802-vlan-tag", &xpath_choice);
-    IEEE_VlanTag *vt = malloc(sizeof(IEEE_VlanTag));
-    rc = _read_ieee802_vlan_tag(xpath_choice, &vt);
-    // If no error occured then the choice was ieee802-vlan-tag and we can stop
-    if (rc == SR_ERR_OK) {
+    } else if (type == CONFIG_LIST_VLAN_TAG) {
+        // Read VLAN Tag
+        _create_xpath(xpath, "/ieee802-vlan-tag", &xpath_choice);
+        IEEE_VlanTag *vt = malloc(sizeof(IEEE_VlanTag));
+        rc = _read_ieee802_vlan_tag(xpath_choice, &vt);
+        if (rc != SR_ERR_OK) {
+            goto cleanup;
+        }
         (*cl)->config_value.ieee802_vlan_tag = *vt;
-        goto cleanup;
-    }
 
-    // Check and Read IPv4 Tuple
-    _create_xpath(xpath, "/ipv4-tuple", &xpath_choice);
-    IEEE_IPv4Tuple *ipv4 = malloc(sizeof(IEEE_IPv4Tuple));
-    rc = _read_ipv4_tuple(xpath_choice, &ipv4);
-    // If no error occured then the choice was ipv4-tuple and we can stop
-    if (rc == SR_ERR_OK) {
+    } else if (type == CONFIG_LIST_IPV4_TUPLE) {
+        // Read IPv4 Tuple
+        _create_xpath(xpath, "/ipv4-tuple", &xpath_choice);
+        IEEE_IPv4Tuple *ipv4 = malloc(sizeof(IEEE_IPv4Tuple));
+        rc = _read_ipv4_tuple(xpath_choice, &ipv4);
+        if (rc != SR_ERR_OK) {
+            goto cleanup;
+        }
         (*cl)->config_value.ipv4_tuple = *ipv4;
-        goto cleanup;
-    }
 
-    // Check and Read IPv6 Tuple
-    _create_xpath(xpath, "/ipv6-tuple", &xpath_choice);
-    IEEE_IPv6Tuple *ipv6 = malloc(sizeof(IEEE_IPv6Tuple));
-    rc = _read_ipv6_tuple(xpath_choice, &ipv6);
-    // If no error occured then the choice was ipv6-tuple and we can stop
-    if (rc == SR_ERR_OK) {
+    } else if (type == CONFIG_LIST_IPV6_TUPLE) {
+        // Check and Read IPv6 Tuple
+        _create_xpath(xpath, "/ipv6-tuple", &xpath_choice);
+        IEEE_IPv6Tuple *ipv6 = malloc(sizeof(IEEE_IPv6Tuple));
+        rc = _read_ipv6_tuple(xpath_choice, &ipv6);
+        if (rc != SR_ERR_OK) {
+            goto cleanup;
+        }
         (*cl)->config_value.ipv6_tuple = *ipv6;
-        goto cleanup;
-    }
 
-    // Check and read Time aware offset
-    _create_xpath(xpath, "/time-aware-offset", &xpath_choice);
-    rc = sr_get_item(session, xpath_choice, 0, &val_time_aware_offset);
-    // If no error occured then the choice was time-aware-offset and we can stop
-    if (rc == SR_ERR_OK) {
+    } else if (type == CONFIG_LIST_TIME_AWARE_OFFSET) {
+        // Check and read Time aware offset
+        _create_xpath(xpath, "/time-aware-offset", &xpath_choice);
+        rc = sr_get_item(session, xpath_choice, 0, &val_time_aware_offset);
+        if (rc != SR_ERR_OK) {
+            goto cleanup;
+        }
         (*cl)->config_value.time_aware_offset = val_time_aware_offset->data.uint32_val;
-        goto cleanup;
     }
+    
 
 cleanup:
     sr_free_val(val_index);
+    sr_free_val(val_root);
     free(xpath_index);
+    free(xpath_root);
     free(xpath_choice);
 
     return rc;
@@ -1930,7 +1982,7 @@ _write_config_list(char *xpath, IEEE_ConfigList *cl)
     _create_xpath(xpath, "/index", &xpath_index);
     sr_val_t val_index;
     val_index.type = SR_UINT8_T;
-    val_index.data.enum_val = cl->index;
+    val_index.data.uint8_val = cl->index;
     rc = sr_set_item(session, xpath_index, &val_index, 0);
     if (rc != SR_ERR_OK) {
         goto cleanup;
@@ -2402,7 +2454,7 @@ _write_stream(char *xpath, TSN_Stream *stream)
     
     if (stream->configuration) {
         _create_xpath(xpath, "/configuration", &xpath_configuration);
-        rc = _write_configuration(xpath_configuration, &(stream->configuration));
+        rc = _write_configuration(xpath_configuration, stream->configuration);
         if (rc != SR_ERR_OK) {
             goto cleanup;
         }
@@ -4330,7 +4382,7 @@ cleanup:
 }
 
 int 
-sysrepo_write_stream_request(TSN_Request *request)
+sysrepo_write_stream_request(TSN_Request *request, char **generated_stream_id)
 {
     char *xpath_stream_root = NULL;
     char *xpath_stream_id = NULL;
@@ -4342,6 +4394,7 @@ sysrepo_write_stream_request(TSN_Request *request)
         printf("[SYSREPO] Error generating new Stream ID!\n");
         return EXIT_FAILURE;
     }
+    (*generated_stream_id) = strdup(new_stream_id);
 
     _create_xpath_key("/control-tsn-uni:tsn-uni/streams/stream[stream-id='%s']", new_stream_id, &xpath_stream_root);
 
@@ -4359,6 +4412,12 @@ sysrepo_write_stream_request(TSN_Request *request)
         goto cleanup;
     }
 
+    // Apply the changes
+    rc = sr_apply_changes(session, 0, 1);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
 cleanup:
     free(xpath_stream_root);
     free(xpath_stream_id);
@@ -4367,7 +4426,8 @@ cleanup:
     return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
-int sysrepo_write_stream_configuration(char *stream_id, TSN_Configuration *configuration)
+int 
+sysrepo_write_stream_configuration(char *stream_id, TSN_Configuration *configuration)
 {
     char *xpath_stream_root = NULL;
     char *xpath_configuration = NULL;
@@ -4388,12 +4448,35 @@ cleanup:
     return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
-int sysrepo_get_stream(char *stream_id, TSN_Stream **stream)
+int 
+sysrepo_get_stream(char *stream_id, TSN_Stream **stream)
 {
     char *xpath_stream = NULL;
 
     _create_xpath_key("/control-tsn-uni:tsn-uni/streams/stream[stream-id='%s']", stream_id, &xpath_stream);
     rc = _read_stream(xpath_stream, stream);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+cleanup:
+    free(xpath_stream);
+
+    return rc ? EXIT_FAILURE : EXIT_SUCCESS;
+}
+
+int 
+sysrepo_delete_stream(char *stream_id)
+{
+    char *xpath_stream = NULL;
+    _create_xpath_key("/control-tsn-uni:tsn-uni/streams/stream[stream-id='%s']", stream_id, &xpath_stream);
+
+    rc = sr_delete_item(session, xpath_stream, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }    
+
+    rc = sr_apply_changes(session, 0, 1);
     if (rc != SR_ERR_OK) {
         goto cleanup;
     }

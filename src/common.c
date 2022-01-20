@@ -298,6 +298,19 @@ streams_get_all(TSN_Streams **streams)
     return ret;
 }
 
+int
+stream_request(TSN_Request *request, char **generated_stream_id)
+{
+    ret = sysrepo_write_stream_request(request, generated_stream_id);
+    return ret;
+}
+
+int 
+streams_delete(char *stream_id)
+{
+    ret = sysrepo_delete_stream(stream_id);
+    return ret;
+}
 
 // ----------------------------------------------
 //      FUNCTIONS - Topology

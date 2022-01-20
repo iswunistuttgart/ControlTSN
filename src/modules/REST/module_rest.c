@@ -101,7 +101,8 @@ _api_index_get(const struct _u_request *request, struct _u_response *response, v
                        // Streams
                        "<tr><th>Streams</th></tr>" \
                        "<tr><td><a href='/streams'>/streams</a></td><td>GET</td><td>Get all streams</td></tr>" \
-                       "<tr><td><a href='/streams/request'>/streams/request</a></td><td>POST</td><td>Request a new stream</td><tr>request (TSN_Request)</td></tr>" \
+                       "<tr><td><a href='/streams/00-00-00-00-00-00:00-01/delete'>/streams/:stream-id/delete</a></td><td>POST</td><td>Delete a specific stream</td></tr>" \
+                       "<tr><td><a href='/streams/request'>/streams/request</a></td><td>POST</td><td>Request a new stream</td><td>request (TSN_Request)</td></tr>" \
                        // Applications
                        "<tr><th>Applications</th></tr>" \
                        "<tr><td><a href='/application'>/application</a></td><td>GET</td><td>Get the application containing all apps and images</td></tr>" \
@@ -473,6 +474,8 @@ _api_streams_get(const struct _u_request *request, struct _u_response *response,
     return U_CALLBACK_COMPLETE;
 }
 
+
+
 static int
 _api_streams_request(const struct _u_request *request, struct _u_response *response, void *user_data)
 {
@@ -482,15 +485,38 @@ _api_streams_request(const struct _u_request *request, struct _u_response *respo
         return U_CALLBACK_ERROR;
     }
 
-    TSN_Request *stream_request = deserialize_stream_request(json_object_get(json_post_body, "request"));
+    TSN_Request *req = deserialize_stream_request(json_object_get(json_post_body, "request"));
+    
     // Write stream request to sysrepo
-    rc = sysrepo_write_stream_request(stream_request);
+    char *generated_stream_id = NULL;
+    rc = stream_request(req, &generated_stream_id);
+
     json_decref(json_post_body);
     if (rc == EXIT_SUCCESS) {
+        // Return the stream id as response
+        json_t *json_response = serialize_stream_id(generated_stream_id);
+        ulfius_set_json_body_response(response, 200, json_response);
+
         return U_CALLBACK_COMPLETE;
     }
 
     return U_CALLBACK_ERROR;
+}
+
+static int
+_api_streams_delete(const struct _u_request *request, struct _u_response *response, void *user_data)
+{
+    const char *url_id = u_map_get(request->map_url, "stream-id");
+    if (url_id == NULL) {
+        return U_CALLBACK_ERROR;
+    }
+    char *stream_id = strdup(url_id);
+    rc = streams_delete(stream_id);
+    if (rc == EXIT_FAILURE) {
+        return U_CALLBACK_ERROR;
+    }
+
+    return U_CALLBACK_COMPLETE;
 }
 
 // ------------------------------------
@@ -819,6 +845,8 @@ _init_server()
     // Streams
     ulfius_add_endpoint_by_val(&server_instance, "GET",     API_PREFIX, API_STREAMS,            0, &_api_streams_get,       NULL);
     ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_STREAMS_REQUEST,    0, &_api_streams_request,   NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_STREAMS_ID_DELETE,  0, &_api_streams_delete,    NULL);
+    
     // Topology
     ulfius_add_endpoint_by_val(&server_instance, "GET", API_PREFIX,     API_TOPOLOGY,           0, &_api_topology_get,          NULL);
     ulfius_add_endpoint_by_val(&server_instance, "GET", API_PREFIX,     API_TOPOLOGY_DEVICES,   0, &_api_topology_devices_get,  NULL);

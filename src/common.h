@@ -137,12 +137,26 @@ TSN_Module_Data_Entry *module_get_data_entry(TSN_Module_Data *module_data, const
 //      FUNCTIONS - Stream-Handling
 // ----------------------------------------------
 /**
- * @brief Get all streams stored in the datastore
+ * @brief Get all streams stored in the datastore.
  * @param streams The TSN_Streams struct to write on
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
 int streams_get_all(TSN_Streams **streams);
 
+/**
+ * @brief Request a new stream.
+ * @param request The TSN_Request struct containing the necessary information for the computation
+ * @param generated_stream_id The generated stream id will be written to this string
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+ */
+int stream_request(TSN_Request *request, char **generated_stream_id);
+
+/**
+ * @brief Deletes a specific stream. 
+ * @param stream_id The id of the stream to delete
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+ */
+int streams_delete(char *stream_id);
 
 // ----------------------------------------------
 //      FUNCTIONS - Topology-Handling

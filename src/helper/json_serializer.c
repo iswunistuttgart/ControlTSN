@@ -235,6 +235,17 @@ deserialize_module_data(json_t *obj)
 // Streams
 // ------------------------------------
 json_t *
+serialize_stream_id(char *stream_id)
+{
+    json_t *root = NULL;
+    root = json_object();
+    
+    json_object_set_new(root, "stream_id", json_string(stream_id));
+
+    return root;
+}
+
+json_t *
 serialize_status_info(IEEE_StatusInfo *si)
 {
     json_t *root = NULL;
@@ -512,7 +523,7 @@ serialize_interface_capabilities(IEEE_InterfaceCapabilities *ic)
     array_cb_stream_iden_type_list = json_array();
     for (int i=0; i<ic->count_cb_stream_iden_types; ++i) {
         json_t *c = NULL;
-        c = json_integer(&(ic->cb_stream_iden_type_list[i]));
+        c = json_integer(ic->cb_stream_iden_type_list[i]);
         json_array_append_new(array_cb_stream_iden_type_list, c);
     }
     json_object_set_new(root, "cb_stream_iden_type_list", array_cb_stream_iden_type_list);
@@ -522,7 +533,7 @@ serialize_interface_capabilities(IEEE_InterfaceCapabilities *ic)
     array_cb_sequence_type_list = json_array();
     for (int i=0; i<ic->count_cb_sequence_types; ++i) {
         json_t *c = NULL;
-        c = json_integer(&(ic->cb_sequence_type_list[i]));
+        c = json_integer(ic->cb_sequence_type_list[i]);
         json_array_append_new(array_cb_sequence_type_list, c);
     }
     json_object_set_new(root, "cb_sequence_type_list", array_cb_sequence_type_list);
@@ -830,17 +841,20 @@ deserialize_config_list(json_t *obj)
 
     x->index = json_integer_value(json_object_get(obj, "index"));
     x->field_type = json_integer_value(json_object_get(obj, "field_type"));
+
+    json_t *config_value = NULL;
+    config_value = json_object_get(obj, "config_value");
     
     if (x->field_type == CONFIG_LIST_MAC_ADDRESSES) {
-        x->config_value.ieee802_mac_addresses = *(deserialize_mac_addresses(json_object_get(obj, "config_value")));
+        x->config_value.ieee802_mac_addresses = *(deserialize_mac_addresses(json_object_get(config_value, "ieee802_mac_addresses")));
     } else if (x->field_type == CONFIG_LIST_VLAN_TAG) {
-        x->config_value.ieee802_vlan_tag = *(deserialize_vlan_tag(json_object_get(obj, "config_value")));
+        x->config_value.ieee802_vlan_tag = *(deserialize_vlan_tag(json_object_get(config_value, "ieee802_vlan_tag")));
     } else if (x->field_type == CONFIG_LIST_IPV4_TUPLE) {
-        x->config_value.ipv4_tuple = *(deserialize_ipv4_tuple(json_object_get(obj, "config_value")));
+        x->config_value.ipv4_tuple = *(deserialize_ipv4_tuple(json_object_get(config_value, "ipv4_tuple")));
     } else if (x->field_type == CONFIG_LIST_IPV6_TUPLE) {
-        x->config_value.ipv6_tuple = *(deserialize_ipv6_tuple(json_object_get(obj, "config_value")));
+        x->config_value.ipv6_tuple = *(deserialize_ipv6_tuple(json_object_get(config_value, "ipv6_tuple")));
     } else if (x->field_type == CONFIG_LIST_TIME_AWARE_OFFSET) {
-        x->config_value.time_aware_offset = json_integer_value(json_object_get(obj, "config_value"));
+        x->config_value.time_aware_offset = json_integer_value(json_object_get(config_value, "time_aware_offset"));
     }
 
     return x;
@@ -897,15 +911,18 @@ deserialize_data_frame_specification(json_t *obj)
 
     x->index = json_integer_value(json_object_get(obj, "index"));
     x->field_type = json_integer_value(json_object_get(obj, "field_type"));
+
+    json_t *field = NULL;
+    field = json_object_get(obj, "field");
     
     if (x->field_type == DATA_FRAME_SPECIFICATION_MAC_ADDRESSES) {
-        x->field.ieee802_mac_addresses = *(deserialize_mac_addresses(json_object_get(obj, "field")));
+        x->field.ieee802_mac_addresses = *(deserialize_mac_addresses(json_object_get(field, "ieee802_mac_addresses")));
     } else if (x->field_type == DATA_FRAME_SPECIFICATION_VLAN_TAG) {
-        x->field.ieee802_vlan_tag = *(deserialize_vlan_tag(json_object_get(obj, "field")));
+        x->field.ieee802_vlan_tag = *(deserialize_vlan_tag(json_object_get(field, "ieee802_vlan_tag")));
     } else if (x->field_type == DATA_FRAME_SPECIFICATION_IPV4_TUPLE) {
-        x->field.ipv4_tuple = *(deserialize_ipv4_tuple(json_object_get(obj, "field")));
+        x->field.ipv4_tuple = *(deserialize_ipv4_tuple(json_object_get(field, "ipv4_tuple")));
     } else if (x->field_type == DATA_FRAME_SPECIFICATION_IPV6_TUPLE) {
-        x->field.ipv6_tuple = *(deserialize_ipv6_tuple(json_object_get(obj, "field")));
+        x->field.ipv6_tuple = *(deserialize_ipv6_tuple(json_object_get(field, "ipv6_tuple")));
     }
 
     return x;    
@@ -991,7 +1008,6 @@ deserialize_talker(json_t *obj)
     TSN_Talker *x = malloc(sizeof(TSN_Talker));
 
     x->stream_rank = *(deserialize_stream_rank(json_object_get(obj, "stream_rank")));
-    
     json_t *end_station_interfaces = json_object_get(obj, "end_station_interfaces");
     x->count_end_station_interfaces = json_array_size(end_station_interfaces);
     x->end_station_interfaces = (IEEE_InterfaceId *) malloc(sizeof(IEEE_InterfaceId) * x->count_end_station_interfaces);

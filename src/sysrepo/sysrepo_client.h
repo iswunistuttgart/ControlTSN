@@ -122,9 +122,10 @@ int sysrepo_get_all_streams(TSN_Streams **streams);
 /**
  * @brief Writes the request information for a new stream to the datastore.
  * @param request The struct containing the request information
+ * @param generated_stream_id The generated stream id for the new stream will be written to this parameter
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
-int sysrepo_write_stream_request(TSN_Request *request);
+int sysrepo_write_stream_request(TSN_Request *request, char **generated_stream_id);
 
 /**
  * @brief Writes the computed configuration to an existing stream in the datastore.
@@ -141,6 +142,13 @@ int sysrepo_write_stream_configuration(char *stream_id, TSN_Configuration *confi
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
 int sysrepo_get_stream(char *stream_id, TSN_Stream **stream);
+
+/**
+ * @brief Removes a stream in the datastore.
+ * @param stream_id The id of the stream to remove
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+ */
+int sysrepo_delete_stream(char *stream_id);
 
 
 // -------------------------------------------------------- //
