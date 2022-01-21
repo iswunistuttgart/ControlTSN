@@ -39,6 +39,7 @@ const char *API_TOPOLOGY_DISCOVER   = "/topology/discover";
 const char *API_STREAMS             = "/streams";
 const char *API_STREAMS_ID_DELETE   = "/streams/:stream-id/delete";
 const char *API_STREAMS_REQUEST     = "/streams/request";
+const char *API_STREAMS_COMPUTE     = "/streams/compute";
 
 // Application
 const char *API_APPLICATION             = "/application";

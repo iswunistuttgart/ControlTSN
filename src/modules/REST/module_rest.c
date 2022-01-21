@@ -103,6 +103,7 @@ _api_index_get(const struct _u_request *request, struct _u_response *response, v
                        "<tr><td><a href='/streams'>/streams</a></td><td>GET</td><td>Get all streams</td></tr>" \
                        "<tr><td><a href='/streams/00-00-00-00-00-00:00-01/delete'>/streams/:stream-id/delete</a></td><td>POST</td><td>Delete a specific stream</td></tr>" \
                        "<tr><td><a href='/streams/request'>/streams/request</a></td><td>POST</td><td>Request a new stream</td><td>request (TSN_Request)</td></tr>" \
+                       "<tr><td><a href='/streams/compute'>/streams/compute</a></td><td>POST</td><td>Trigger the computation of all stream requests</td><td></td></tr>" \
                        // Applications
                        "<tr><th>Applications</th></tr>" \
                        "<tr><td><a href='/application'>/application</a></td><td>GET</td><td>Get the application containing all apps and images</td></tr>" \
@@ -519,6 +520,17 @@ _api_streams_delete(const struct _u_request *request, struct _u_response *respon
     return U_CALLBACK_COMPLETE;
 }
 
+static int
+_api_streams_compute(const struct _u_request *request, struct _u_response *response, void *user_data)
+{
+    rc =sysrepo_send_notification(EVENT_STREAM_COMPUTATION_REQUESTED, NULL, "stream computation requested via REST module");
+    if (rc == EXIT_FAILURE) {
+        return U_CALLBACK_ERROR;
+    }
+
+    return U_CALLBACK_COMPLETE;
+}
+
 // ------------------------------------
 // Topology
 // ------------------------------------
@@ -578,7 +590,7 @@ _api_topology_graph_get(const struct _u_request *request, struct _u_response *re
 static int
 _api_topology_discover(const struct _u_request *request, struct _u_response *response, void *user_data)
 {
-    rc = sysrepo_send_notification(EVENT_TOPOLOGY_DISCOVERY_REQUESTED, NULL, NULL);
+    rc = sysrepo_send_notification(EVENT_TOPOLOGY_DISCOVERY_REQUESTED, NULL, "topology discovery requested via REST module");
     if (rc == EXIT_FAILURE) {
         return U_CALLBACK_ERROR;
     }
@@ -846,12 +858,13 @@ _init_server()
     ulfius_add_endpoint_by_val(&server_instance, "GET",     API_PREFIX, API_STREAMS,            0, &_api_streams_get,       NULL);
     ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_STREAMS_REQUEST,    0, &_api_streams_request,   NULL);
     ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_STREAMS_ID_DELETE,  0, &_api_streams_delete,    NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_STREAMS_COMPUTE,    0, &_api_streams_compute,   NULL);
     
     // Topology
-    ulfius_add_endpoint_by_val(&server_instance, "GET", API_PREFIX,     API_TOPOLOGY,           0, &_api_topology_get,          NULL);
-    ulfius_add_endpoint_by_val(&server_instance, "GET", API_PREFIX,     API_TOPOLOGY_DEVICES,   0, &_api_topology_devices_get,  NULL);
-    ulfius_add_endpoint_by_val(&server_instance, "GET", API_PREFIX,     API_TOPOLOGY_GRAPH,     0, &_api_topology_graph_get,    NULL);
-    ulfius_add_endpoint_by_val(&server_instance, "POST", API_PREFIX,    API_TOPOLOGY_DISCOVER,  0, &_api_topology_discover,     NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "GET",     API_PREFIX, API_TOPOLOGY,           0, &_api_topology_get,          NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "GET",     API_PREFIX, API_TOPOLOGY_DEVICES,   0, &_api_topology_devices_get,  NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "GET",     API_PREFIX, API_TOPOLOGY_GRAPH,     0, &_api_topology_graph_get,    NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_TOPOLOGY_DISCOVER,  0, &_api_topology_discover,     NULL);
     // Application
     ulfius_add_endpoint_by_val(&server_instance, "GET", API_PREFIX, API_APPLICATION,        0, &_api_application_get,           NULL);
     ulfius_add_endpoint_by_val(&server_instance, "GET", API_PREFIX, API_APPLICATION_APPS,   0, &_api_application_apps_get,      NULL);

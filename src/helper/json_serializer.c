@@ -708,14 +708,19 @@ serialize_stream(TSN_Stream *stream)
     json_object_set_new(root, "stream_id", json_string(stream->stream_id));
 
     // Request
-   json_t *request = NULL;
-   request = serialize_stream_request(&(stream->request));
-   json_object_set_new(root, "request", request);
+    json_t *request = NULL;
+    request = serialize_stream_request(&(stream->request));
+    json_object_set_new(root, "request", request);
 
-    // Configuration
-    json_t *configuration = NULL;
-    configuration = serialize_stream_configuration(stream->configuration);
-    json_object_set_new(root, "configuration", configuration);
+    // Is configured
+    json_object_set_new(root, "configured", json_integer(stream->configured));
+
+    if (stream->configured) {
+        // Configuration
+        json_t *configuration = NULL;
+        configuration = serialize_stream_configuration(stream->configuration);
+        json_object_set_new(root, "configuration", configuration);
+    }
 
     return root;
 }
@@ -1124,8 +1129,15 @@ deserialize_stream(json_t *obj)
     // Request
     stream->request = *(deserialize_stream_request(json_object_get(obj, "request")));
 
+    // Is configured?
+    stream->configured = json_integer_value(json_object_get(obj, "configured"));
+
     // Configuration
-    stream->configuration = deserialize_stream_configuration(json_object_get(obj, "configuration"));
+    if (stream->configured) {
+        stream->configuration = deserialize_stream_configuration(json_object_get(obj, "configuration"));
+    } else {
+        stream->configuration = NULL;
+    }
 
     return stream;
 }

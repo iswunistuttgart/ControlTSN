@@ -17,6 +17,13 @@
         <subscribed-events-mask>196609</subscribed-events-mask>
         <registered>1</registered>
         <pid>0</pid>
+        <data>
+          <entry>
+            <data-name>cnc_url</data-name>
+            <data-type>string</data-type>
+            <data-value>http://localhost:11067</data-value>
+          </entry>
+        </data>
       </mod>
       <mod>
         <id>3</id>

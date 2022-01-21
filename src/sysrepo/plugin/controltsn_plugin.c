@@ -16,7 +16,7 @@
 sr_subscription_ctx_t *_subscriptions = NULL;
 
 
-
+/*
 static int
 _test_print_mask(uint32_t mask) {
     if (mask & EVENT_STREAM_REQUESTED) {
@@ -49,6 +49,7 @@ _test_print_mask(uint32_t mask) {
 
     printf("\n");
 }
+*/
 
 
 static int
@@ -167,10 +168,11 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
         // STREAM ---------------------------------------------------
         if (strstr(val->xpath, "/streams/") != NULL) {
             // Deleted
-            if (op == SR_OP_DELETED) {
+            if ((strstr(val->xpath, "/stream-id") != NULL) &&
+                (op == SR_OP_DELETED)) {   
                 if ((already_send_mask & EVENT_STREAM_DELETED) == 0) {
                     char *key = _extract_key(val->xpath, "stream-id");
-                    rc = _send_notification(session, EVENT_STREAM_DELETED, key, NULL);
+                    rc = _send_notification(session, EVENT_STREAM_DELETED, key, "stream deleted");
                     if (rc == EXIT_FAILURE) {
                         printf("[PLUGIN] Failed to send notification 'EVENT_STREAM_DELETED'!\n");
                     } else {
@@ -185,7 +187,7 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
                 (op == SR_OP_CREATED)) {       
                 if ((already_send_mask & EVENT_STREAM_REQUESTED) == 0) {
                     char *key = _extract_key(val->xpath, "stream-id");
-                    rc = _send_notification(session, EVENT_STREAM_REQUESTED, key, NULL);
+                    rc = _send_notification(session, EVENT_STREAM_REQUESTED, key, "stream request added");
                     if (rc == EXIT_FAILURE) {
                         printf("[PLUGIN] Failed to send notification 'EVENT_STREAM_REQUESTED'!\n");
                     } else {
@@ -195,12 +197,12 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
                 }
             }
 
-            // Configured
-            if ((strstr(val->xpath, "/configuration/") != NULL)
-                && ((op == SR_OP_CREATED) || (op == SR_OP_MODIFIED))) {
+            if ((!strcmp(val->xpath + strlen(val->xpath) - strlen("/configured"), "/configured")) 
+                && (op == SR_OP_MODIFIED)) {
+
                 if ((already_send_mask & EVENT_STREAM_CONFIGURED) == 0) {
                     char *key = _extract_key(val->xpath, "stream-id");
-                    rc = _send_notification(session, EVENT_STREAM_CONFIGURED, key, NULL);
+                    rc = _send_notification(session, EVENT_STREAM_CONFIGURED, key, "stream configured");
                     if (rc == EXIT_FAILURE) {
                         printf("[PLUGIN] Failed to send notification 'EVENT_STREAM_CONFIGURED'!\n");
                     } else {
@@ -214,27 +216,12 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
         // MODULES ---------------------------------------------------
         } else if (strstr(val->xpath, "/modules/") != NULL) {
             // Added
-            /*
-            if ((strstr(val->xpath, "/available-modules") != NULL) 
-                && (op == SR_OP_CREATED)) {
-                if ((already_send_mask & EVENT_MODULE_ADDED) == 0) {
-                    char *key = _extract_key(val->xpath, "id");
-                    rc = _send_notification(session, EVENT_MODULE_ADDED, key, NULL);
-                    if (rc == EXIT_FAILURE) {
-                        printf("[PLUGIN] Failed to send notification 'EVENT_MODULE_ADDED'!\n");
-                    } else {
-                        already_send_mask |= EVENT_MODULE_ADDED;
-                    }
-                    
-                }
-            }
-            */
             if ((strstr(val->xpath, "/id") != NULL)
                 && (op = SR_OP_CREATED)) {
 
                 if ((already_send_mask & EVENT_MODULE_ADDED) == 0) {
                     char *key = _extract_key(val->xpath, "id");
-                    rc = _send_notification(session, EVENT_MODULE_ADDED, key, NULL);
+                    rc = _send_notification(session, EVENT_MODULE_ADDED, key, "module added");
                     if (rc == EXIT_FAILURE) {
                         printf("[PLUGIN] Failed to send notification 'EVENT_MODULE_ADDED'!\n");
                     } else {
@@ -242,38 +229,6 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
                     }
                 }
             }
-
-            /*
-            // Registered
-            if ((strstr(val->xpath, "/registered-modules") != NULL) 
-                && (op == SR_OP_CREATED)) {
-                if ((already_send_mask & EVENT_MODULE_REGISTERED) == 0) {
-                    char *key = _extract_key(val->xpath, "id");
-                    rc = _send_notification(session, EVENT_MODULE_REGISTERED, key, NULL);
-                    if (rc == EXIT_FAILURE) {
-                        printf("[PLUGIN] Failed to send notification 'EVENT_MODULE_REGISTERED'!\n");
-                    } else {
-                        already_send_mask |= EVENT_MODULE_REGISTERED;
-                    }
-                    
-                }
-            }
-
-            // Unregistered
-            if ((strstr(val->xpath, "/registered-modules") != NULL) 
-                && (op == SR_OP_DELETED)) {
-                if ((already_send_mask & EVENT_MODULE_UNREGISTERED) == 0) {
-                    char *key = _extract_key(val->xpath, "id");
-                    rc = _send_notification(session, EVENT_MODULE_UNREGISTERED, key, NULL);
-                    if (rc == EXIT_FAILURE) {
-                        printf("[PLUGIN] Failed to send notification 'EVENT_MODULE_UNREGISTERED'!\n");
-                    } else {
-                        already_send_mask |= EVENT_MODULE_UNREGISTERED;
-                    }
-                    
-                }    
-            }
-            */
 
             // Registered / Unregistered
             // Check if /registered is at the end of the xpath
@@ -283,7 +238,7 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
                 char *key = _extract_key(val->xpath, "id");
 
                 uint8_t registered = val->data.uint8_val;
-                rc = _send_notification(session, registered ? EVENT_MODULE_REGISTERED : EVENT_MODULE_UNREGISTERED, key, NULL);
+                rc = _send_notification(session, registered ? EVENT_MODULE_REGISTERED : EVENT_MODULE_UNREGISTERED, key, registered ? "module registered" : "module unregistered");
                 if (rc == EXIT_FAILURE) {
                     printf("[PLUGIN] Failed to send notification '%s'!\n", (registered ? "EVENT_MODULE_REGISTERED" : "EVENT_MODULE_UNREGISTERED"));
                 } else {
@@ -297,7 +252,7 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
                 && ((op == SR_OP_CREATED) || (op == SR_OP_MODIFIED))) {
                 if ((already_send_mask & EVENT_MODULE_DATA_UPDATED) == 0) {
                     char *key = _extract_key(val->xpath, "id");
-                    rc = _send_notification(session, EVENT_MODULE_DATA_UPDATED, key, NULL);
+                    rc = _send_notification(session, EVENT_MODULE_DATA_UPDATED, key, "module data updated");
                     if (rc == EXIT_FAILURE) {
                         printf("[PLUGIN] Failed to send notification 'EVENT_MODULE_DATA_UPDATED'!\n");
                     } else {
@@ -308,11 +263,11 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
             }
 
             // Deleted
-            if ((strstr(val->xpath, "/available-modules") != NULL) 
+            if ((strstr(val->xpath, "/id") != NULL) 
                 && (op == SR_OP_DELETED)) {
                 if ((already_send_mask & EVENT_MODULE_DELETED) == 0) {
                     char *key = _extract_key(val->xpath, "id");
-                    rc = _send_notification(session, EVENT_MODULE_DELETED, key, NULL);
+                    rc = _send_notification(session, EVENT_MODULE_DELETED, key, "module deleted");
                     if (rc == EXIT_FAILURE) {
                         printf("[PLUGIN] Failed to send notification 'EVENT_MODULE_DELETED'!\n");
                     } else {
@@ -329,7 +284,7 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
 
             // Discovered
             if ((already_send_mask & EVENT_TOPOLOGY_DISCOVERED) == 0) {
-                rc = _send_notification(session, EVENT_TOPOLOGY_DISCOVERED, NULL, NULL);
+                rc = _send_notification(session, EVENT_TOPOLOGY_DISCOVERED, NULL, "topology discovered");
                 already_send_mask |= EVENT_TOPOLOGY_DISCOVERED;
                 if (rc == EXIT_FAILURE) {
                     printf("[PLUGIN] Failed to send notification 'EVENT_TOPOLOGY_DISCOVERED'!\n");

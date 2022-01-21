@@ -56,34 +56,15 @@ module control-tsn-uni {
         }
         container request {
             uses request;
+        }
 
-            /*
-            // === Actions
-            action compute-request {
-                output {
-                    container configuration {
-                        uses configuration;
-                    }
-                }
-            }
-            */
+        leaf configured {               // Added xoe: to simplify the check whether a stream is configured or not
+            type uint8;
+            default 0;
         }
 
         container configuration {
             uses configuration;
-
-            /*
-            // === Actions
-            action deploy-configuration {
-                output {
-                    container configuration {
-                        uses configuration;
-                    }
-                }
-            }
-            action undeploy-configuration { }
-            action delete-configuration { }
-            */
         }
     }
 

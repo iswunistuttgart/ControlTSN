@@ -72,7 +72,7 @@ cnc_discover_topology()
 }
 
 void 
-cnc_compute_request(TSN_Stream *stream)
+cnc_compute_requests(TSN_Streams *streams)
 {
     // Make HTTP Request to the CNC
     struct _u_response response;
@@ -80,22 +80,24 @@ cnc_compute_request(TSN_Stream *stream)
     ulfius_init_request(&request);
     ulfius_init_response(&response);
 
-    request.http_url = _concat_strings(cnc_url, CNC_INTERFACE_COMPUTE_REQUEST);
+    request.http_url = _concat_strings(cnc_url, CNC_INTERFACE_COMPUTE_REQUESTS);
     request.http_verb = strdup("POST");
+
+    json_t *body = NULL;
+    body = serialize_streams(streams);
+    ulfius_set_json_body_request(&request, body);
 
     int res = ulfius_send_http_request(&request, &response);
     if (res == U_OK) {
         // get JSON body containing the computed configuration
         json_t *json_body = ulfius_get_json_body_response(&response, NULL);
         printf("Response:\n%s\n", json_dumps(json_body, JSON_INDENT(4)));
+
+        // Write Configurations back to sysrepo
+        // TODO 21.01.2022
     }
 }
 
-void 
-cnc_compute_requests(TSN_Streams *streams)
-{
-
-}
 
 // ------------------------------------
 // Callback handler
@@ -106,12 +108,22 @@ _cb_event(TSN_Event_CB_Data data)
     if (data.event_id == EVENT_ERROR) {
         printf("[REST][CB] ERROR (%s): %s\n", data.entry_id, data.msg);
     }
+
+    // --- TOPOLOGY ----------------------
     else if (data.event_id == EVENT_TOPOLOGY_DISCOVERY_REQUESTED) {
         printf("[CUC][CB] Topology discovery requested!\n");
         cnc_discover_topology();
     }
     else if (data.event_id == EVENT_TOPOLOGY_DISCOVERED) {
         printf("[CUC][CB] Topology discovered!\n");
+    }
+
+    // --- STREAMS ----------------------
+    else if(data.event_id == EVENT_STREAM_COMPUTATION_REQUESTED) {
+        printf("[CUC][CB] Stream computation requested!\n");
+        TSN_Streams *streams = malloc(sizeof(TSN_Streams));
+        rc = streams_get_all(&streams);
+        cnc_compute_requests(streams);
     }
 
     return;

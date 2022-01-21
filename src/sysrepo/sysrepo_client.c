@@ -1461,6 +1461,7 @@ _read_talker(char *xpath, TSN_Talker **talker)
         goto cleanup;
     }
     (*talker)->interface_capabilities = *ic;
+
     
 cleanup:
     sr_free_val(val_end_station_interfaces);
@@ -1546,10 +1547,19 @@ static int
 _read_listener(char *xpath, TSN_Listener **listener)
 {
     int rc;
+    sr_val_t *val_index = NULL;
     sr_val_t *val_end_station_interfaces = NULL;
+    char *xpath_index = NULL;
     char *xpath_end_station_interfaces = NULL;
     char *xpath_user_to_network_requirements = NULL;
     char *xpath_interface_capabilities = NULL;
+
+    _create_xpath(xpath, "/index", &xpath_index);
+    rc = sr_get_item(session, xpath_index, 0, &val_index);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*listener)->index = val_index->data.uint16_val;
 
     // Read End Station Interfaces
     //_create_xpath(xpath, "/*[contains(.,'end-station-interfaces')]", &xpath_end_station_interfaces);
@@ -1586,7 +1596,9 @@ _read_listener(char *xpath, TSN_Listener **listener)
     (*listener)->interface_capabilities = *ic;
 
 cleanup:
+    sr_free_val(val_index);
     sr_free_val(val_end_station_interfaces);
+    free(xpath_index);
     free(xpath_end_station_interfaces);
     free(xpath_user_to_network_requirements);
     free(xpath_interface_capabilities);
@@ -1598,9 +1610,19 @@ static int
 _write_listener(char *xpath, TSN_Listener *listener)
 {
     int rc = SR_ERR_OK;
+    char *xpath_index = NULL;
     char *xpath_end_station_interfaces = NULL;
     char *xpath_user_to_network_requirements = NULL;
     char *xpath_interface_capabilities = NULL;
+
+    _create_xpath(xpath, "/index", &xpath_index);
+    sr_val_t val_index;
+    val_index.type = SR_UINT16_T;
+    val_index.data.uint16_val = listener->index;
+    rc = sr_set_item(session, xpath_index, &val_index, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
 
     _create_xpath(xpath, "/end-station-interfaces[mac-address='%s'][interface-name='%s']", &xpath_end_station_interfaces);
     for (int i=0; i<listener->count_end_station_interfaces; ++i) {
@@ -1626,6 +1648,7 @@ _write_listener(char *xpath, TSN_Listener *listener)
     }
 
 cleanup:
+    free(xpath_index);
     free(xpath_end_station_interfaces);
     free(xpath_user_to_network_requirements);
     free(xpath_interface_capabilities);
@@ -2393,8 +2416,10 @@ _read_stream(char *xpath, TSN_Stream **stream)
 {
     int rc = SR_ERR_OK;
     sr_val_t *val_stream_id = NULL;
+    sr_val_t *val_configured = NULL;
     char *xpath_stream_id = NULL;
     char *xpath_request = NULL;
+    char *xpath_configured = NULL;
     char *xpath_configuration = NULL;
 
     // Stream ID
@@ -2414,19 +2439,33 @@ _read_stream(char *xpath, TSN_Stream **stream)
     }
     (*stream)->request = *req;
 
-    // Configuration
-    _create_xpath(xpath, "/configuration", &xpath_request);
-    TSN_Configuration *con = malloc(sizeof(TSN_Configuration));
-    rc = _read_configuration(xpath_configuration, &con);
+    // Check if configuration is available
+    _create_xpath(xpath, "/configured", &xpath_configured);
+    rc = sr_get_item(session, xpath_configured, 0, &val_configured);
     if (rc != SR_ERR_OK) {
         goto cleanup;
     }
+    (*stream)->configured = val_configured->data.uint8_val;
+
+    TSN_Configuration *con = NULL;
+    if ((*stream)->configured) {
+        // Configuration
+        _create_xpath(xpath, "/configuration", &xpath_configuration);
+        con = malloc(sizeof(TSN_Configuration));
+        rc = _read_configuration(xpath_configuration, &con);
+        if (rc != SR_ERR_OK) {
+            goto cleanup;
+        }
+    }
     (*stream)->configuration = con;
+    
 
 cleanup:
     sr_free_val(val_stream_id);
+    sr_free_val(val_configured);
     free(xpath_stream_id);
     free(xpath_request);
+    free(xpath_configuration);
     free(xpath_configuration);
 
     return rc;
@@ -2438,6 +2477,7 @@ _write_stream(char *xpath, TSN_Stream *stream)
     int rc = SR_ERR_OK;
     char *xpath_stream_id = NULL;
     char *xpath_request = NULL;
+    char *xpath_configured = NULL;
     char *xpath_configuration = NULL;
 
     _create_xpath(xpath, "/stream-id", &xpath_stream_id);
@@ -2451,8 +2491,17 @@ _write_stream(char *xpath, TSN_Stream *stream)
     if (rc != SR_ERR_OK) {
         goto cleanup;
     }
+
+    _create_xpath(xpath, "/configured", &xpath_configured);
+    sr_val_t val_configured;
+    val_configured.type = SR_UINT8_T;
+    val_configured.data.uint8_val = stream->configured;
+    rc = sr_set_item(session, xpath_configured, &val_configured, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
     
-    if (stream->configuration) {
+    if (stream->configured) {
         _create_xpath(xpath, "/configuration", &xpath_configuration);
         rc = _write_configuration(xpath_configuration, stream->configuration);
         if (rc != SR_ERR_OK) {
@@ -2463,6 +2512,7 @@ _write_stream(char *xpath, TSN_Stream *stream)
 cleanup:
     free(xpath_stream_id);
     free(xpath_request);
+    free(xpath_configured);
     free(xpath_configuration);
 
     return rc;
@@ -4387,6 +4437,7 @@ sysrepo_write_stream_request(TSN_Request *request, char **generated_stream_id)
     char *xpath_stream_root = NULL;
     char *xpath_stream_id = NULL;
     char *xpath_request = NULL;
+    char *xpath_configured = NULL;
 
     // Generate a new stream id based on the talker mac and already stored streams from this talker
     char *new_stream_id = _generate_stream_id(*request);
@@ -4412,6 +4463,16 @@ sysrepo_write_stream_request(TSN_Request *request, char **generated_stream_id)
         goto cleanup;
     }
 
+    // Set the 'configured' flag to false
+    _create_xpath(xpath_stream_root, "/configured", &xpath_configured);
+    sr_val_t val_configured;
+    val_configured.type = SR_UINT8_T;
+    val_configured.data.uint8_val = 0;
+    rc = sr_set_item(session, xpath_configured, &val_configured, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
     // Apply the changes
     rc = sr_apply_changes(session, 0, 1);
     if (rc != SR_ERR_OK) {
@@ -4422,6 +4483,7 @@ cleanup:
     free(xpath_stream_root);
     free(xpath_stream_id);
     free(xpath_request);
+    free(xpath_configured);
 
     return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }

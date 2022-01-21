@@ -189,6 +189,7 @@ typedef struct TSN_Stream {
     // where XX is the MAC of the Talker and YY a unique number
     char *stream_id;   
     TSN_Request request;
+    uint8_t configured;
     TSN_Configuration *configuration;
 } TSN_Stream;
 

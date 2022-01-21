@@ -7,13 +7,13 @@
 #define EVENT_ERROR                 0x00000001
 
 // Stream related   
-#define EVENT_STREAM_REQUESTED      0x00000002
-#define EVENT_STREAM_CONFIGURED     0x00000004
-#define EVENT_STREAM_DELETED        0x00000008
-//#define ...                       0x00000010
-//#define ...                       0x00000020
-//#define ...                       0x00000040
-//#define ...                       0x00000080
+#define EVENT_STREAM_REQUESTED              0x00000002
+#define EVENT_STREAM_CONFIGURED             0x00000004
+#define EVENT_STREAM_DELETED                0x00000008
+#define EVENT_STREAM_MODIFIED               0x00000010
+#define EVENT_STREAM_COMPUTATION_REQUESTED  0x00000020
+//#define ...                               0x00000040
+//#define ...                               0x00000080
 
 // Modules related  
 #define EVENT_MODULE_ADDED          0x00000100
