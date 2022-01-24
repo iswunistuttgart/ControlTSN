@@ -172,9 +172,9 @@ typedef struct TSN_Configuration {
     TSN_StatusListener *listener_list;
 
     // ieee802-dot1q-tsn-types -> group-status-stream
-    //IEEE_StatusInfo status_info;
-    //IEEE_InterfaceId *failed_interfaces;
-    IEEE_StatusStream status_stream;
+    IEEE_StatusInfo status_info;
+    IEEE_InterfaceId *failed_interfaces;
+    uint16_t count_failed_interfaces;
 } TSN_Configuration;
 
 typedef struct TSN_Request {

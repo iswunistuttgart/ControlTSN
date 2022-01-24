@@ -91,11 +91,25 @@ cnc_compute_requests(TSN_Streams *streams)
     if (res == U_OK) {
         // get JSON body containing the computed configuration
         json_t *json_body = ulfius_get_json_body_response(&response, NULL);
-        printf("Response:\n%s\n", json_dumps(json_body, JSON_INDENT(4)));
 
         // Write Configurations back to sysrepo
-        // TODO 21.01.2022
+        if (json_body != NULL) {
+            TSN_Streams *streams = deserialize_streams(json_body);
+            for (int i=0; i<streams->count_streams; ++i) {
+                rc = stream_set_computed(streams->streams[i].stream_id, streams->streams[i].configuration);
+                if (rc != EXIT_SUCCESS) {
+                    printf("[CUC] Error writing stream configuration to the datastore!\n");
+                }
+            }
+        }
+    } else {
+        printf("[CUC] Failure sending request to CNC at '%s'\n", cnc_url);
     }
+
+    ulfius_clean_response(&response);
+    ulfius_clean_request(&request);
+
+    return;
 }
 
 

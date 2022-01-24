@@ -20,7 +20,7 @@ TSN_Module_Data_Entry *deserialize_module_data_entry(json_t *obj);
 json_t *serialize_stream_id(char *stream_id);
 json_t *serialize_status_info(IEEE_StatusInfo *si);
 json_t *serialize_interface_id(IEEE_InterfaceId *ii);
-json_t *serialize_status_stream(IEEE_StatusStream *ss);
+//json_t *serialize_status_stream(IEEE_StatusStream *ss);
 json_t *serialize_mac_addresses(IEEE_MacAddresses *ma);
 json_t *serialize_vlan_tag(IEEE_VlanTag *vt);
 json_t *serialize_ipv4_tuple(IEEE_IPv4Tuple *ipv4);
@@ -46,7 +46,7 @@ json_t *serialize_streams(TSN_Streams *streams);
 
 IEEE_StatusInfo *deserialize_status_info(json_t *obj);
 IEEE_InterfaceId *deserialize_interface_id(json_t *obj);
-IEEE_StatusStream *deserialize_status_stream(json_t *obj);
+//IEEE_StatusStream *deserialize_status_stream(json_t *obj);
 IEEE_MacAddresses *deserialize_mac_addresses(json_t *obj);
 IEEE_VlanTag *deserialize_vlan_tag(json_t *obj);
 IEEE_IPv4Tuple *deserialize_ipv4_tuple(json_t *obj);

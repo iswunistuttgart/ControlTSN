@@ -306,6 +306,13 @@ stream_request(TSN_Request *request, char **generated_stream_id)
 }
 
 int 
+stream_set_computed(char *stream_id, TSN_Configuration *configuration)
+{
+    ret = sysrepo_write_stream_configuration(stream_id, configuration);
+    return ret;
+}
+
+int 
 streams_delete(char *stream_id)
 {
     ret = sysrepo_delete_stream(stream_id);

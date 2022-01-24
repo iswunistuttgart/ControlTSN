@@ -152,6 +152,14 @@ int streams_get_all(TSN_Streams **streams);
 int stream_request(TSN_Request *request, char **generated_stream_id);
 
 /**
+ * @brief Sets a stream as computed by writing the computed configuration to the datastore.
+ * @param stream_id The stream id of the computed stream
+ * @param configuration The TSN_Configuration struct containing the computed information
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+ */
+int stream_set_computed(char *stream_id, TSN_Configuration *configuration);
+
+/**
  * @brief Deletes a specific stream. 
  * @param stream_id The id of the stream to delete
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)

@@ -18,6 +18,7 @@ typedef struct IEEE_InterfaceId {
     char *interface_name;
 } IEEE_InterfaceId;
 
+/*
 typedef struct IEEE_StatusStream
 {
     IEEE_StatusInfo status_info;
@@ -25,6 +26,7 @@ typedef struct IEEE_StatusStream
 
     uint16_t count_failed_interfaces;
 } IEEE_StatusStream;
+*/
 
 typedef struct IEEE_MacAddresses {
     char *destination_mac_address;
@@ -65,6 +67,7 @@ typedef enum ConfigList_FieldType {
 typedef struct IEEE_ConfigList {
     uint8_t index;
     ConfigList_FieldType field_type;                    // Added by xoe (should be included in the official yang in my opinion)
+    /*
     union config_value
     {
         IEEE_MacAddresses ieee802_mac_addresses;
@@ -73,12 +76,18 @@ typedef struct IEEE_ConfigList {
         IEEE_IPv6Tuple ipv6_tuple;
         uint32_t time_aware_offset;
     } config_value;
+    */
+    IEEE_MacAddresses *ieee802_mac_addresses;
+    IEEE_VlanTag *ieee802_vlan_tag;
+    IEEE_IPv4Tuple *ipv4_tuple;
+    IEEE_IPv6Tuple *ipv6_tuple;
+    uint32_t time_aware_offset;
 } IEEE_ConfigList;
 
 typedef struct IEEE_InterfaceList {
-    //char *mac_address;
-    //char *interface_name;
-    IEEE_InterfaceId interface_id;
+    char *mac_address;
+    char *interface_name;
+    //IEEE_InterfaceId interface_id;
     IEEE_ConfigList *config_list;
 
     uint16_t count_config_list_entries;
@@ -105,12 +114,18 @@ typedef enum DataFrameSpecification_FieldType {
 typedef struct IEEE_DataFrameSpecification {
     uint8_t index;
     DataFrameSpecification_FieldType field_type;        // Added by xoe (should be included in the official yang in my opinion)
+    /*
     union field {
         IEEE_MacAddresses ieee802_mac_addresses;
         IEEE_VlanTag ieee802_vlan_tag;
         IEEE_IPv4Tuple ipv4_tuple;
         IEEE_IPv6Tuple ipv6_tuple;
     } field;
+    */
+    IEEE_MacAddresses *ieee802_mac_addresses;
+    IEEE_VlanTag *ieee802_vlan_tag;
+    IEEE_IPv4Tuple *ipv4_tuple;
+    IEEE_IPv6Tuple *ipv6_tuple;
 } IEEE_DataFrameSpecification;
 
 typedef struct IEEE_Interval {
