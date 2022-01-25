@@ -313,6 +313,11 @@ module control-tsn-uni {
         action undeploy-all-configurations { }
         action delete-all-configurations { }
         */
+
+        leaf plugin-running {
+            type boolean;
+            default false;
+        }
         
         container streams {
             list stream {

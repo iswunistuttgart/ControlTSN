@@ -487,7 +487,7 @@ _api_streams_request(const struct _u_request *request, struct _u_response *respo
     }
 
     TSN_Request *req = deserialize_stream_request(json_object_get(json_post_body, "request"));
-    
+
     // Write stream request to sysrepo
     char *generated_stream_id = NULL;
     rc = stream_request(req, &generated_stream_id);

@@ -350,9 +350,35 @@ int
 sr_plugin_init_cb(sr_session_ctx_t *session, void **private_data)
 {
     int rc;
+    sr_val_t *val_plugin_running = NULL;
 
     (void) private_data;
 
+    // Check if the plugin is already running
+    rc = sr_get_item(session, "/control-tsn-uni:tsn-uni/plugin-running", 0, &val_plugin_running);
+    if (rc != SR_ERR_OK) {
+        goto error;
+    }
+    
+    if (!val_plugin_running->data.bool_val) {
+        // If not running then set flag to true
+        sr_val_t val_running;
+        val_running.type = SR_BOOL_T;
+        val_running.data.bool_val = 1;
+        rc = sr_set_item(session, "/control-tsn-uni:tsn-uni/plugin-running", &val_running, 0);
+        if (rc != SR_ERR_OK) {
+            goto error;
+        }
+        rc = sr_apply_changes(session, 0, 1);
+        if (rc != SR_ERR_OK) {
+            goto error;
+        }
+
+    } else {
+        printf("[PLUGIN] A instance of the plugin is already running!\n");
+        return SR_ERR_OPERATION_FAILED;
+    }
+    
 
     // Subscribe for module changes (also causes startup data to be copied into running and enabling the module)
     rc = sr_module_change_subscribe(session, "control-tsn-uni", NULL, _module_change_cb, NULL, 0, SR_SUBSCR_DONE_ONLY, &_subscriptions);
@@ -374,6 +400,7 @@ sr_plugin_init_cb(sr_session_ctx_t *session, void **private_data)
     return SR_ERR_OK;
 
 error:
+    sr_free_val(val_plugin_running);
     printf("[PLUGIN] Error! Plugin couldn't be initialized: %s\n", sr_strerror(rc));
     sr_unsubscribe(_subscriptions);
     return rc;
@@ -386,6 +413,14 @@ sr_plugin_cleanup_cb(sr_session_ctx_t *session, void *private_data)
     (void) private_data;
 
     int rc;
+
+    // Reset the 'plugin-running' flag
+    sr_val_t val_running;
+    val_running.type = SR_BOOL_T;
+    val_running.data.bool_val = 0;
+    rc = sr_set_item(session, "/control-tsn-uni:tsn-uni/plugin-running", &val_running, 0);
+    rc = sr_apply_changes(session, 0, 1);
+
 
     // Saving the current configuration by writing the data to the startup datastore
     rc = _save_to_startup(session);

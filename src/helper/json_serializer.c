@@ -616,9 +616,9 @@ serialize_talker(TSN_Talker *talker)
     traffic_specification = serialize_traffic_specification(&(talker->traffic_specification));
     json_object_set_new(root, "traffic_specification", traffic_specification);
 
-    json_t *user_to_network_requirement = NULL;
-    user_to_network_requirement = serialize_user_to_network_requirements(&(talker->user_to_network_requirements));
-    json_object_set_new(root, "user_to_network_requirement", user_to_network_requirement);
+    json_t *user_to_network_requirements = NULL;
+    user_to_network_requirements = serialize_user_to_network_requirements(&(talker->user_to_network_requirements));
+    json_object_set_new(root, "user_to_network_requirements", user_to_network_requirements);
 
     json_t *interface_capabilities = NULL;
     interface_capabilities = serialize_interface_capabilities(&(talker->interface_capabilities));
@@ -1097,7 +1097,6 @@ deserialize_talker(json_t *obj)
     TSN_Talker *x = malloc(sizeof(TSN_Talker));
 
     x->stream_rank = *(deserialize_stream_rank(json_object_get(obj, "stream_rank")));
-    
     json_t *end_station_interfaces = json_object_get(obj, "end_station_interfaces");
     x->count_end_station_interfaces = json_array_size(end_station_interfaces);
     x->end_station_interfaces = (IEEE_InterfaceId *) malloc(sizeof(IEEE_InterfaceId) * x->count_end_station_interfaces);

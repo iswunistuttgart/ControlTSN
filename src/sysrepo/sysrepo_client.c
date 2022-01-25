@@ -33,6 +33,11 @@ sysrepo_connect()
         return EXIT_SUCCESS;
     }
 
+    // Trigger the sysrepo plugin daemon
+    // the plugin itself checks if an instance is already runnning to prevent starting multiple instances
+    // and thus sending the same events multiple times
+    system("sysrepo-plugind");
+
     // Turn sysrepo logging on
     sr_log_stderr(SR_LL_WRN);
     // Connect 
@@ -2191,7 +2196,7 @@ _write_interface_configuration(char *xpath, IEEE_InterfaceConfiguration *ic)
     for (int i=0; i<ic->count_interface_list_entries; ++i) {
         char *xpath_entry = NULL;
         _create_xpath_key_multi(xpath_interface_list, ic->interface_list[i].mac_address, ic->interface_list[i].interface_name, &xpath_entry);
-        rc = _write_interface_list(xpath_interface_list, &(ic->interface_list[i]));
+        rc = _write_interface_list(xpath_entry, &(ic->interface_list[i]));
         free(xpath_entry);
         if (rc != SR_ERR_OK) {
             goto cleanup;
@@ -2551,7 +2556,7 @@ cleanup:
     sr_free_val(val_configured);
     free(xpath_stream_id);
     free(xpath_request);
-    free(xpath_configuration);
+    free(xpath_configured);
     free(xpath_configuration);
 
     return rc;
