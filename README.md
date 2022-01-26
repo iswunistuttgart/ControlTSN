@@ -13,24 +13,29 @@ Communication within the framework is controlled via events. Individual modules 
 The events are (mainly) sent by a Sysrepo plugin, which continuously monitors the data store for changes. Depending on the operation (e.g. a new stream entry) a generic event is created and sent. The information contained in the event consists of the respective event ID, an entry ID (i.e. the respective key for a list entry, such as stream ID and an optional message). <br>
 The following table gives an overview of the currently implemented (or subscribable) events and their intended purpose:
 
-| Name | ID (Hex) | ID (Dec) | Usage |
+| Name | ID (Hex) | ID (Dec) | Usage (TODO) |
 | ---- | -------- |:--------:| ----- |
 | EVENT_ERROR | 0x00000001 | 1 |  |
+| **Stream specific** | | | |
 | EVENT_STREAM_REQUESTED | 0x00000002 | 2 |  |
 | EVENT_STREAM_CONFIGURED | 0x00000004 | 4 |  |
 | EVENT_STREAM_DELETED | 0x00000008 | 8 |  |
 | EVENT_STREAM_MODIFIED | 0x00000010 | 16 |  |
 | EVENT_STREAM_COMPUTATION_REQUESTED | 0x00000020 | 32 |  |
 | EVENT_STREAM... | ... | ... |  |
+| **Module specific** | | | |
 | EVENT_MODULE_ADDED | 0x00000100 | 256 |  |
 | EVENT_MODULE_REGISTERED | 0x00000200 | 512 |  |
 | EVENT_MODULE_DATA_UPDATED | 0x00000400 | 1024 |  |
 | EVENT_MODULE_UNREGISTERED | 0x00000800 | 2048 |  |
 | EVENT_MODULE_DELETED | 0x00001000 | 4096 |  |
 | EVENT_MODULE_... | ... | ... |  |
+| **Topology specific** | | | |
 | EVENT_TOPOLOGY_DISCOVERY_REQUESTED | 0x00010000 | 65536 |  |
 | EVENT_TOPOLOGY_DISCOVERED | 0x00020000 | 131072 |  |
 | EVENT_TOPOLOGY_... | ... | ... |  |
+| **Application specific** | | | |
+| EVENT_APPLICATION_... | 0x00100000 | ... |  |
 
 
 ### **Module structure**
@@ -66,6 +71,27 @@ int main (void)
     return rc;
 }
 ```
+
+```c
+static void cb_event (TSN_Event_CB_Data data)
+{
+    if (data.event_id == EVENT_ERROR) {
+        printf("[MODULE][CB] ERROR (%s): %s\n", data.entry_id, data.msg);
+        // Do something on error
+        // ...
+    }
+
+    else if (data.event_id == EVENT_STREAM_DELETED) {
+        // Do something when a stream has been deleted
+        // ...
+    }
+
+    else if ( ... ) {
+        // ...
+    }
+}
+```
+
 
 ### **Sequences**
 The following figures represent the flows for the respective actions using the framework:
