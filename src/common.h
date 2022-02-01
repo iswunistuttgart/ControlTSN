@@ -16,14 +16,6 @@
 int module_connect();
 
 /**
- * @brief Initializes a module by connecting to sysrepo and writing the passed 
- * module information to the datastore under the list of available modules.
- * @param this_module The module information
- * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
- */
-int module_init_BACKUP(TSN_Module *this_module);
-
-/**
  * @brief Initializes a module by getting the stored module information from the registered modules
  * and writing the information to the passed struct.
  * @param module_name The name of the module to search for in the list of registered modules
@@ -187,11 +179,6 @@ int topology_get_devices(TSN_Devices **devices);
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
 int topology_get_graph(TSN_Graph **graph);
-/**
- * @brief Triggers the discovery of the topology. The result can be captured by subscribing the corresponding event.
- * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
- */
-int topology_trigger_discovery();
 
 // ----------------------------------------------
 //      FUNCTIONS - Application-Handling

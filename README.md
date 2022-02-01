@@ -1,9 +1,25 @@
-# ControlTSN
-Development repo for the project ControlTSN.<br>
-**The development is still ongoing.** Therefore, bugs and error can not be excluded.
+# ControlTSN (WiP)
+Development repo for the framework of the project ControlTSN.<br>
+**The development is still ongoing.** Therefore, bugs and similar can not be excluded. <br>
+**Missing but important points in this README and other errors are welcome to be reported.**
+
+## Table of Contents
+1. [Architecture](#architecture)
+    1. [Data model](#data-model)
+    2. [Events](#events)
+    3. [Module structure](#module-structure)
+    4. [Sequences](#sequences)
+2. [Folder structure](#folder-structure)
+3. [Building and starting the framework](#building-and-starting-the-framework)
+    1. [Requirements](#requirements)
+    2. [Building](#building)
+    3. [Starting](#starting)
+    4. [Interact with the framework](#interact-with-the-framework)
+
+<br>
 
 ## Architecture
-<p align="center"><img src="images/Architecture_Framework_v4.png" width="500"></p>
+<p align="center"><img src="images/Architecture_Framework_v4.png" width="800"></p>
 
 ### **Data model**
 The data model is represented as a YANG module [(src/sysrepo/control-tsn-uni.yang)](src/sysrepo/control-tsn-uni.yang). It is roughly divided into the four aspects Stream, Modules, Application and Topology. The currently used data structure is shown in Fig. 2. No claim is made to completeness, but rather the current structure is seen as a basis for discussion and as a starting point for initial development (especially "application" and "topology").
@@ -15,27 +31,27 @@ The following table gives an overview of the currently implemented (or subscriba
 
 | Name | ID (Hex) | ID (Dec) | Usage (TODO) |
 | ---- | -------- |:--------:| ----- |
-| EVENT_ERROR | 0x00000001 | 1 |  |
+| EVENT_ERROR | 0x00000001 | 1 | Can be used for any error |
 | **Stream specific** | | | |
-| EVENT_STREAM_REQUESTED | 0x00000002 | 2 |  |
-| EVENT_STREAM_CONFIGURED | 0x00000004 | 4 |  |
-| EVENT_STREAM_DELETED | 0x00000008 | 8 |  |
-| EVENT_STREAM_MODIFIED | 0x00000010 | 16 |  |
-| EVENT_STREAM_COMPUTATION_REQUESTED | 0x00000020 | 32 |  |
-| EVENT_STREAM... | ... | ... |  |
+| EVENT_STREAM_REQUESTED | 0x00000002 | 2 | A new stream was requested |
+| EVENT_STREAM_CONFIGURED | 0x00000004 | 4 | A stream was configured |
+| EVENT_STREAM_DELETED | 0x00000008 | 8 | A stream was deleted |
+| EVENT_STREAM_MODIFIED | 0x00000010 | 16 | A stream was modified |
+| EVENT_STREAM_COMPUTATION_REQUESTED | 0x00000020 | 32 | The computation of streams was requested |
+| EVENT_STREAM... | ... | ... | ... |
 | **Module specific** | | | |
-| EVENT_MODULE_ADDED | 0x00000100 | 256 |  |
-| EVENT_MODULE_REGISTERED | 0x00000200 | 512 |  |
-| EVENT_MODULE_DATA_UPDATED | 0x00000400 | 1024 |  |
-| EVENT_MODULE_UNREGISTERED | 0x00000800 | 2048 |  |
-| EVENT_MODULE_DELETED | 0x00001000 | 4096 |  |
-| EVENT_MODULE_... | ... | ... |  |
+| EVENT_MODULE_ADDED | 0x00000100 | 256 | A new module was added |
+| EVENT_MODULE_REGISTERED | 0x00000200 | 512 | The registered flag of a module was set to TRUE |
+| EVENT_MODULE_DATA_UPDATED | 0x00000400 | 1024 | The module-specific data of a module was updated |
+| EVENT_MODULE_UNREGISTERED | 0x00000800 | 2048 | The registered flag of a module was set to FALSE  |
+| EVENT_MODULE_DELETED | 0x00001000 | 4096 | A module was deleted |
+| EVENT_MODULE_... | ... | ... | ... |
 | **Topology specific** | | | |
-| EVENT_TOPOLOGY_DISCOVERY_REQUESTED | 0x00010000 | 65536 |  |
-| EVENT_TOPOLOGY_DISCOVERED | 0x00020000 | 131072 |  |
-| EVENT_TOPOLOGY_... | ... | ... |  |
+| EVENT_TOPOLOGY_DISCOVERY_REQUESTED | 0x00010000 | 65536 | The discovery of the topology was requested |
+| EVENT_TOPOLOGY_DISCOVERED | 0x00020000 | 131072 | The toplogy was updated in the datastore  |
+| EVENT_TOPOLOGY_... | ... | ... | ... |
 | **Application specific** | | | |
-| EVENT_APPLICATION_... | 0x00100000 | ... |  |
+| EVENT_APPLICATION_... | 0x00100000 | ... | ... |
 
 
 ### **Module structure**
@@ -92,45 +108,78 @@ static void cb_event (TSN_Event_CB_Data data)
 }
 ```
 
+To get data from the datastore see [the sysrepo client header](src/sysrepo/sysrepo_client.h) to get a overview over exposed functions. As already mentioned at the beginning, the data models for application and topology are not yet sufficiently elaborated. Accordingly, the corresponding functions are missing for the most part.
+
+
 
 ### **Sequences**
 The following figures represent the flows for the respective actions using the framework:
 
-1. **Starting all modules**
+<details><summary><b>Starting all modules</b></summary><p>
+<p align="center"><img src="images/sequences/1_Starten_der_Module.png" width="800"></p>
+</p></details>
 
-<p align="center"><img src="images/sequences/1_Starten_der_Module.png" width="500"></p>
+<details><summary><b>Topology identification</b></summary><p>
+<p align="center"><img src="images/sequences/2_Topologie_Ermittlung.png" width="800"></p>
+</p></details>
 
-2. **Topology identification**
+<details><summary><b>Distribute the application</b></summary><p>
+<p align="center"><img src="images/sequences/3_Verteilen_der_Anwendung.png" width="800"></p>
+</p></details>
 
-<p align="center"><img src="images/sequences/2_Topologie_Ermittlung.png" width="500"></p>
+<details><summary><b>Stream creation</b></summary><p>
+<p align="center"><img src="images/sequences/4_Stream_Erstellung.png" width="800"></p>
+</p></details>
 
-3. **Distribute the application**
+<details><summary><b>Starting a (user) application</b></summary><p>
+<p align="center"><img src="images/sequences/5_Starten_der_Anwendung.png" width="800"></p>
+</p></details>
 
-<p align="center"><img src="images/sequences/3_Verteilen_der_Anwendung.png" width="500"></p>
+<details><summary><b>Monitoring of the latency</b></summary><p>
+<p align="center"><img src="images/sequences/6_Monitoring_der_Latenz.png" width="800"></p>
+</p></details>
 
-4. **Stream creation**
-
-<p align="center"><img src="images/sequences/4_Stream_Erstellung.png" width="500"></p>
-
-5. **Starting a (user) application**
-
-<p align="center"><img src="images/sequences/5_Starten_der_Anwendung.png" width="500"></p>
-
-6. **Monitoring of the latency**
-
-<p align="center"><img src="images/sequences/6_Monitoring_der_Latenz.png" width="500"></p>
-
-7. **Stopping a application**
-
-<p align="center"><img src="images/sequences/7_Stoppen_der_Anwendung.png" width="500"></p>
+<details><summary><b>Stopping a application</b></summary><p>
+<p align="center"><img src="images/sequences/7_Stoppen_der_Anwendung.png" width="800"></p>
+</p></details>
 
 
 ## Folder structure
 | Path (/src/...) | Description |
 | --------------- | ----------- |
-| /CNC | Contains a prototype CNC. Used only for testing during development and does not represent an actual CNC. |
-| /helper | Includes helper functions. For example, a JSON serializer for use in the REST API. |
-| /modules | Contains the individual modules, each in its own subfolder. |
-| /sysrepo | Contains the Sysrepo client, i.e. the interface to the data memory, the main YANG module, and an included module that describes the [IEEE802.1Q types](src/sysrepo/ieee802-dot1q-tsn-types.yang). |
-| /sysrepo/plugin | Included is the plugin [(controltsn_plugin.c)](src/sysrepo/plugin/controltsn_plugin.c), which monitors the data store and sends events. Additionally included is a shell script to compile and install the plugin. |
-| /*helper* | *common*:<br>Includes certain functions for interaction with the modules and Sysrepo (still needs to be revised).<br>*core*:<br>Should be renamed to Main. Corresponds to the Main module on the overall architecture diagram. The Main module retrieves all stored modules in the data store and starts them. Serves as a simplification to start the whole framework and the modules.<br>*logger*:<br>Provides several print functions.<br>*event_definitions.h, ieee802_tsn_types.h and type_definitons.h*:<br>Contain the C structs for mapping the data model. |
+| **/CNC** | Contains a prototype CNC. Used only for testing during development and does not represent an actual CNC. |
+| **/helper** | Includes helper functions. For example, a JSON serializer for use in the REST API. |
+| **/modules** | Contains the individual modules, each in its own subfolder. |
+| **/sysrepo** | Contains the Sysrepo client, i.e. the interface to the data memory, the main YANG module, and an included module that describes the [IEEE802.1Q types](src/sysrepo/ieee802-dot1q-tsn-types.yang). |
+| **/sysrepo/plugin** | Included is the plugin [(controltsn_plugin.c)](src/sysrepo/plugin/controltsn_plugin.c), which monitors the data store and sends events. Additionally included is a shell script to compile and install the plugin. |
+| **/helper** | **common**:<br>Includes certain functions for interaction with the modules and Sysrepo. *Needs to bew reworked, because in the current state it calls the respective sysrepo functions one-to-one and is therefore redundant.*<br>**core**:<br>Should be renamed to Main. Corresponds to the Main module on the overall architecture diagram. The Main module retrieves all stored modules in the data store and starts them. Serves as a simplification to start the whole framework and the modules.<br>**logger**:<br>Provides several print functions.<br>*event_definitions.h, ieee802_tsn_types.h and type_definitons.h*:<br>Contain the C structs for mapping the data model. |
+
+## Building and starting the framework
+### **Requirements**
+- sysrepo
+- jansson
+- ulfius
+
+In addition to the packages, the necessary sysrepo YANG modules( [ieee802-dot1q-tsn-types.yang](src/sysrepo/ieee802-dot1q-tsn-types.yang) & [control-tsn-uni.yang](src/sysrepo/control-tsn-uni.yang)) must be installed. This can be done by the following commands (assuming we are in the folder `src/sysrepo`):
+- `sysrepoctl -i ieee802-dot1q-tsn-types.yang`
+- `sysrepoctl -i control-tsn-uni.yang`
+
+After that a [initial configuration](src/sysrepo/initial2.xml) can be loaded into the datastore:
+- `sysrepocfg --import=initial2.xml -d running -m control-tsn-uni`
+
+See [HELPERS.md](src/sysrepo/HELPERS.md) for more sysrepo commands.
+
+### **Building**
+``` c 
+$ mkdir build; cd build
+$ cmake ..
+$ make
+```
+
+### **Starting**
+To start the whole framework including the modules just call `./MainModule`.
+This module will then check sysrepo for registered modules (modules with the flag `registered` set to TRUE) and starts them one by one. <br>
+To start a module individually call `./<Module>` (e.g. `./RESTModule`).
+
+### **Interact with the framework**
+The `RESTModule` starts a webserver which can be used to interact with the framework. Call [http://localhost:8080](http://localhost:8080) in a web browser to see a list of provided API Endpoints. From there you can interact by HTTP requests like `GET` and `POST`.
