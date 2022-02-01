@@ -176,6 +176,8 @@ $ cmake ..
 $ make
 ```
 
+Additionally, the `controltsn_plugin` must be copied to the sysrepo plugin folder. This can be done by calling the [update_plugin.sh](src/sysrepo/plugin/update_plugin.sh) script.
+
 ### **Starting**
 To start the whole framework including the modules just call `./MainModule`.
 This module will then check sysrepo for registered modules (modules with the flag `registered` set to TRUE) and starts them one by one. <br>
