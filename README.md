@@ -19,17 +19,26 @@ Development repo for the framework of the project ControlTSN.<br>
 <br>
 
 ## Architecture
-<p align="center"><img src="images/Architecture_Framework_v4.png" width="800"></p>
+<figure>
+<img src="images/Architecture_Framework_v4.png" width="800" id="fig1">
+<figcaption><b>Fig. 1 - Overview of the architecture of the framework</b></figcaption>
+</figure>
 
 ### **Data model**
-The data model is represented as a YANG module [(src/sysrepo/control-tsn-uni.yang)](src/sysrepo/control-tsn-uni.yang). It is roughly divided into the four aspects Stream, Modules, Application and Topology. The currently used data structure is shown in Fig. 2. No claim is made to completeness, but rather the current structure is seen as a basis for discussion and as a starting point for initial development (especially "application" and "topology").
+The data model is represented as a YANG module [(src/sysrepo/control-tsn-uni.yang)](src/sysrepo/control-tsn-uni.yang). It is roughly divided into the four aspects Stream, Modules, Application and Topology. The currently used data structure is shown in [Fig. 2](#fig2). For the sake of clarity, the structure of the streams has not been mapped in full. No claim is made to completeness, but rather the current structure is seen as a basis for discussion and as a starting point for initial development (especially "application" and "topology").
+
+<figure>
+<img src="images/YANG_Modell.png" width="800" id="fig2">
+<figcaption><b>Fig. 2 - Current structure of the data model</b></figcaption>
+</figure>
+
 
 ### **Events**
 Communication within the framework is controlled via events. Individual modules subscribe to the events relevant to them. On receipt of a corresponding event, the modules can then perform specific functions. <br>
 The events are (mainly) sent by a Sysrepo plugin, which continuously monitors the data store for changes. Depending on the operation (e.g. a new stream entry) a generic event is created and sent. The information contained in the event consists of the respective event ID, an entry ID (i.e. the respective key for a list entry, such as stream ID and an optional message). <br>
 The following table gives an overview of the currently implemented (or subscribable) events and their intended purpose:
 
-| Name | ID (Hex) | ID (Dec) | Usage (TODO) |
+| Name | ID (Hex) | ID (Dec) | Usage |
 | ---- | -------- |:--------:| ----- |
 | EVENT_ERROR | 0x00000001 | 1 | Can be used for any error |
 | **Stream specific** | | | |
@@ -55,7 +64,7 @@ The following table gives an overview of the currently implemented (or subscriba
 
 
 ### **Module structure**
-In addition to the actual main method, modules consist of a callback function for handling incoming events (`cb_event`), which is passed to the initialization call at the beginning of a module. The structural design of a module is illustrated by the following pseudo code:
+In addition to the actual main method, modules consist of a callback function for handling incoming events [`cb_event`](#cbevent), which is passed to the initialization call at the beginning of a module. The structural design of a module is illustrated by the following pseudo code:
 ```c
 int main (void)
 {
@@ -87,6 +96,8 @@ int main (void)
     return rc;
 }
 ```
+
+<span id="cbevent">The callback function for event handling:</span>
 
 ```c
 static void cb_event (TSN_Event_CB_Data data)
@@ -143,6 +154,7 @@ The following figures represent the flows for the respective actions using the f
 <p align="center"><img src="images/sequences/7_Stoppen_der_Anwendung.png" width="800"></p>
 </p></details>
 
+<br>
 
 ## Folder structure
 | Path (/src/...) | Description |
