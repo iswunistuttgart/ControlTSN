@@ -34,5 +34,14 @@
         <registered>1</registered>
         <pid>0</pid>
       </mod>
+      <mod>
+        <id>4</id>
+        <name>Container</name>
+        <desc>This module performs the application deployment to the enddevices.</desc>
+        <executable-path>./ContainerModule</executable-path>
+        <subscribed-events-mask>203535</subscribed-events-mask>
+        <registered>1</registered>
+        <pid>0</pid>
+      </mod>
   </modules>
 </tsn-uni>

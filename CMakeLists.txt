@@ -29,6 +29,10 @@ target_link_libraries(CUCModule common ulfius json_serializer)
 add_executable(MonitorModule src/modules/monitor/module_monitor.c)
 target_link_libraries(MonitorModule common)
 
+# MODULE CONTAINER
+add_executable(ContainerModule src/modules/container/module_container.c)
+target_link_libraries(ContainerModule common)
+
 ##### This is just for Testing purposes #####
 add_executable(CNCPrototype src/CNC/cnc_prototype.c)
 target_link_libraries(CNCPrototype ulfius json_serializer)
