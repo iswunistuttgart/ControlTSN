@@ -42,6 +42,13 @@
         <subscribed-events-mask>203535</subscribed-events-mask>
         <registered>1</registered>
         <pid>0</pid>
+        <data>
+          <entry>
+            <data-name>registry_url</data-name>
+            <data-type>string</data-type>
+            <data-value>http://containerregistry:5000</data-value>
+          </entry>
+        </data>
       </mod>
   </modules>
 </tsn-uni>

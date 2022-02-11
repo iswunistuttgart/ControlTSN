@@ -66,6 +66,7 @@ static void _cb_event(TSN_Event_CB_Data data)
 int main(void)
 {
     TSN_Module *this_module = NULL;
+    const char *registry_url;
     int rc;
 
     // Signal handling
@@ -84,6 +85,24 @@ int main(void)
     if (rc == EXIT_FAILURE) {
         printf("[Container] Error initializing module!\n");
         goto cleanup;
+    }
+
+    // Get saved module data
+    TSN_Module_Data *module_data = malloc(sizeof(TSN_Module_Data));
+    if (!module_data)
+        goto cleanup;
+
+    rc = module_get_data(this_module->id, &module_data);
+    if (rc != EXIT_SUCCESS)
+        goto cleanup;
+
+    // Find Container registry url
+    TSN_Module_Data_Entry *reg_entry = module_get_data_entry(module_data, MODULE_DATA_IDENTIFIER_REGISTRY);
+    if (reg_entry) {
+        registry_url = strdup(reg_entry->value.string_val);
+        if (!registry_url)
+            goto cleanup;
+        printf("[Container] Container registry URL: '%s'\n", registry_url);
     }
 
     printf("[Container] Container module successfully started and running\n");
