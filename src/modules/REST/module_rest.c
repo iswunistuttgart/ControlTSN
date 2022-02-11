@@ -878,6 +878,8 @@ _init_server()
 
     // Default
     ulfius_set_default_endpoint(&server_instance, &_api_index_get, NULL);
+
+    return EXIT_SUCCESS;
 }
 
 // ------------------------------------
