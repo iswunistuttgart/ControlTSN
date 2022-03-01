@@ -35,6 +35,11 @@
 //#define ...                               0x00400000
 //#define ...                               0x00800000
 
+// Application related
+#define EVENT_APPLICATION_LIST_OF_IMAGES_REQUESTED	0x01000000
+#define EVENT_APPLICATION_LIST_OF_APPS_REQUESTED	0x02000000
+#define EVENT_APPLICATION_APP_START_REQUESTED		0x04000000
+#define EVENT_APPLICATION_APP_STOP_REQUESTED		0x08000000
 
 // ----------------------------------------------
 // Error
