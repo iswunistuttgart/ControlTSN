@@ -19,7 +19,7 @@ struct _u_instance server_instance;
 struct _websocket_manager *_websocket_manager = NULL;
 
 
-static void 
+static void
 signal_handler(int signum)
 {
     is_running = 0;
@@ -33,7 +33,7 @@ static void
 _cb_event(TSN_Event_CB_Data data)
 {
     printf("[REST] Triggered callback for event ID %d\n", data.event_id);
-    
+
     // Sending events in the websocket if it's open
     if (_websocket_manager) {
         // TODO: Newer version of ulfius supports sending json message 'ulfius_websocket_send_json_message'
@@ -50,7 +50,7 @@ _cb_event(TSN_Event_CB_Data data)
             printf("[REST][WS]: Error sending websocket message\n");
         }
     }
-    
+
     if (data.event_id == EVENT_ERROR) {
         //printf("[REST][CB] ERROR: Code %d - '%s'\n", data.error.error_code, data.error.error_msg);
         printf("[REST][CB] ERROR (%s): %s\n", data.entry_id, data.msg);
@@ -80,8 +80,8 @@ _api_index_get(const struct _u_request *request, struct _u_response *response, v
                        // Modules
                        "<tr><th>Modules</th></tr>" \
                        "<tr><td><a href='/modules'>/modules</a></td><td>GET</td><td>Get all available and registered modules</td></tr>" \
-                       //"<tr><td><a href='/modules/registered/1'>/modules/registered/:id</a></td><td>GET</td><td>Get a specific registered module based on the id</td></tr>" 
-                       //"<tr><td><a href='/modules/available/1'>/modules/available/:id</a></td><td>GET</td><td>Get a specific available module based on the id</td></tr>" 
+                       //"<tr><td><a href='/modules/registered/1'>/modules/registered/:id</a></td><td>GET</td><td>Get a specific registered module based on the id</td></tr>"
+                       //"<tr><td><a href='/modules/available/1'>/modules/available/:id</a></td><td>GET</td><td>Get a specific available module based on the id</td></tr>"
                        "<tr><td><a href='/modules/1'>/modules/:id</a></td><td>GET</td><td>Get a specific module based on the id</td></tr>" \
                        "<tr><td><a href='/modules/add'>/modules/add</a></td><td>POST</td><td>Add a new module to the list of available modules</td><td>name (string), description (string), path (string), subscribed_events_mask (int)</td></tr>" \
                        "<tr><td><a href='/modules/1/start'>/modules/:id/start</a></td><td>POST</td><td>Start a specific module</td></tr>" \
@@ -154,7 +154,7 @@ _api_modules_get_available_id(const struct _u_request *request, struct _u_respon
     if (module_id <= 0) {
         return U_CALLBACK_ERROR;
     }
-    
+
     // Get the specific module from the list of available modules
     TSN_Module *module = malloc(sizeof(TSN_Module));
     rc = module_get_available(module_id, &module);
@@ -179,7 +179,7 @@ _api_modules_get_registered_id(const struct _u_request *request, struct _u_respo
     if (module_id <= 0) {
         return U_CALLBACK_ERROR;
     }
-    
+
     // Get the specific module from the list of available modules
     TSN_Module *module = malloc(sizeof(TSN_Module));
     rc = module_get_registered(module_id, &module);
@@ -205,7 +205,7 @@ _api_modules_get_id(const struct _u_request *request, struct _u_response *respon
     if (module_id <= 0) {
         return U_CALLBACK_ERROR;
     }
-    
+
     // Get the specific module from the list of modules
     TSN_Module *module = malloc(sizeof(TSN_Module));
     rc = module_get_id(module_id, &module);
@@ -234,8 +234,8 @@ _api_modules_add(const struct _u_request *request, struct _u_response *response,
         //sprintf(error_resp, "ERROR: %s | %d", json_error.text, json_error.position);
         //ulfius_set_string_body_response(response, 200, error_resp);
         return U_CALLBACK_ERROR;
-    } 
-    
+    }
+
     const char *name = json_string_value(json_object_get(json_post_body, "name"));
     const char *description = json_string_value(json_object_get(json_post_body, "description"));
     const char *path = json_string_value(json_object_get(json_post_body, "path"));
@@ -243,9 +243,9 @@ _api_modules_add(const struct _u_request *request, struct _u_response *response,
 
     TSN_Module *module = malloc(sizeof(TSN_Module));
 
-    if (name == NULL || strlen(name) <= 0 
-        || description == NULL || strlen(description) <= 0 
-        || path == NULL || strlen(path) <= 0 
+    if (name == NULL || strlen(name) <= 0
+        || description == NULL || strlen(description) <= 0
+        || path == NULL || strlen(path) <= 0
         || subscribed_events_mask < 0) {
 
         json_decref(json_post_body);
@@ -260,7 +260,7 @@ _api_modules_add(const struct _u_request *request, struct _u_response *response,
     module->subscribed_events_mask = subscribed_events_mask;
 
     json_decref(json_post_body);
-    
+
     rc = sysrepo_add_module(&module);
     if (rc != EXIT_SUCCESS) {
         return U_CALLBACK_ERROR;
@@ -323,7 +323,7 @@ _api_modules_delete(const struct _u_request *request, struct _u_response *respon
 static int
 _api_modules_register(const struct _u_request *request, struct _u_response *response, void *user_data)
 {
- 
+
     const char *param_id = u_map_get(request->map_url, "id");
     int module_id = atoi(param_id);
     if (module_id <= 0) {
@@ -413,13 +413,13 @@ _api_modules_set_data_id(const struct _u_request *request, struct _u_response *r
     }
 
     TSN_Module_Data *module_data = deserialize_module_data(json_post_body);
-    
+
     rc = sysrepo_update_module_data(module_id, *module_data);
     if (rc == EXIT_SUCCESS) {
         return U_CALLBACK_COMPLETE;
     }
 
-    return U_CALLBACK_ERROR;    
+    return U_CALLBACK_ERROR;
 }
 
 static int
@@ -436,8 +436,8 @@ _api_modules_update(const struct _u_request *request, struct _u_response *respon
     json_t *json_post_body = ulfius_get_json_body_request(request, NULL);
     if (json_post_body == NULL) {
         return U_CALLBACK_ERROR;
-    } 
-    
+    }
+
     const char *name = json_string_value(json_object_get(json_post_body, "name"));
     const char *description = json_string_value(json_object_get(json_post_body, "description"));
     const char *path = json_string_value(json_object_get(json_post_body, "path"));
@@ -774,7 +774,7 @@ _websocket_manager_cb(const struct _u_request *request, struct _websocket_manage
     */
 
     _websocket_manager = websocket_manager;
-    
+
     while(is_running) {
         /*
         Websocket_Message ws_msg = {
@@ -839,7 +839,7 @@ _init_server()
 
     // Add the API endpoints to the server
     ulfius_add_endpoint_by_val(&server_instance, "GET", API_PREFIX, API_INDEX, 0, &_api_index_get, NULL);
-    
+
     // Modules
     ulfius_add_endpoint_by_val(&server_instance, "GET",     API_PREFIX, API_MODULES,                0, &_api_modules_get,               NULL);
     //ulfius_add_endpoint_by_val(&server_instance, "GET",     API_PREFIX, API_MODULES_AVAILABLE_ID,   0, &_api_modules_get_available_id,  NULL);
@@ -859,7 +859,7 @@ _init_server()
     ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_STREAMS_REQUEST,    0, &_api_streams_request,   NULL);
     ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_STREAMS_ID_DELETE,  0, &_api_streams_delete,    NULL);
     ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_STREAMS_COMPUTE,    0, &_api_streams_compute,   NULL);
-    
+
     // Topology
     ulfius_add_endpoint_by_val(&server_instance, "GET",     API_PREFIX, API_TOPOLOGY,           0, &_api_topology_get,          NULL);
     ulfius_add_endpoint_by_val(&server_instance, "GET",     API_PREFIX, API_TOPOLOGY_DEVICES,   0, &_api_topology_devices_get,  NULL);
@@ -869,7 +869,7 @@ _init_server()
     ulfius_add_endpoint_by_val(&server_instance, "GET", API_PREFIX, API_APPLICATION,        0, &_api_application_get,           NULL);
     ulfius_add_endpoint_by_val(&server_instance, "GET", API_PREFIX, API_APPLICATION_APPS,   0, &_api_application_apps_get,      NULL);
     ulfius_add_endpoint_by_val(&server_instance, "GET", API_PREFIX, API_APPLICATION_IMAGES, 0, &_api_application_images_get,    NULL);
-    
+
 
     // JUST TESTING
     ulfius_add_endpoint_by_val(&server_instance, "GET", API_PREFIX, "/testing/set_topology",    0, &_api_testing_set_topology,    NULL);
@@ -885,7 +885,7 @@ _init_server()
 // ------------------------------------
 // MAIN
 // ------------------------------------
-int 
+int
 main(void)
 {
     // Signal handling
@@ -903,7 +903,7 @@ main(void)
     // sub mask = 1
 
     this_module.cb_event = _cb_event;
-    
+
     rc = module_init(&this_module);
     */
     this_module = malloc(sizeof(TSN_Module));
@@ -949,5 +949,5 @@ cleanup:
         printf("[REST] Error shutting down the module!\n");
     }
 
-    return rc;    
+    return rc;
 }
