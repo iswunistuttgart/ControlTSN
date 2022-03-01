@@ -39,7 +39,7 @@
         <name>Container</name>
         <desc>This module performs the application deployment to the enddevices.</desc>
         <executable-path>./ContainerModule</executable-path>
-        <subscribed-events-mask>203535</subscribed-events-mask>
+        <subscribed-events-mask>251658240</subscribed-events-mask>
         <registered>1</registered>
         <pid>0</pid>
         <data>

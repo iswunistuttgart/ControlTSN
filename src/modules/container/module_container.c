@@ -25,28 +25,14 @@ static void _cb_event(TSN_Event_CB_Data data)
 {
     char *event_name = NULL;
 
-    if (data.event_id & EVENT_ERROR) {
-        event_name = strdup("EVENT_ERROR");
-    } else if (data.event_id & EVENT_STREAM_REQUESTED) {
-        event_name = strdup("EVENT_STREAM_REQUESTED");
-    } else if (data.event_id & EVENT_STREAM_CONFIGURED) {
-        event_name = strdup("EVENT_STREAM_CONFIGURED");
-    } else if (data.event_id & EVENT_STREAM_DELETED) {
-        event_name = strdup("EVENT_STREAM_DELETED");
-    } else if (data.event_id & EVENT_MODULE_ADDED) {
-        event_name = strdup("EVENT_MODULE_ADDED");
-    } else if (data.event_id & EVENT_MODULE_REGISTERED) {
-        event_name = strdup("EVENT_MODULE_REGISTERED");
-    } else if (data.event_id & EVENT_MODULE_DATA_UPDATED) {
-        event_name = strdup("EVENT_MODULE_DATA_UPDATED");
-    } else if (data.event_id & EVENT_MODULE_UNREGISTERED) {
-        event_name = strdup("EVENT_MODULE_UNREGISTERED");
-    } else if (data.event_id & EVENT_MODULE_DELETED) {
-        event_name = strdup("EVENT_MODULE_DELETED");
-    } else if (data.event_id & EVENT_TOPOLOGY_DISCOVERY_REQUESTED) {
-        event_name = strdup("EVENT_TOPOLOGY_DISCOVERY_REQUESTED");
-    } else if (data.event_id & EVENT_TOPOLOGY_DISCOVERED) {
-        event_name = strdup("EVENT_TOPOLOGY_DISCOVERED");
+    if (data.event_id & EVENT_APPLICATION_LIST_OF_IMAGES_REQUESTED) {
+        event_name = strdup("EVENT_APPLICATION_LIST_OF_IMAGES_REQUESTED");
+    } else if (data.event_id & EVENT_APPLICATION_LIST_OF_APPS_REQUESTED) {
+        event_name = strdup("EVENT_APPLICATION_LIST_OF_APPS_REQUESTED");
+    } else if (data.event_id & EVENT_APPLICATION_APP_START_REQUESTED) {
+        event_name = strdup("EVENT_APPLICATION_APP_START_REQUESTED");
+    } else if (data.event_id & EVENT_APPLICATION_APP_STOP_REQUESTED) {
+        event_name = strdup("EVENT_APPLICATION_APP_STOP_REQUESTED");
     }
 
     if (!event_name)
@@ -79,9 +65,11 @@ int main(void)
     if (!this_module)
         return EXIT_FAILURE;
 
-    rc = module_init("Container", &this_module, (EVENT_ERROR | EVENT_STREAM_REQUESTED | EVENT_STREAM_CONFIGURED | EVENT_STREAM_DELETED |
-                                                 EVENT_MODULE_ADDED | EVENT_MODULE_REGISTERED | EVENT_MODULE_DATA_UPDATED | EVENT_MODULE_UNREGISTERED | EVENT_MODULE_DELETED |
-                                                 EVENT_TOPOLOGY_DISCOVERY_REQUESTED | EVENT_TOPOLOGY_DISCOVERED), _cb_event);
+    rc = module_init("Container", &this_module, (EVENT_APPLICATION_LIST_OF_IMAGES_REQUESTED |
+                                                 EVENT_APPLICATION_LIST_OF_APPS_REQUESTED |
+                                                 EVENT_APPLICATION_APP_START_REQUESTED |
+                                                 EVENT_APPLICATION_APP_STOP_REQUESTED),
+                     _cb_event);
     if (rc == EXIT_FAILURE) {
         printf("[Container] Error initializing module!\n");
         goto cleanup;
