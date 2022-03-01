@@ -6,7 +6,7 @@
 // ----------------------------------------------
 #define EVENT_ERROR                 0x00000001
 
-// Stream related   
+// Stream related
 #define EVENT_STREAM_REQUESTED              0x00000002
 #define EVENT_STREAM_CONFIGURED             0x00000004
 #define EVENT_STREAM_DELETED                0x00000008
@@ -15,7 +15,7 @@
 //#define ...                               0x00000040
 //#define ...                               0x00000080
 
-// Modules related  
+// Modules related
 #define EVENT_MODULE_ADDED          0x00000100
 #define EVENT_MODULE_REGISTERED     0x00000200
 #define EVENT_MODULE_DATA_UPDATED   0x00000400
@@ -25,7 +25,7 @@
 //#define ...                       0x00004000
 //#define ...                       0x00008000
 
-// Topology related   
+// Topology related
 #define EVENT_TOPOLOGY_DISCOVERY_REQUESTED  0x00010000
 #define EVENT_TOPOLOGY_DISCOVERED           0x00020000
 //#define ...                               0x00040000
