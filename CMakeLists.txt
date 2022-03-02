@@ -31,7 +31,7 @@ target_link_libraries(MonitorModule common)
 
 # MODULE CONTAINER
 add_executable(ContainerModule src/modules/container/module_container.c)
-target_link_libraries(ContainerModule common)
+target_link_libraries(ContainerModule common ulfius json_serializer)
 
 ##### This is just for Testing purposes #####
 add_executable(CNCPrototype src/CNC/cnc_prototype.c)

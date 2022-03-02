@@ -26,7 +26,7 @@ void (*_cb_event)(TSN_Event_CB_Data data);
 // -------------------------------------------------------- //
 //  Initialization and connection stuff
 // -------------------------------------------------------- //
-int 
+int
 sysrepo_connect()
 {
     if (connection != NULL) {
@@ -40,7 +40,7 @@ sysrepo_connect()
 
     // Turn sysrepo logging on
     sr_log_stderr(SR_LL_WRN);
-    // Connect 
+    // Connect
     rc = sr_connect(0, &connection);
     // Start the session
     rc = sr_session_start(connection, SR_DS_RUNNING, &session);
@@ -53,7 +53,7 @@ sysrepo_connect()
     return EXIT_SUCCESS;
 }
 
-int 
+int
 sysrepo_disconnect()
 {
     rc = sysrepo_stop_listening();
@@ -74,14 +74,14 @@ sysrepo_disconnect()
 // -------------------------------------------------------- //
 //  Callbacks
 // -------------------------------------------------------- //
-void 
+void
 sysrepo_init_callback(uint32_t subscribed_events_mask, void (*cb_event)(TSN_Event_CB_Data))
 {
     _subscribed_mask = subscribed_events_mask;
     _cb_event = cb_event;
 }
 
-int 
+int
 sysrepo_send_notification(uint32_t event_id, char *entry_id, char *msg)
 {
     sr_val_t notif_values[3];
@@ -137,7 +137,7 @@ _notif_listener_cb(sr_session_ctx_t *session, const sr_ev_notif_type_t notif_typ
     // Check if the module subscribed to this event
     if ((_subscribed_mask & values[0].data.uint32_val) == 0) {
         return;
-    } 
+    }
 
     // Creating the event data
     TSN_Event_CB_Data event_data = {
@@ -157,12 +157,12 @@ sysrepo_start_listening()
     rc = sr_event_notif_subscribe(session, "control-tsn-uni", NULL, 0, 0, _notif_listener_cb, NULL, 0, &subscription);
     if (rc != SR_ERR_OK) {
         printf("[SYSREPO] Failure while subscribing to notifications!\n");
-    } 
+    }
 
     return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
-int 
+int
 sysrepo_stop_listening()
 {
     if (subscription == NULL) {
@@ -183,7 +183,7 @@ sysrepo_stop_listening()
 // -------------------------------------------------------- //
 //  Static helper functions to interact with sysrepo
 // -------------------------------------------------------- //
-static void 
+static void
 _create_xpath(char *xpath_base, char *xpath_append, char **result)
 {
     (*result) = malloc(strlen(xpath_base) + strlen(xpath_append) + 1);
@@ -195,23 +195,23 @@ _create_xpath_id(char *xpath_base, int id, char **result)
 {
     size_t size_needed = snprintf(NULL, 0, xpath_base, id) + 1;
     (*result) = malloc(size_needed);
-    sprintf((*result), xpath_base, id); 
+    sprintf((*result), xpath_base, id);
 }
 
-void 
+void
 _create_xpath_key(char *xpath_base, char *key, char **result)
 {
     size_t size_needed = snprintf(NULL, 0, xpath_base, key) + 1;
     (*result) = malloc(size_needed);
-    sprintf((*result), xpath_base, key); 
+    sprintf((*result), xpath_base, key);
 }
 
-void 
+void
 _create_xpath_key_multi(char *xpath_base, char *key1, char *key2, char **result)
 {
     size_t size_needed = snprintf(NULL, 0, xpath_base, key1, key2) + 1;
     (*result) = malloc(size_needed);
-    sprintf((*result), xpath_base, key1, key2); 
+    sprintf((*result), xpath_base, key1, key2);
 }
 
 
@@ -777,7 +777,7 @@ cleanup:
     sr_free_val(val_max_latency);
     free(xpath_num_seamless_trees);
     free(xpath_max_latency);
-    
+
     return rc;
 }
 
@@ -863,7 +863,7 @@ cleanup:
     free(xpath_vlan_tag_capable);
     free(xpath_cb_stream_iden_type_list);
     free(xpath_cb_sequence_type_list);
-    
+
     return rc;
 }
 
@@ -980,9 +980,9 @@ _read_data_frame_specification(char *xpath, IEEE_DataFrameSpecification **dfs)
     }
     (*dfs)->index = val_index->data.uint8_val;
 
-    // Read the Choice field 
+    // Read the Choice field
     _create_xpath(xpath, "/*", &xpath_root);
-    size_t count_root = 0;    
+    size_t count_root = 0;
     rc = sr_get_items(session, xpath_root, 0, 0, &val_root, &count_root);
     DataFrameSpecification_FieldType type;
 
@@ -1007,7 +1007,7 @@ _read_data_frame_specification(char *xpath, IEEE_DataFrameSpecification **dfs)
         rc = _read_ieee802_mac_addresses(xpath_choice, &ma);
         if (rc != SR_ERR_OK) {
             goto cleanup;
-        }  
+        }
         (*dfs)->ieee802_mac_addresses = ma;
 
     } else if (type == DATA_FRAME_SPECIFICATION_VLAN_TAG) {
@@ -1097,7 +1097,7 @@ _write_data_frame_specification(char *xpath, IEEE_DataFrameSpecification *dfs)
             goto cleanup;
         }
 
-    }  
+    }
 
 cleanup:
     free(xpath_index);
@@ -1467,7 +1467,7 @@ _read_talker(char *xpath, TSN_Talker **talker)
     }
     (*talker)->interface_capabilities = *ic;
 
-    
+
 cleanup:
     sr_free_val(val_end_station_interfaces);
     sr_free_val(val_data_frame_specification);
@@ -1506,7 +1506,7 @@ _write_talker(char *xpath, TSN_Talker *talker)
         if (rc != SR_ERR_OK) {
             goto cleanup;
         }
-    } 
+    }
 
     _create_xpath(xpath, "/data-frame-specification[index='%d']", &xpath_data_frame_specification);
     for (int i=0; i<talker->count_data_frame_specifications; ++i) {
@@ -1517,7 +1517,7 @@ _write_talker(char *xpath, TSN_Talker *talker)
         if (rc != SR_ERR_OK) {
             goto cleanup;
         }
-    }  
+    }
 
     _create_xpath(xpath, "/traffic-specification", &xpath_traffic_specification);
     rc = _write_traffic_specification(xpath_traffic_specification, &(talker->traffic_specification));
@@ -1638,7 +1638,7 @@ _write_listener(char *xpath, TSN_Listener *listener)
         if (rc != SR_ERR_OK) {
             goto cleanup;
         }
-    } 
+    }
 
     _create_xpath(xpath, "/user-to-network-requirements", &xpath_user_to_network_requirements);
     rc = _write_user_to_network_requirements(xpath_user_to_network_requirements, &(listener->user_to_network_requirements));
@@ -1671,7 +1671,7 @@ _read_status_info(char *xpath, IEEE_StatusInfo **si)
     char *xpath_talker_status = NULL;
     char *xpath_listener_status = NULL;
     char *xpath_failure_code = NULL;
-        
+
     // Read talker status
     _create_xpath(xpath, "/talker-status", &xpath_talker_status);
     rc = sr_get_item(session, xpath_talker_status, 0, &val_talker_status);
@@ -1818,7 +1818,7 @@ _write_status_stream(char *xpath, IEEE_StatusStream *ss)
             goto cleanup;
         }
     }
-    
+
 
 cleanup:
     free(xpath_status_info);
@@ -1880,7 +1880,7 @@ _write_request(char *xpath, TSN_Request *req)
     if (rc != SR_ERR_OK) {
         goto cleanup;
     }
-    
+
     _create_xpath(xpath, "/listener-list/listener[index='%d']", &xpath_listener_list);
     for (int i=0; i<req->count_listeners; ++i) {
         char *xpath_entry = NULL;
@@ -1891,7 +1891,7 @@ _write_request(char *xpath, TSN_Request *req)
             goto cleanup;
         }
     }
-    
+
 
 cleanup:
     free(xpath_talker);
@@ -1920,9 +1920,9 @@ _read_config_list(char *xpath, IEEE_ConfigList **cl)
     (*cl)->index = val_index->data.uint8_val;
 
 
-    // Read the Choice field 
+    // Read the Choice field
     _create_xpath(xpath, "/*", &xpath_root);
-    size_t count_root = 0;    
+    size_t count_root = 0;
     rc = sr_get_items(session, xpath_root, 0, 0, &val_root, &count_root);
     ConfigList_FieldType type;
 
@@ -1950,7 +1950,7 @@ _read_config_list(char *xpath, IEEE_ConfigList **cl)
         rc = _read_ieee802_mac_addresses(xpath_choice, &ma);
         if (rc != SR_ERR_OK) {
             goto cleanup;
-        }  
+        }
         (*cl)->ieee802_mac_addresses = ma;
 
     } else if (type == CONFIG_LIST_VLAN_TAG) {
@@ -1992,7 +1992,7 @@ _read_config_list(char *xpath, IEEE_ConfigList **cl)
         }
         (*cl)->time_aware_offset = val_time_aware_offset->data.uint32_val;
     }
-    
+
 
 cleanup:
     sr_free_val(val_index);
@@ -2135,7 +2135,7 @@ _write_interface_list(char *xpath, IEEE_InterfaceList *il)
     if (rc != SR_ERR_OK) {
         goto cleanup;
     }
-    
+
     _create_xpath(xpath, "/config-list[index='%d']", &xpath_config_list);
     for (int i=0; i<il->count_config_list_entries; ++i) {
         char *xpath_entry = NULL;
@@ -2146,7 +2146,7 @@ _write_interface_list(char *xpath, IEEE_InterfaceList *il)
             goto cleanup;
         }
     }
-    
+
 
 cleanup:
     //free(xpath_interface_id);
@@ -2202,7 +2202,7 @@ _write_interface_configuration(char *xpath, IEEE_InterfaceConfiguration *ic)
             goto cleanup;
         }
     }
-    
+
 cleanup:
     free(xpath_interface_list);
 
@@ -2256,7 +2256,7 @@ _write_status_talker(char *xpath, TSN_StatusTalker *st)
     if (rc != SR_ERR_OK) {
         goto cleanup;
     }
-    
+
     _create_xpath(xpath, "/interface-configuration", &xpath_interface_configuration);
     rc = _write_interface_configuration(xpath_interface_configuration, &(st->interface_configuration));
     if (rc != SR_ERR_OK) {
@@ -2313,7 +2313,7 @@ cleanup:
     return rc;
 }
 
-static int 
+static int
 _write_status_listener(char *xpath, TSN_StatusListener *sl)
 {
     int rc = SR_ERR_OK;
@@ -2338,7 +2338,7 @@ _write_status_listener(char *xpath, TSN_StatusListener *sl)
     if (rc != SR_ERR_OK) {
         goto cleanup;
     }
-    
+
     _create_xpath(xpath, "/interface-configuration", &xpath_interface_configuration);
     rc = _write_interface_configuration(xpath_interface_configuration, &(sl->interface_configuration));
     if (rc != SR_ERR_OK) {
@@ -2456,7 +2456,7 @@ _write_configuration(char *xpath, TSN_Configuration *con)
         goto cleanup;
     }
     */
-    
+
 
     _create_xpath(xpath, "/status-info", &xpath_status_info);
     rc = _write_status_info(xpath_status_info, &(con->status_info));
@@ -2480,7 +2480,7 @@ _write_configuration(char *xpath, TSN_Configuration *con)
     if (rc != SR_ERR_OK) {
         goto cleanup;
     }
-    
+
     _create_xpath(xpath, "/listener-list/listener[index='%d']", &xpath_listener_list);
     for (int i=0; i<con->count_listeners; ++i) {
         char *xpath_entry = NULL;
@@ -2549,7 +2549,7 @@ _read_stream(char *xpath, TSN_Stream **stream)
         }
     }
     (*stream)->configuration = con;
-    
+
 
 cleanup:
     sr_free_val(val_stream_id);
@@ -2591,7 +2591,7 @@ _write_stream(char *xpath, TSN_Stream *stream)
     if (rc != SR_ERR_OK) {
         goto cleanup;
     }
-    
+
     if (stream->configured) {
         _create_xpath(xpath, "/configuration", &xpath_configuration);
         rc = _write_configuration(xpath_configuration, stream->configuration);
@@ -2610,7 +2610,7 @@ cleanup:
 }
 
 static int
-_read_streams(char *xpath, TSN_Streams **streams) 
+_read_streams(char *xpath, TSN_Streams **streams)
 {
     int rc = SR_ERR_OK;
     sr_val_t *val_streams = NULL;
@@ -2642,7 +2642,7 @@ _write_streams(char *xpath, TSN_Streams *streams)
 {
     int rc = SR_ERR_OK;
     char *xpath_streams = NULL;
-    
+
     _create_xpath(xpath, "/stream[stream-id='%s']", &xpath_streams);
     for (int i=0; i<streams->count_streams; ++i) {
         char *xpath_entry = NULL;
@@ -2778,7 +2778,7 @@ _read_module_data(char *xpath, TSN_Module_Data **module_data)
         }
         (*module_data)->entries[i] = *e;
     }
-    
+
 cleanup:
     sr_free_val(val_data);
     free(xpath_data);
@@ -3010,7 +3010,7 @@ _write_module(char *xpath, TSN_Module *mod)
             goto cleanup;
         }
     }
-    
+
     // Apply the changes
     //rc = sr_apply_changes(session, 0, 1);
     //if (rc != SR_ERR_OK) {
@@ -3153,7 +3153,7 @@ cleanup:
 }
 
 static int
-_read_switch(char *xpath, TSN_Switch **sw) 
+_read_switch(char *xpath, TSN_Switch **sw)
 {
     int rc = SR_ERR_OK;
     sr_val_t *val_mac = NULL;
@@ -3230,7 +3230,7 @@ cleanup:
     sr_free_val(val_switches);
     free(xpath_enddevices);
     free(xpath_switches);
-    
+
     return rc;
 }
 
@@ -3272,7 +3272,7 @@ _read_connection(char *xpath, TSN_Connection **connection)
         goto cleanup;
     }
     (*connection)->from_port = val_from_port->data.uint8_val;
-    
+
     // To MAC
     _create_xpath(xpath, "/to-mac", &xpath_to_mac);
     rc = sr_get_item(session, xpath_to_mac, 0, &val_to_mac);
@@ -3304,7 +3304,7 @@ cleanup:
     return rc;
 }
 
-static int 
+static int
 _read_graph(char *xpath, TSN_Graph **graph)
 {
     int rc = SR_ERR_OK;
@@ -3329,7 +3329,7 @@ _read_graph(char *xpath, TSN_Graph **graph)
 cleanup:
     sr_free_val(val_connections);
     free(xpath_connections);
-    
+
     return rc;
 }
 
@@ -3359,7 +3359,7 @@ _read_topology(char *xpath, TSN_Topology **topology)
         goto cleanup;
     }
     (*topology)->graph = *graph;
-    
+
 cleanup:
     free(xpath_devices);
     free(xpath_graph);
@@ -3374,7 +3374,7 @@ _write_enddevice(char *xpath, TSN_Enddevice *enddevice)
     char *xpath_mac = NULL;
     char *xpath_has_app = NULL;
     char *xpath_app_ref = NULL;
-    
+
     // Mac
     _create_xpath(xpath, "/mac", &xpath_mac);
     rc = sr_set_item_str(session, xpath_mac, enddevice->mac, NULL, 0);
@@ -3421,7 +3421,7 @@ _write_switch(char *xpath, TSN_Switch *sw)
     int rc = SR_ERR_OK;
     char *xpath_mac = NULL;
     char *xpath_ports_count = NULL;
-    
+
     // Mac
     _create_xpath(xpath, "/mac", &xpath_mac);
     rc = sr_set_item_str(session, xpath_mac, sw->mac, NULL, 0);
@@ -3458,7 +3458,7 @@ _write_devices(char *xpath, TSN_Devices *devices)
     int rc = SR_ERR_OK;
     char *xpath_enddevices = NULL;
     char *xpath_switches = NULL;
-    
+
     // Write Enddevices
     _create_xpath(xpath, "/enddevices/enddevice[mac='%s']", &xpath_enddevices);
     for (int i=0; i<devices->count_enddevices; ++i) {
@@ -3507,7 +3507,7 @@ _write_connection(char *xpath, TSN_Connection *connection)
     char *xpath_from_port = NULL;
     char *xpath_to_mac = NULL;
     char *xpath_to_port = NULL;
-    
+
     // ID
     _create_xpath(xpath, "/id", &xpath_id);
     sr_val_t val_id;
@@ -3573,7 +3573,7 @@ _write_graph(char *xpath, TSN_Graph *graph)
 {
     int rc = SR_ERR_OK;
     char *xpath_connections = NULL;
-    
+
     // Write Connections
     _create_xpath(xpath, "/connections/connection[id='%d']", &xpath_connections);
     for (int i=0; i<graph->count_connections; ++i) {
@@ -3649,6 +3649,95 @@ cleanup:
 // -------------------------------
 // Application
 // -------------------------------
+static int _remove_images()
+{
+    int ret = SR_ERR_OK;
+
+    ret = sr_delete_item(session, "/control-tsn-uni:tsn-uni/application/images", 0);
+    if (ret != SR_ERR_OK)
+        goto cleanup;
+
+    // ret = sr_apply_changes(session, 0, 1);
+    // if (ret != SR_ERR_OK)
+    //     goto cleanup;
+
+cleanup:
+    return ret;
+}
+
+static int _write_image(char *xpath, TSN_Image *image)
+{
+    char *xpath_version = NULL;
+    char *xpath_name = NULL;
+    char *xpath_desc = NULL;
+    char *xpath_id = NULL;
+    int ret;
+
+    // ID
+    _create_xpath(xpath, "/id", &xpath_id);
+    ret = sr_set_item_str(session, xpath_id, image->id, NULL, 0);
+    if (ret != SR_ERR_OK)
+        goto cleanup;
+
+    // Name
+    _create_xpath(xpath, "/name", &xpath_name);
+    ret = sr_set_item_str(session, xpath_name, image->name, NULL, 0);
+    if (ret != SR_ERR_OK)
+        goto cleanup;
+
+    // Description
+    _create_xpath(xpath, "/desc", &xpath_desc);
+    ret = sr_set_item_str(session, xpath_desc, image->description, NULL, 0);
+    if (ret != SR_ERR_OK)
+        goto cleanup;
+
+    // Version
+    _create_xpath(xpath, "/version", &xpath_version);
+    ret = sr_set_item_str(session, xpath_version, image->version, NULL, 0);
+    if (ret != SR_ERR_OK)
+        goto cleanup;
+
+    // Apply the changes
+    // ret = sr_apply_changes(session, 0, 1);
+    // if (ret != SR_ERR_OK)
+    //     goto cleanup;
+
+cleanup:
+    free(xpath_id);
+    free(xpath_name);
+    free(xpath_desc);
+    free(xpath_version);
+
+    return ret ;
+}
+
+static int _write_images(char *xpath, TSN_Images *images)
+{
+    char *xpath_images = NULL;
+    int ret = SR_ERR_OK;
+    int i;
+
+    _create_xpath(xpath, "/image[id='%s']", &xpath_images);
+
+    for (i = 0; i < images->count_images; ++i) {
+        TSN_Image *image = &images->images[i];
+        char *xpath_entry = NULL;
+
+        _create_xpath_key(xpath_images, image->id, &xpath_entry);
+
+        ret = _write_image(xpath_entry, image);
+        free(xpath_entry);
+
+        if (ret != SR_ERR_OK)
+            goto cleanup;
+    }
+
+cleanup:
+    free(xpath_images);
+
+    return ret;
+}
+
 static int
 _read_app_parameter(char *xpath, TSN_App_Parameter **parameter)
 {
@@ -3892,7 +3981,7 @@ _read_images(char *xpath, TSN_Images **images)
     sr_val_t *val_images = NULL;
     char *xpath_images = NULL;
 
-    // Apps
+    // Images
     _create_xpath(xpath, "/*", &xpath_images);
     size_t count_images = 0;
     rc = sr_get_items(session, xpath_images, 0, 0, &val_images, &count_images);
@@ -3959,7 +4048,7 @@ cleanup:
 //  Module handling
 // -------------------------------------------------------- //
 /*
-int 
+int
 sysrepo_add_or_get_module(TSN_Module **module)
 {
     int is_failure = 0;
@@ -3973,7 +4062,7 @@ sysrepo_add_or_get_module(TSN_Module **module)
         is_failure = 1;
         goto cleanup;
     }
-    
+
     // Search if the name and path already exists under the stored modules
     // simultaneously the highest used ID is determined in order to specify
     // the ID for the potential, new module
@@ -3982,7 +4071,7 @@ sysrepo_add_or_get_module(TSN_Module **module)
         // Compare name and path
         if ((strcmp((*module)->name, stored_modules->available_modules[i].name) == 0) &&
             (strcmp((*module)->path, stored_modules->available_modules[i].path) == 0)) {
-            
+
             // We found a module with the same name and path
             printf("[SYSREPO] Module not added. Module with the same name and path already exists!\n");
             // Overwrite the passed struct with the stored information
@@ -4014,7 +4103,7 @@ sysrepo_add_or_get_module(TSN_Module **module)
     if (rc != SR_ERR_OK) {
         goto cleanup;
     }
-    
+
 
 cleanup:
     free(xpath_mod);
@@ -4105,7 +4194,7 @@ sysrepo_register_module(int module_id)
 
 
     if (adjusted_subscribed_events_mask != -1) {
-        stored_module->subscribed_events_mask = adjusted_subscribed_events_mask; 
+        stored_module->subscribed_events_mask = adjusted_subscribed_events_mask;
     }
 
     // Write module to list of registered modules
@@ -4155,7 +4244,7 @@ cleanup:
     return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
-int 
+int
 sysrepo_unregister_module(int module_id)
 {
     /*
@@ -4200,7 +4289,7 @@ cleanup:
     return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
-int 
+int
 sysrepo_delete_module(int module_id)
 {
     /*
@@ -4223,7 +4312,7 @@ sysrepo_delete_module(int module_id)
     rc = sr_delete_item(session, xpath_module_delete, 0);
     if (rc != SR_ERR_OK) {
         goto cleanup;
-    }    
+    }
 
     rc = sr_apply_changes(session, 0, 1);
     if (rc != SR_ERR_OK) {
@@ -4264,7 +4353,7 @@ cleanup:
 }
 
 /*
-int 
+int
 sysrepo_get_module_from_registered(int module_id, TSN_Module **module)
 {
     char *xpath_module = NULL;
@@ -4280,7 +4369,7 @@ cleanup:
     return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
-int 
+int
 sysrepo_get_module_from_available(int module_id, TSN_Module **module)
 {
     char *xpath_module = NULL;
@@ -4297,7 +4386,7 @@ cleanup:
 }
 */
 
-int 
+int
 sysrepo_get_all_modules(TSN_Modules **modules)
 {
     rc = _read_modules("/control-tsn-uni:tsn-uni/modules", modules);
@@ -4309,7 +4398,7 @@ cleanup:
     return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
-int 
+int
 sysrepo_get_module(int module_id, TSN_Module **module)
 {
     char *xpath_module = NULL;
@@ -4325,7 +4414,7 @@ cleanup:
     return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
-int 
+int
 sysrepo_get_module_data(int module_id, TSN_Module_Data **data)
 {
     char *xpath_module_data = NULL;
@@ -4342,7 +4431,7 @@ cleanup:
     return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
-int 
+int
 sysrepo_update_module_data(int module_id, TSN_Module_Data data)
 {
     char *xpath_module_data = NULL;
@@ -4358,7 +4447,7 @@ sysrepo_update_module_data(int module_id, TSN_Module_Data data)
     if (rc != SR_ERR_OK) {
         goto cleanup;
     }
-    
+
     rc = _write_module_data(xpath_module_data, &data);
     if (rc != SR_ERR_OK) {
         goto cleanup;
@@ -4398,7 +4487,7 @@ cleanup:
 }
 */
 
-int 
+int
 sysrepo_update_module_attributes(int module_id, const char *name, const char *description, const char *path, const uint32_t subscribed_events_mask)
 {
     char *xpath_name = NULL;
@@ -4491,7 +4580,7 @@ sysrepo_update_module_attributes(int module_id, const char *name, const char *de
         if (rc != SR_ERR_OK) {
             goto cleanup;
         }
-    } 
+    }
 
 cleanup:
     free(xpath_name);
@@ -4510,7 +4599,7 @@ cleanup:
 // -------------------------------------------------------- //
 //  Stream handling
 // -------------------------------------------------------- //
-int 
+int
 sysrepo_get_all_streams(TSN_Streams **streams)
 {
     rc = _read_streams("/control-tsn-uni:tsn-uni/streams", streams);
@@ -4522,7 +4611,7 @@ cleanup:
     return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
-int 
+int
 sysrepo_write_stream_request(TSN_Request *request, char **generated_stream_id)
 {
     char *xpath_stream_root = NULL;
@@ -4579,7 +4668,7 @@ cleanup:
     return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
-int 
+int
 sysrepo_write_stream_configuration(char *stream_id, TSN_Configuration *configuration)
 {
     char *xpath_stream_root = NULL;
@@ -4619,7 +4708,7 @@ cleanup:
     return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
-int 
+int
 sysrepo_get_stream(char *stream_id, TSN_Stream **stream)
 {
     char *xpath_stream = NULL;
@@ -4636,7 +4725,7 @@ cleanup:
     return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
-int 
+int
 sysrepo_delete_stream(char *stream_id)
 {
     char *xpath_stream = NULL;
@@ -4645,7 +4734,7 @@ sysrepo_delete_stream(char *stream_id)
     rc = sr_delete_item(session, xpath_stream, 0);
     if (rc != SR_ERR_OK) {
         goto cleanup;
-    }    
+    }
 
     rc = sr_apply_changes(session, 0, 1);
     if (rc != SR_ERR_OK) {
@@ -4662,7 +4751,7 @@ cleanup:
 // -------------------------------------------------------- //
 //  Topology handling
 // -------------------------------------------------------- //
-int 
+int
 sysrepo_get_topology(TSN_Topology **topology)
 {
     rc = _read_topology("/control-tsn-uni:tsn-uni/topology", topology);
@@ -4674,7 +4763,7 @@ cleanup:
     return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
-int 
+int
 sysrepo_set_topology(TSN_Topology *topology)
 {
     // Clear the whole topology first
@@ -4682,7 +4771,7 @@ sysrepo_set_topology(TSN_Topology *topology)
     if (rc != SR_ERR_OK) {
         goto cleanup;
     }
-    
+
     // Write the topology
     if (topology) {
         rc = _write_topology("/control-tsn-uni:tsn-uni/topology", topology);
@@ -4700,7 +4789,7 @@ cleanup:
     return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
-int 
+int
 sysrepo_get_all_devices(TSN_Devices **devices)
 {
     rc = _read_devices("/control-tsn-uni:tsn-uni/topology/devices", devices);
@@ -4712,7 +4801,7 @@ cleanup:
     return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
-int 
+int
 sysrepo_get_topology_graph(TSN_Graph **graph)
 {
     rc = _read_graph("/control-tsn-uni:tsn-uni/topology/graph", graph);
@@ -4725,7 +4814,7 @@ cleanup:
 }
 
 /*      NOT NEEDED ANYMORE?! --> switched to generic notif in yang and a single (generic) send notif function
-int 
+int
 sysrepo_trigger_topology_discovery()
 {
     int rc = SR_ERR_OK;
@@ -4733,23 +4822,23 @@ sysrepo_trigger_topology_discovery()
     char *xpath_rpc_trigger_topology_discovery = NULL;
 
     // Send the RPC
-    
+
     size_t ouput_count = 0;
     xpath_rpc_trigger_topology_discovery = strdup("/control-tsn-uni:rpc-trigger-topology-discovery");
     rc = sr_rpc_send(session, xpath_rpc_trigger_topology_discovery, NULL, 0, 0, &output, &ouput_count);
     if (rc != SR_ERR_OK) {
         goto cleanup;
     }
-    
 
-    
+
+
     // TEEEEEEEEEEEEEEST
     rc = sr_event_notif_send(session, "/control-tsn-uni:notif-topology-discovery-requested", NULL, 0);
     printf("[SYSREPO] Sending notification 'notif-topology-discovery-requested'... \n");
     if (rc != SR_ERR_OK) {
         goto cleanup;
     }
-    
+
 
 cleanup:
     sr_free_val(output);
@@ -4762,7 +4851,7 @@ cleanup:
 // -------------------------------------------------------- //
 //  Application handling
 // -------------------------------------------------------- //
-int 
+int
 sysrepo_get_application(TSN_Application **application)
 {
     rc = _read_application("/control-tsn-uni:tsn-uni/application", application);
@@ -4774,7 +4863,7 @@ cleanup:
     return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
-int 
+int
 sysrepo_get_application_apps(TSN_Apps **apps)
 {
     rc = _read_apps("/control-tsn-uni:tsn-uni/application/apps", apps);
@@ -4786,7 +4875,7 @@ cleanup:
     return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
-int 
+int
 sysrepo_get_application_images(TSN_Images **images)
 {
     rc = _read_images("/control-tsn-uni:tsn-uni/application/images", images);
@@ -4796,4 +4885,25 @@ sysrepo_get_application_images(TSN_Images **images)
 
 cleanup:
     return rc ? EXIT_FAILURE : EXIT_SUCCESS;
+}
+
+int
+sysrepo_set_application_images(TSN_Images *images)
+{
+    int ret;
+
+    // Clear all images first
+    ret = _remove_images();
+    if (ret != SR_ERR_OK)
+        goto cleanup;
+
+    // Write the images
+    ret = _write_images("/control-tsn-uni:tsn-uni/application/images", images);
+    if (rc != SR_ERR_OK)
+        goto cleanup;
+
+    ret = sr_apply_changes(session, 0, 1);
+
+cleanup:
+    return ret ? EXIT_FAILURE : EXIT_SUCCESS;
 }

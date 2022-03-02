@@ -1593,6 +1593,62 @@ serialize_images(TSN_Images *images)
     return root;
 }
 
+TSN_Images *deserialize_images(json_t *obj)
+{
+    TSN_Images *images = malloc(sizeof(TSN_Topology));
+    json_t *repositories;
+    int i;
+
+    images = malloc(sizeof(*images));
+    if (!images)
+        return NULL;
+    memset(images, '\0', sizeof(*images));
+
+    repositories = json_object_get(obj, "repositories");
+
+    images->count_images = json_array_size(repositories);
+    if (!images->count_images)
+        goto err1;
+
+    images->images = malloc(sizeof(TSN_Image) * images->count_images);
+    if (!images->images)
+        goto err1;
+    memset(images->images, '\0', sizeof(TSN_Image) * images->count_images);
+
+    for (i = 0; i < images->count_images; ++i) {
+        json_t *entry = json_array_get(repositories, i);
+        char id[1024] = { };
+        TSN_Image image;
+
+        // version is latest
+        image.version = "latest";
+
+        // name
+        image.name = strdup(json_string_value(entry));
+        if (!image.name)
+            goto err2;
+
+        // id == {name}_{version}
+        snprintf(id, sizeof(id) - 1, "%s_%s", image.name, image.version);
+        image.id = strdup(id);
+        if (!image.id)
+            goto err2;
+
+        // no description
+        image.description = "N/A";
+
+        images->images[i] = image;
+    }
+
+    return images;
+
+err2:
+    free(images->images);
+err1:
+    free(images);
+    return NULL;
+}
+
 json_t *
 serialize_application(TSN_Application *application)
 {

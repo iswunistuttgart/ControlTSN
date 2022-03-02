@@ -204,7 +204,11 @@ int sysrepo_get_application_apps(TSN_Apps **apps);
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
 int sysrepo_get_application_images(TSN_Images **images);
-
-
+/**
+ * @brief Writes the images to the datastore.
+ * @param images The struct containing the devices and connections
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+ */
+int sysrepo_set_application_images(TSN_Images *images);
 
 #endif // __SYSREPO_CLIENT_H__
