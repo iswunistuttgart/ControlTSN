@@ -106,6 +106,7 @@ _api_index_get(const struct _u_request *request, struct _u_response *response, v
                        "<tr><td><a href='/streams/compute'>/streams/compute</a></td><td>POST</td><td>Trigger the computation of all stream requests</td><td></td></tr>" \
                        // Applications
                        "<tr><th>Applications</th></tr>" \
+                       "<tr><td><a href='/application/discover'>/application/discover</a></td><td>POST</td><td>Request discovery of images and applications</td></tr>" \
                        "<tr><td><a href='/application'>/application</a></td><td>GET</td><td>Get the application containing all apps and images</td></tr>" \
                        "<tr><td><a href='/application/apps'>/application/apps</a></td><td>GET</td><td>Get all stored apps</td></tr>" \
                        "<tr><td><a href='/application/images'>/application/images</a></td><td>GET</td><td>Get all stored images</td></tr>" \
@@ -602,6 +603,24 @@ _api_topology_discover(const struct _u_request *request, struct _u_response *res
 // Application
 // ------------------------------------
 static int
+_api_application_discover_post(const struct _u_request *request, struct _u_response *response, void *user_data)
+{
+    int ret;
+
+    ret = sysrepo_send_notification(EVENT_APPLICATION_LIST_OF_APPS_REQUESTED, NULL, "Application discovery requested via REST module");
+    if (ret == EXIT_FAILURE) {
+        return U_CALLBACK_ERROR;
+    }
+
+    ret = sysrepo_send_notification(EVENT_APPLICATION_LIST_OF_IMAGES_REQUESTED, NULL, "Image discovery requested via REST module");
+    if (ret == EXIT_FAILURE) {
+        return U_CALLBACK_ERROR;
+    }
+
+    return U_CALLBACK_COMPLETE;
+}
+
+static int
 _api_application_get(const struct _u_request *request, struct _u_response *response, void *user_data)
 {
     TSN_Application *application = malloc(sizeof(TSN_Application));
@@ -866,9 +885,10 @@ _init_server()
     ulfius_add_endpoint_by_val(&server_instance, "GET",     API_PREFIX, API_TOPOLOGY_GRAPH,     0, &_api_topology_graph_get,    NULL);
     ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_TOPOLOGY_DISCOVER,  0, &_api_topology_discover,     NULL);
     // Application
-    ulfius_add_endpoint_by_val(&server_instance, "GET", API_PREFIX, API_APPLICATION,        0, &_api_application_get,           NULL);
-    ulfius_add_endpoint_by_val(&server_instance, "GET", API_PREFIX, API_APPLICATION_APPS,   0, &_api_application_apps_get,      NULL);
-    ulfius_add_endpoint_by_val(&server_instance, "GET", API_PREFIX, API_APPLICATION_IMAGES, 0, &_api_application_images_get,    NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_APPLICATION_DISCOVER,	0, &_api_application_discover_post, NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "GET",     API_PREFIX, API_APPLICATION,		0, &_api_application_get,           NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "GET",     API_PREFIX, API_APPLICATION_APPS,   	0, &_api_application_apps_get,      NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "GET",     API_PREFIX, API_APPLICATION_IMAGES, 	0, &_api_application_images_get,    NULL);
 
 
     // JUST TESTING

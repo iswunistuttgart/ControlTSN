@@ -43,6 +43,7 @@ const char *API_STREAMS_COMPUTE     = "/streams/compute";
 
 // Application
 const char *API_APPLICATION             = "/application";
+const char *API_APPLICATION_DISCOVER	= "/application/discover";
 const char *API_APPLICATION_APPS        = "/application/apps";
 //const char *API_APPLICATION_APPS_DISTRIBUTE = "/application/apps/distribute";
 const char *API_APPLICATION_IMAGES      = "/application/images";
