@@ -3651,18 +3651,12 @@ cleanup:
 // -------------------------------
 static int _remove_images()
 {
-    int ret = SR_ERR_OK;
+    return sr_delete_item(session, "/control-tsn-uni:tsn-uni/application/images", 0);
+}
 
-    ret = sr_delete_item(session, "/control-tsn-uni:tsn-uni/application/images", 0);
-    if (ret != SR_ERR_OK)
-        goto cleanup;
-
-    // ret = sr_apply_changes(session, 0, 1);
-    // if (ret != SR_ERR_OK)
-    //     goto cleanup;
-
-cleanup:
-    return ret;
+static int _remove_apps()
+{
+    return sr_delete_item(session, "/control-tsn-uni:tsn-uni/application/apps", 0);
 }
 
 static int _write_image(char *xpath, TSN_Image *image)
@@ -3697,11 +3691,6 @@ static int _write_image(char *xpath, TSN_Image *image)
     if (ret != SR_ERR_OK)
         goto cleanup;
 
-    // Apply the changes
-    // ret = sr_apply_changes(session, 0, 1);
-    // if (ret != SR_ERR_OK)
-    //     goto cleanup;
-
 cleanup:
     free(xpath_id);
     free(xpath_name);
@@ -3709,6 +3698,68 @@ cleanup:
     free(xpath_version);
 
     return ret ;
+}
+
+static int _write_app(char *xpath, TSN_App *app)
+{
+    char *xpath_has_image = NULL;
+    char *xpath_version = NULL;
+    char *xpath_image = NULL;
+    char *xpath_name = NULL;
+    char *xpath_desc = NULL;
+    char *xpath_id = NULL;
+    sr_val_t has_image;
+    int ret;
+
+    // ID
+    _create_xpath(xpath, "/id", &xpath_id);
+    ret = sr_set_item_str(session, xpath_id, app->id, NULL, 0);
+    if (ret != SR_ERR_OK)
+        goto cleanup;
+
+    // Name
+    _create_xpath(xpath, "/name", &xpath_name);
+    ret = sr_set_item_str(session, xpath_name, app->name, NULL, 0);
+    if (ret != SR_ERR_OK)
+        goto cleanup;
+
+    // Description
+    _create_xpath(xpath, "/desc", &xpath_desc);
+    ret = sr_set_item_str(session, xpath_desc, app->description, NULL, 0);
+    if (ret != SR_ERR_OK)
+        goto cleanup;
+
+    // Version
+    _create_xpath(xpath, "/version", &xpath_version);
+    ret = sr_set_item_str(session, xpath_version, app->version, NULL, 0);
+    if (ret != SR_ERR_OK)
+        goto cleanup;
+
+    // Image
+    _create_xpath(xpath, "/image-ref", &xpath_image);
+    ret = sr_set_item_str(session, xpath_image, app->image_ref, NULL, 0);
+    if (ret != SR_ERR_OK)
+        goto cleanup;
+
+    // Has-Image
+    _create_xpath(xpath, "/has-image", &xpath_has_image);
+    has_image.type = SR_UINT8_T;
+    has_image.data.uint8_val = app->has_image;
+    ret = sr_set_item(session, xpath_has_image, &has_image, 0);
+    if (ret != SR_ERR_OK)
+        goto cleanup;
+
+    // FIXME: Add Parameter!
+
+cleanup:
+    free(xpath_id);
+    free(xpath_name);
+    free(xpath_desc);
+    free(xpath_version);
+    free(xpath_image);
+    free(xpath_has_image);
+
+    return ret;
 }
 
 static int _write_images(char *xpath, TSN_Images *images)
@@ -3734,6 +3785,33 @@ static int _write_images(char *xpath, TSN_Images *images)
 
 cleanup:
     free(xpath_images);
+
+    return ret;
+}
+
+static int _write_apps(char *xpath, TSN_Apps *apps)
+{
+    char *xpath_apps = NULL;
+    int ret = SR_ERR_OK;
+    int i;
+
+    _create_xpath(xpath, "/app[id='%s']", &xpath_apps);
+
+    for (i = 0; i < apps->count_apps; ++i) {
+        TSN_App *app = &apps->apps[i];
+        char *xpath_entry = NULL;
+
+        _create_xpath_key(xpath_apps, app->id, &xpath_entry);
+
+        ret = _write_app(xpath_entry, app);
+        free(xpath_entry);
+
+        if (ret != SR_ERR_OK)
+            goto cleanup;
+    }
+
+cleanup:
+    free(xpath_apps);
 
     return ret;
 }
@@ -4899,6 +4977,27 @@ sysrepo_set_application_images(TSN_Images *images)
 
     // Write the images
     ret = _write_images("/control-tsn-uni:tsn-uni/application/images", images);
+    if (rc != SR_ERR_OK)
+        goto cleanup;
+
+    ret = sr_apply_changes(session, 0, 1);
+
+cleanup:
+    return ret ? EXIT_FAILURE : EXIT_SUCCESS;
+}
+
+int
+sysrepo_set_application_apps(TSN_Apps *apps)
+{
+    int ret;
+
+    // Clear all apps first
+    ret = _remove_apps();
+    if (ret != SR_ERR_OK)
+        goto cleanup;
+
+    // Write the apps
+    ret = _write_apps("/control-tsn-uni:tsn-uni/application/apps", apps);
     if (rc != SR_ERR_OK)
         goto cleanup;
 

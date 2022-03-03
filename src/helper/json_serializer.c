@@ -1595,8 +1595,8 @@ serialize_images(TSN_Images *images)
 
 TSN_Images *deserialize_images(json_t *obj)
 {
-    TSN_Images *images = malloc(sizeof(TSN_Topology));
     json_t *repositories;
+    TSN_Images *images;
     int i;
 
     images = malloc(sizeof(*images));
@@ -1646,6 +1646,83 @@ err2:
     free(images->images);
 err1:
     free(images);
+    return NULL;
+}
+
+//
+// The return of Kubernetes is a Pod list to be parsed:
+// https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#podlist-v1-core
+//
+TSN_Apps *deserialize_apps(json_t *obj)
+{
+    TSN_Apps *apps;
+    json_t *items;
+    int i;
+
+    apps = malloc(sizeof(*apps));
+    if (!apps)
+        return NULL;
+    memset(apps, '\0', sizeof(*apps));
+
+    items = json_object_get(obj, "items");
+
+    apps->count_apps = json_array_size(items);
+    if (!apps->count_apps)
+        goto err1;
+
+    apps->apps = malloc(sizeof(TSN_App) * apps->count_apps);
+    if (!apps->apps)
+        goto err1;
+    memset(apps->apps, '\0', sizeof(TSN_App) * apps->count_apps);
+
+    for (i = 0; i < apps->count_apps; ++i) {
+        json_t *entry = json_array_get(items, i);
+        json_t *metadata = json_object_get(entry, "metadata");
+        json_t *name = json_object_get(metadata, "name");
+        json_t *id = json_object_get(metadata, "uid");
+        json_t *spec = json_object_get(entry, "spec");
+        json_t *containers = json_object_get(spec, "containers");
+        TSN_App app;
+
+        // Name
+        app.name = strdup(json_string_value(name));
+        if (!app.name)
+            goto err2;
+
+        // Id
+        app.id = strdup(json_string_value(id));
+        if (!app.id)
+            goto err2;
+
+        // Version
+        app.version = "latest";
+
+        // No description
+        app.description = "N/A";
+
+        // FIXME: Parameters!
+        app.count_parameters = 0;
+        app.parameters = NULL;
+
+        // Image ref -> Assumption: One container per pod/app
+        app.has_image = 1;
+        if (json_array_size(containers) != 1)
+            goto err2;
+        json_t *container = json_array_get(containers, 0);
+        json_t *image = json_object_get(container, "image");
+        app.image_ref = strdup(json_string_value(image));
+        if (!app.image_ref)
+            goto err2;
+
+        apps->apps[i] = app;
+    }
+
+    return apps;
+
+err2:
+    free(apps->apps);
+err1:
+    free(apps);
     return NULL;
 }
 

@@ -29,6 +29,7 @@ static const char *kubernetes_url;
 // API specific REST endpoints
 //--------------------------------------
 static const char *API_DOCKER_LIST_IMAGES = "v2/_catalog";
+static const char *API_KUBERNETES_LIST_APPS = "api/v1/namespaces/default/pods";
 
 //--------------------------------------
 // Container Module Utility functions
@@ -119,12 +120,53 @@ out:
 //------------------------------------------
 static void container_discover_apps(void)
 {
+    struct _u_response response;
+    struct _u_request request;
+    char url[1024] = { };
+    json_t *json_body;
+    int ret;
+
     if (!kubernetes_url) {
         log("No kubernetes URL specified!");
         return;
     }
 
-    // FIXME: Implement me!
+    // Make HTTP Request to the Kubernetes cluster
+    ulfius_init_request(&request);
+    ulfius_init_response(&response);
+
+    snprintf(url, sizeof(url) - 1, "%s/%s", kubernetes_url, API_KUBERNETES_LIST_APPS);
+    request.http_url  = strdup(url);
+    request.http_verb = strdup("GET");
+    if (!request.http_url || !request.http_verb)
+        goto out;
+
+    ret = ulfius_send_http_request(&request, &response);
+    if (ret != U_OK) {
+        log("Failure sending request to Kubernetes Cluster at '%s'", url);
+        goto out;
+    }
+
+    // Get JSON body containing the "items" aka Pods/Applications
+    json_body = ulfius_get_json_body_response(&response, NULL);
+
+    // Deserialize the apps
+    TSN_Apps *discovered_apps = deserialize_apps(json_body);
+    if (!discovered_apps) {
+        log("Failed to deserialize images!");
+        goto out;
+    }
+
+    // Write the apps to sysrepo
+    ret = sysrepo_set_application_apps(discovered_apps);
+    if (ret != EXIT_SUCCESS)
+        log("Error writing list of images to the datastore!");
+
+    free(discovered_apps);
+
+out:
+    ulfius_clean_response(&response);
+    ulfius_clean_request(&request);
 }
 
 // ------------------------------------
