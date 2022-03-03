@@ -41,6 +41,16 @@ static void signal_handler(int signum)
     is_running = 0;
 }
 
+static const char *container_docker_host(void)
+{
+    if (!strncmp(registry_url, "http://", strlen("http://")))
+        return registry_url + strlen("http://");
+    if (!strncmp(registry_url, "https://", strlen("https://")))
+        return registry_url + strlen("https://");
+
+    return NULL;
+}
+
 #define log(...)                                                        \
     do {                                                                \
         container_log(__func__, __VA_ARGS__);                           \
@@ -97,7 +107,7 @@ static void container_discover_images(void)
     json_body = ulfius_get_json_body_response(&response, NULL);
 
     // Deserialize the images
-    TSN_Images *discovered_images = deserialize_images(json_body);
+    TSN_Images *discovered_images = deserialize_images(json_body, container_docker_host());
     if (!discovered_images) {
         log("Failed to deserialize images!");
         goto out;

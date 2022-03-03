@@ -1593,7 +1593,7 @@ serialize_images(TSN_Images *images)
     return root;
 }
 
-TSN_Images *deserialize_images(json_t *obj)
+TSN_Images *deserialize_images(json_t *obj, const char *docker_host)
 {
     json_t *repositories;
     TSN_Images *images;
@@ -1617,20 +1617,20 @@ TSN_Images *deserialize_images(json_t *obj)
 
     for (i = 0; i < images->count_images; ++i) {
         json_t *entry = json_array_get(repositories, i);
-        char id[1024] = { };
         TSN_Image image;
+        char name[1024];
 
         // version is latest
         image.version = "latest";
 
         // name
-        image.name = strdup(json_string_value(entry));
+        snprintf(name, sizeof(name) - 1, "%s/%s", docker_host, json_string_value(entry));
+        image.name = strdup(name);
         if (!image.name)
             goto err2;
 
-        // id == {name}_{version}
-        snprintf(id, sizeof(id) - 1, "%s_%s", image.name, image.version);
-        image.id = strdup(id);
+        // id
+        image.id = strdup(name);
         if (!image.id)
             goto err2;
 
