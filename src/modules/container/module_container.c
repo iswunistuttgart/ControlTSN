@@ -23,6 +23,7 @@
 //   Defined in src/sysrepo/initial2.xml
 //--------------------------------------
 static const char *registry_url;
+static const char *kubernetes_url;
 
 //--------------------------------------
 // API specific REST endpoints
@@ -113,6 +114,19 @@ out:
     ulfius_clean_request(&request);
 }
 
+//------------------------------------------
+// Request list of Apps/Pods from Kubernetes
+//------------------------------------------
+static void container_discover_apps(void)
+{
+    if (!kubernetes_url) {
+        log("No kubernetes URL specified!");
+        return;
+    }
+
+    // FIXME: Implement me!
+}
+
 // ------------------------------------
 // Callback handler
 // ------------------------------------
@@ -125,6 +139,7 @@ static void _cb_event(TSN_Event_CB_Data data)
         container_discover_images();
     } else if (data.event_id & EVENT_APPLICATION_LIST_OF_APPS_REQUESTED) {
         event_name = "EVENT_APPLICATION_LIST_OF_APPS_REQUESTED";
+        container_discover_apps();
     } else if (data.event_id & EVENT_APPLICATION_APP_START_REQUESTED) {
         event_name = "EVENT_APPLICATION_APP_START_REQUESTED";
     } else if (data.event_id & EVENT_APPLICATION_APP_STOP_REQUESTED) {
@@ -182,6 +197,15 @@ int main(void)
         if (!registry_url)
             goto cleanup;
         log("Container registry URL: '%s'", registry_url);
+    }
+
+    // Find Kubernetes url
+    TSN_Module_Data_Entry *kub_entry = module_get_data_entry(module_data, MODULE_DATA_IDENTIFIER_KUBERNETES);
+    if (kub_entry) {
+        kubernetes_url = strdup(kub_entry->value.string_val);
+        if (!kubernetes_url)
+            goto cleanup;
+        log("Kubernetes URL: '%s'", kubernetes_url);
     }
 
     log("Container module successfully started and running");

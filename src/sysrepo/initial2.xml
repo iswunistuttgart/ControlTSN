@@ -48,6 +48,19 @@
             <data-type>string</data-type>
             <data-value>http://containerregistry:5000</data-value>
           </entry>
+          <entry>
+            <!--
+                Access to the Kubernetes control plane has to be
+                authenticated. Only authorized users are allowed to perform
+                meaningful cluster actions. Therefore, we use `kubectl proxy`.
+                It establishes a channel to the cluster and we can use
+                localhost as communication endpoint without worrying about
+                authentication.
+            -->
+            <data-name>kubernetes_url</data-name>
+            <data-type>string</data-type>
+            <data-value>http://localhost:8001</data-value>
+          </entry>
         </data>
       </mod>
   </modules>
