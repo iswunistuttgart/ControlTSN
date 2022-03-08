@@ -19,7 +19,7 @@ signal_handler(int signum)
 }
 
 
-void main(void)
+int main(void)
 {
 
     // Signal handling
@@ -91,5 +91,5 @@ cleanup:
     free(modules);
     free(modules_after);
 
-    return;
+    return EXIT_SUCCESS;
 }

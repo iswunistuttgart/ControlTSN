@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.16)
 
 project(ControlTSN_2)
 
+# Set C standard and enable warnings
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu99 -Wall")
 
 ## The Common lib
 add_library(common SHARED src/common.c src/sysrepo/sysrepo_client.c src/type_definitions.c src/logger.c)

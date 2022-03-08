@@ -984,7 +984,7 @@ _read_data_frame_specification(char *xpath, IEEE_DataFrameSpecification **dfs)
     _create_xpath(xpath, "/*", &xpath_root);
     size_t count_root = 0;
     rc = sr_get_items(session, xpath_root, 0, 0, &val_root, &count_root);
-    DataFrameSpecification_FieldType type;
+    DataFrameSpecification_FieldType type = 0;
 
     for (int i=0; i<count_root; ++i) {
         if (strstr(val_root[i].xpath, "/ieee802-mac-addresses") != NULL) {
@@ -1924,7 +1924,7 @@ _read_config_list(char *xpath, IEEE_ConfigList **cl)
     _create_xpath(xpath, "/*", &xpath_root);
     size_t count_root = 0;
     rc = sr_get_items(session, xpath_root, 0, 0, &val_root, &count_root);
-    ConfigList_FieldType type;
+    ConfigList_FieldType type = 0;
 
     for (int i=0; i<count_root; ++i) {
         if (strstr(val_root[i].xpath, "/ieee802-mac-addresses") != NULL) {

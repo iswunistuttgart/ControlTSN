@@ -258,6 +258,8 @@ _init_server()
     ulfius_add_endpoint_by_val(&server_instance, "POST", API_PREFIX, API_STREAMS_COMPUTE_REQUESTS, 0, &_api_streams_compute_requests, NULL);
 
     ulfius_set_default_endpoint(&server_instance, &_api_index, NULL);
+
+    return EXIT_SUCCESS;
 }
 
 static void 

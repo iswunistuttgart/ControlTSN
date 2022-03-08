@@ -838,7 +838,7 @@ _api_testing_websocket(const struct _u_request *request, struct _u_response *res
     if ((ret = ulfius_set_websocket_response(response, NULL, NULL, &_websocket_manager_cb, NULL, &_websocket_incoming_cb, NULL, &_websocket_onclose_cb, NULL)) == U_OK) {
         return U_CALLBACK_CONTINUE;
     } else {
-        U_CALLBACK_ERROR;
+        return U_CALLBACK_ERROR;
     }
 }
 
