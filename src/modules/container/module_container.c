@@ -29,7 +29,7 @@ static const char *kubernetes_url;
 // API specific REST endpoints
 //--------------------------------------
 static const char *API_DOCKER_LIST_IMAGES = "v2/_catalog";
-static const char *API_KUBERNETES_LIST_APPS = "api/v1/namespaces/default/pods";
+static const char *API_KUBERNETES_PODS = "api/v1/namespaces/default/pods";
 
 //--------------------------------------
 // Container Module Utility functions
@@ -69,6 +69,14 @@ static void container_log(const char * restrict func, const char * restrict fmt,
     fflush(out);
 
     va_end(args);
+}
+
+static void container_init_app_param(struct application_parameter *parameter)
+{
+    memset(parameter, '\0', sizeof(*parameter));
+    parameter->capabilities    = APPLICATION_DEFAULT_CAPABILITIES;
+    parameter->resource_cpus   = APPLICATION_DEFAULT_RESOURCE_CPUS;
+    parameter->resource_ram_mb = APPLICATION_DEFAULT_RESOURCE_RAM_MB;
 }
 
 //--------------------------------------
@@ -145,7 +153,7 @@ static void container_discover_apps(void)
     ulfius_init_request(&request);
     ulfius_init_response(&response);
 
-    snprintf(url, sizeof(url) - 1, "%s/%s", kubernetes_url, API_KUBERNETES_LIST_APPS);
+    snprintf(url, sizeof(url) - 1, "%s/%s", kubernetes_url, API_KUBERNETES_PODS);
     request.http_url  = strdup(url);
     request.http_verb = strdup("GET");
     if (!request.http_url || !request.http_verb)
@@ -179,6 +187,138 @@ out:
     ulfius_clean_request(&request);
 }
 
+//------------------------------------------
+// Start App/Pod in Kubernetes Cluster
+//------------------------------------------
+static void container_start_app(const struct application_parameter *parameter)
+{
+    struct _u_response response;
+    struct _u_request request;
+    char pod[4096] = { };
+    char url[1024] = { };
+    int ret, len;
+
+    if (!kubernetes_url) {
+        log("No kubernetes URL specified!");
+        return;
+    }
+
+    if (!parameter) {
+        log("No application/pod parameter specified!");
+        return;
+    }
+
+    // Build Kubernetes pod description
+    len = snprintf(pod, sizeof(pod) - 1,
+                   "apiVersion: v1\n"
+                   "kind: Pod\n"
+                   "metadata:\n"
+                   "  name: %s\n"
+                   "spec:\n"
+                   "  containers:\n"
+                   "  - name: rt-container\n"
+                   "    image: %s\n"
+                   "    imagePullPolicy: IfNotPresent\n"
+                   "    command: [ \"%s\" ]\n"
+                   "    args: [ %s ]\n"
+                   "    securityContext:\n"
+                   "      capabilities:\n"
+                   "        add: [ %s ]\n"
+                   "    resources:\n"
+                   "      requests:\n"
+                   "        cpu: %d\n"
+                   "        memory: \"%dM\"\n"
+                   "      limits:\n"
+                   "        cpu: %d\n"
+                   "        memory: \"%dM\"\n",
+                   parameter->name,
+                   parameter->application_image,
+                   parameter->command,
+                   parameter->command_line,
+                   parameter->capabilities,
+                   parameter->resource_cpus,
+                   parameter->resource_ram_mb,
+                   parameter->resource_cpus,
+                   parameter->resource_ram_mb);
+
+    if (parameter->node_selector)
+        len = snprintf(pod + len, sizeof(pod) - len - 1,
+                       "  nodeSelector:\n"
+                       "    tsnnode: %s\n",
+                       parameter->node_selector);
+
+    // Make HTTP Request to the Kubernetes cluster
+    ulfius_init_request(&request);
+    ulfius_init_response(&response);
+
+    snprintf(url, sizeof(url) - 1, "%s/%s", kubernetes_url, API_KUBERNETES_PODS);
+    ulfius_set_request_properties(&request,
+                                  U_OPT_HTTP_VERB, "POST",
+                                  U_OPT_HTTP_URL, url,
+                                  U_OPT_STRING_BODY, pod,
+                                  U_OPT_HEADER_PARAMETER, "Content-Type", "application/yaml",
+                                  U_OPT_NONE);
+
+    ret = ulfius_send_http_request(&request, &response);
+    if (ret != U_OK) {
+        log("Failure sending request to Kubernetes Cluster at '%s'", url);
+        goto out;
+    }
+
+    if (response.status != 200 && response.status != 201)
+        log("Failed to create pod. Response code=%ld", response.status);
+
+out:
+    ulfius_clean_response(&response);
+    ulfius_clean_request(&request);
+}
+
+//------------------------------------------
+// Start App/Pod in Kubernetes Cluster
+//------------------------------------------
+static void container_stop_app(const struct application_parameter *parameter)
+{
+    struct _u_response response;
+    struct _u_request request;
+    char url[1024] = { };
+    int ret;
+
+    if (!kubernetes_url) {
+        log("No kubernetes URL specified!");
+        return;
+    }
+
+    if (!parameter) {
+        log("No application/pod parameter specified!");
+        return;
+    }
+
+    // Make HTTP Request to the Kubernetes cluster
+    ulfius_init_request(&request);
+    ulfius_init_response(&response);
+
+    snprintf(url, sizeof(url) - 1, "%s/%s/%s", kubernetes_url,
+             API_KUBERNETES_PODS, parameter->name);
+
+    ulfius_set_request_properties(&request,
+                                  U_OPT_HTTP_VERB, "DELETE",
+                                  U_OPT_HTTP_URL, url,
+                                  U_OPT_NONE);
+
+    ret = ulfius_send_http_request(&request, &response);
+    if (ret != U_OK) {
+        log("Failure sending request to Kubernetes Cluster at '%s'", url);
+        goto out;
+    }
+
+    if (response.status != 200 && response.status != 201)
+        log("Failed to delete pod. Response code=%ld", response.status);
+
+out:
+    ulfius_clean_response(&response);
+    ulfius_clean_request(&request);
+}
+
 // ------------------------------------
 // Callback handler
 // ------------------------------------
@@ -193,9 +333,25 @@ static void _cb_event(TSN_Event_CB_Data data)
         event_name = "EVENT_APPLICATION_LIST_OF_APPS_REQUESTED";
         container_discover_apps();
     } else if (data.event_id & EVENT_APPLICATION_APP_START_REQUESTED) {
+        struct application_parameter param;
+
         event_name = "EVENT_APPLICATION_APP_START_REQUESTED";
+
+        // initialize with default values
+        container_init_app_param(&param);
+
+        // FIXME: Add parameter from request/sysrepo!
+        container_start_app(&param);
     } else if (data.event_id & EVENT_APPLICATION_APP_STOP_REQUESTED) {
+        struct application_parameter param;
+
         event_name = "EVENT_APPLICATION_APP_STOP_REQUESTED";
+
+        // initialize with default values
+        container_init_app_param(&param);
+
+        // FIXME: Add parameter from request/sysrepo!
+        container_stop_app(&param);
     }
 
     log("Event '%s' (%s, %s)", event_name, data.entry_id, data.msg);
