@@ -27,16 +27,16 @@ int sysrepo_send_notification(uint32_t event_id, char *entry_id, char *msg);
 //  Module handling
 // -------------------------------------------------------- //
 /**
- * @brief Adds a new module to the list of available modules in the datastore. 
- * Before that it is checked if the module already exists. 
+ * @brief Adds a new module to the list of available modules in the datastore.
+ * Before that it is checked if the module already exists.
  * @param module The module to add (the id of the module is determined automatically and ignored if already set)
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
 int sysrepo_add_module(TSN_Module **module);
 
 /**
- * @brief Registers a module by adding it to the list of registered modules in the datastore. 
- * That means on the next ramp up it will be automatically started. 
+ * @brief Registers a module by adding it to the list of registered modules in the datastore.
+ * That means on the next ramp up it will be automatically started.
  * Before that the function checks if the module is already registered.
  * @param module_id The id of the module to register (use the id stored under all-modules)
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
@@ -66,7 +66,7 @@ int sysrepo_get_all_modules(TSN_Modules **modules);
 int sysrepo_get_module(int module_id, TSN_Module **module);
 
 /**
- * @brief Removes a module from the list of available modules in the datastore. The function also unregisters the module. 
+ * @brief Removes a module from the list of available modules in the datastore. The function also unregisters the module.
  * @param module The module to remove
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
@@ -84,7 +84,7 @@ int sysrepo_set_module_pid(int module_id, pid_t pid);
  * @brief Gets the stored data of a specific module.
  * @param module_id The id of the module
  * @param data The struct to write on
- * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1) 
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
 int sysrepo_get_module_data(int module_id, TSN_Module_Data **data);
 
@@ -97,8 +97,8 @@ int sysrepo_get_module_data(int module_id, TSN_Module_Data **data);
 int sysrepo_update_module_data(int module_id, TSN_Module_Data data);
 
 /**
- * @brief Updates the attributes of a specific module in the datastore. 
- * Only the attributes of passed parameters that are not NULL will be updated. 
+ * @brief Updates the attributes of a specific module in the datastore.
+ * Only the attributes of passed parameters that are not NULL will be updated.
  * @param module_id The id of the module
  * @param name The new name or NULL
  * @param description The new description or NULL
@@ -222,5 +222,12 @@ int sysrepo_set_application_apps(TSN_Apps *apps);
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
 int sysrepo_set_application_app(TSN_App *app);
+/**
+ * @brief Gets the stored data of a specific app.
+ * @param id The id of the app
+ * @param app The struct to write on
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+ */
+int sysrepo_get_application_app(const char *id, TSN_App **app);
 
 #endif // __SYSREPO_CLIENT_H__

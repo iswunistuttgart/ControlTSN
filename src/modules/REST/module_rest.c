@@ -703,11 +703,8 @@ out:
     free(app->description);
     free(app->version);
     free(app->image_ref);
-
-    for (i = 0; i < app->count_parameters; ++i) {
+    for (i = 0; i < app->count_parameters; ++i)
         free(app->parameters[i].name);
-        free(app->parameters[i].description);
-    }
     free(app->parameters);
     free(app);
 

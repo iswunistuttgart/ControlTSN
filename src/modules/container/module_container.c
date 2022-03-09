@@ -79,6 +79,43 @@ static void container_init_app_param(struct application_parameter *parameter)
     parameter->resource_ram_mb = APPLICATION_DEFAULT_RESOURCE_RAM_MB;
 }
 
+static void container_fill_app_param(struct application_parameter *parameter,
+                                     const TSN_App *app)
+{
+    int i;
+
+    parameter->name = app->name;
+    parameter->application_image = app->image_ref;
+
+    for (i = 0; i < app->count_parameters; ++i) {
+        TSN_App_Parameter *par = &app->parameters[i];
+
+        if (!strcmp(par->name, "command"))
+            parameter->command = par->value.string_val;
+
+        if (!strcmp(par->name, "command_line"))
+            parameter->command_line = par->value.string_val;
+
+        if (!strcmp(par->name, "node"))
+            parameter->node_selector = par->value.string_val;
+
+        if (!strcmp(par->name, "capabilities"))
+            parameter->capabilities = par->value.string_val;
+
+        if (!strcmp(par->name, "cpus")) {
+            parameter->resource_cpus = atoi(par->value.string_val);
+            if (parameter->resource_cpus <= 0)
+                parameter->resource_cpus = APPLICATION_DEFAULT_RESOURCE_CPUS;
+        }
+
+        if (!strcmp(par->name, "ram")) {
+            parameter->resource_ram_mb = atoi(par->value.string_val);
+            if (parameter->resource_ram_mb <= 0)
+                parameter->resource_ram_mb = APPLICATION_DEFAULT_RESOURCE_RAM_MB;
+        }
+    }
+}
+
 //--------------------------------------
 // Request list of Images from Registry
 //--------------------------------------
@@ -325,6 +362,8 @@ out:
 static void _cb_event(TSN_Event_CB_Data data)
 {
     const char *event_name = NULL;
+    TSN_App *app = NULL;
+    int i;
 
     if (data.event_id & EVENT_APPLICATION_LIST_OF_IMAGES_REQUESTED) {
         event_name = "EVENT_APPLICATION_LIST_OF_IMAGES_REQUESTED";
@@ -334,27 +373,60 @@ static void _cb_event(TSN_Event_CB_Data data)
         container_discover_apps();
     } else if (data.event_id & EVENT_APPLICATION_APP_START_REQUESTED) {
         struct application_parameter param;
+        int ret;
 
         event_name = "EVENT_APPLICATION_APP_START_REQUESTED";
 
-        // initialize with default values
+        // Initialize with default values
         container_init_app_param(&param);
 
-        // FIXME: Add parameter from request/sysrepo!
+        // Get app from sysrepo
+        ret = sysrepo_get_application_app(data.msg, &app);
+        if (ret != EXIT_SUCCESS)
+            goto cleanup;
+
+        // Enrich application parameters from sysrepo data
+        container_fill_app_param(&param, app);
+
         container_start_app(&param);
     } else if (data.event_id & EVENT_APPLICATION_APP_STOP_REQUESTED) {
         struct application_parameter param;
+        int ret;
 
         event_name = "EVENT_APPLICATION_APP_STOP_REQUESTED";
 
-        // initialize with default values
+        // Initialize with default values
         container_init_app_param(&param);
 
-        // FIXME: Add parameter from request/sysrepo!
+        // Get app from sysrepo
+        ret = sysrepo_get_application_app(data.msg, &app);
+        if (ret != EXIT_SUCCESS)
+            goto cleanup;
+
+        // Enrich application parameters from sysrepo data
+        container_fill_app_param(&param, app);
+
         container_stop_app(&param);
     }
 
     log("Event '%s' (%s, %s)", event_name, data.entry_id, data.msg);
+
+cleanup:
+    if (app) {
+        free(app->id);
+        free(app->name);
+        free(app->description);
+        free(app->version);
+        free(app->image_ref);
+
+        for (i = 0; i < app->count_parameters; ++i) {
+            free(app->parameters[i].name);
+            free(app->parameters[i].description);
+        }
+        free(app->parameters);
+        free(app);
+        free(data.msg);
+    }
 
     return;
 }

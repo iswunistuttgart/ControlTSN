@@ -5077,3 +5077,25 @@ sysrepo_set_application_app(TSN_App *app)
 cleanup:
     return ret ? EXIT_FAILURE : EXIT_SUCCESS;
 }
+
+int
+sysrepo_get_application_app(const char *id, TSN_App **app)
+{
+    char *xpath_app = NULL;
+    int ret;
+
+    *app = malloc(sizeof(**app));
+    if (!*app)
+        return EXIT_FAILURE;
+    memset(*app, '\0', sizeof(**app));
+
+    _create_xpath_key("/control-tsn-uni:tsn-uni/application/apps/app[id='%s']", (char *)id, &xpath_app);
+    ret = _read_app(xpath_app, app);
+    if (ret != SR_ERR_OK)
+        goto cleanup;
+
+cleanup:
+    free(xpath_app);
+
+    return ret ? EXIT_FAILURE : EXIT_SUCCESS;
+}
