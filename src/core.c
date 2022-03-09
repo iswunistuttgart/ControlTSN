@@ -8,7 +8,7 @@
 #include "common.h"
 
 
-int ret;
+static int ret;
 
 volatile sig_atomic_t is_running = 1;
 

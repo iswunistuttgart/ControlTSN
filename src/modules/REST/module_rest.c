@@ -9,7 +9,7 @@
 #include "module_rest.h"
 #include "../../helper/json_serializer.h"
 
-int rc;
+static int rc;
 volatile sig_atomic_t is_running = 1;
 
 TSN_Module *this_module;
