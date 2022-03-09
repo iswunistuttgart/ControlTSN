@@ -27,13 +27,13 @@ typedef enum TSN_Module_Data_Entry_Type {
 } TSN_Module_Data_Entry_Type;
 
 /**
- * @brief Converts the string from the sysrepo type enum to the module data type enum. 
+ * @brief Converts the string from the sysrepo type enum to the module data type enum.
  * @param enum_string The string to convert
  * @return The module data type enum
  */
 TSN_Module_Data_Entry_Type string_to_data_type(const char *enum_string);
 /**
- * @brief Converts the module data type to the corresponding sysrepo enum string. 
+ * @brief Converts the module data type to the corresponding sysrepo enum string.
  * @param type The module data type enum
  * @return The converted string for writing to sysrepo
  */
@@ -56,14 +56,14 @@ typedef union TSN_Module_Data_Entry_Value {
 } TSN_Module_Data_Entry_Value;
 
 /**
- * @brief Converts a sysrepo data struct to the corresponding module data value. 
+ * @brief Converts a sysrepo data struct to the corresponding module data value.
  * @param data The data struct from sysrepo
- * @param type The assigned type of this module data 
+ * @param type The assigned type of this module data
  * @return The converted module data value struct
  */
 TSN_Module_Data_Entry_Value sysrepo_data_to_data_value(sr_data_t data, TSN_Module_Data_Entry_Type type);
 /**
- * @brief Converts a module data value to the corresponding sysrepo value. 
+ * @brief Converts a module data value to the corresponding sysrepo value.
  * @param value The module data value
  * @param type The assigned type of this module data
  * @return The converted sysrepo value struct
@@ -84,7 +84,7 @@ typedef struct TSN_Module_Data_Entry
  */
 char *data_value_to_string(TSN_Module_Data_Entry entry);
 
-typedef struct TSN_Module_Data 
+typedef struct TSN_Module_Data
 {
     uint16_t count_entries;
     TSN_Module_Data_Entry *entries;
@@ -158,7 +158,7 @@ typedef struct TSN_StatusTalker {
 
 typedef struct TSN_StatusListener {
     uint16_t index;
-    
+
     // ieee802-dot1q-tsn-types -> group-status-talker-listener
     uint32_t accumulated_latency;
     IEEE_InterfaceConfiguration interface_configuration;
@@ -187,7 +187,7 @@ typedef struct TSN_Request {
 typedef struct TSN_Stream {
     // The unique id of the stream in the format XX-XX-XX-XX-XX-XX:YY-YY,
     // where XX is the MAC of the Talker and YY a unique number
-    char *stream_id;   
+    char *stream_id;
     TSN_Request request;
     uint8_t configured;
     TSN_Configuration *configuration;
@@ -245,7 +245,7 @@ typedef struct TSN_App_Parameter {
     char *name;
     char *description;
     TSN_Module_Data_Entry_Type type;
-    TSN_Module_Data_Entry_Value value;    
+    TSN_Module_Data_Entry_Value value;
 } TSN_App_Parameter;
 
 typedef struct TSN_App {

@@ -3697,11 +3697,49 @@ cleanup:
     free(xpath_desc);
     free(xpath_version);
 
-    return ret ;
+    return ret;
+}
+
+static int
+_write_parameter(char *xpath, TSN_App_Parameter *parameter)
+{
+    char *xpath_param_name = NULL;
+    char *xpath_param_type = NULL;
+    char *xpath_param_value = NULL;
+    sr_val_t val_param_value;
+    sr_val_t val_param_type;
+    int ret = SR_ERR_OK;
+
+    // Name
+    _create_xpath(xpath, "/param-name", &xpath_param_name);
+    ret = sr_set_item_str(session, xpath_param_name, parameter->name, NULL, 0);
+    if (ret != SR_ERR_OK)
+        goto cleanup;
+
+    // Type
+    _create_xpath(xpath, "/param-type", &xpath_param_type);
+    val_param_type.data.enum_val = data_type_to_string(parameter->type);
+    val_param_type.type = SR_ENUM_T;
+    ret = sr_set_item(session, xpath_param_type, &val_param_type, 0);
+    if (ret != SR_ERR_OK)
+        goto cleanup;
+
+    // Value
+    _create_xpath(xpath, "/param-value", &xpath_param_value);
+    val_param_value = data_value_to_sysrepo_value(parameter->value, parameter->type);
+    ret = sr_set_item(session, xpath_param_value, &val_param_value, 0);
+
+cleanup:
+    free(xpath_param_name);
+    free(xpath_param_type);
+    free(xpath_param_value);
+
+    return ret;
 }
 
 static int _write_app(char *xpath, TSN_App *app)
 {
+    char *xpath_parameters = NULL;
     char *xpath_has_image = NULL;
     char *xpath_version = NULL;
     char *xpath_image = NULL;
@@ -3709,7 +3747,7 @@ static int _write_app(char *xpath, TSN_App *app)
     char *xpath_desc = NULL;
     char *xpath_id = NULL;
     sr_val_t has_image;
-    int ret;
+    int ret, i;
 
     // ID
     _create_xpath(xpath, "/id", &xpath_id);
@@ -3749,7 +3787,20 @@ static int _write_app(char *xpath, TSN_App *app)
     if (ret != SR_ERR_OK)
         goto cleanup;
 
-    // FIXME: Add Parameter!
+    // Parameters
+    _create_xpath(xpath, "/parameters/parameter[param-name='%s']", &xpath_parameters);
+    for (i = 0; i < app->count_parameters; ++i) {
+        TSN_App_Parameter *par = &app->parameters[i];
+        char *xpath_entry = NULL;
+
+        _create_xpath_key(xpath_parameters, par->name, &xpath_entry);
+
+        ret = _write_parameter(xpath_entry, par);
+        free(xpath_entry);
+
+        if (ret != SR_ERR_OK)
+            goto cleanup;
+    }
 
 cleanup:
     free(xpath_id);
@@ -3758,6 +3809,7 @@ cleanup:
     free(xpath_version);
     free(xpath_image);
     free(xpath_has_image);
+    free(xpath_parameters);
 
     return ret;
 }
@@ -4998,6 +5050,25 @@ sysrepo_set_application_apps(TSN_Apps *apps)
 
     // Write the apps
     ret = _write_apps("/control-tsn-uni:tsn-uni/application/apps", apps);
+    if (rc != SR_ERR_OK)
+        goto cleanup;
+
+    ret = sr_apply_changes(session, 0, 1);
+
+cleanup:
+    return ret ? EXIT_FAILURE : EXIT_SUCCESS;
+}
+
+int
+sysrepo_set_application_app(TSN_App *app)
+{
+    TSN_Apps apps;
+    int ret;
+
+    // Write the app
+    apps.count_apps = 1;
+    apps.apps = app;
+    ret = _write_apps("/control-tsn-uni:tsn-uni/application/apps", &apps);
     if (rc != SR_ERR_OK)
         goto cleanup;
 

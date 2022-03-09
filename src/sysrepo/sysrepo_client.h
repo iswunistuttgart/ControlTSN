@@ -216,5 +216,11 @@ int sysrepo_set_application_images(TSN_Images *images);
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
 int sysrepo_set_application_apps(TSN_Apps *apps);
+/**
+ * @brief Writes the app to the datastore.
+ * @param app The struct containing the app
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+ */
+int sysrepo_set_application_app(TSN_App *app);
 
 #endif // __SYSREPO_CLIENT_H__

@@ -47,8 +47,9 @@ const char *API_APPLICATION_DISCOVER	= "/application/discover";
 const char *API_APPLICATION_APPS        = "/application/apps";
 //const char *API_APPLICATION_APPS_DISTRIBUTE = "/application/apps/distribute";
 const char *API_APPLICATION_IMAGES      = "/application/images";
-//const char *API_APPLICATION_APPS_START  = "/application/apps/:id/start";
-//const char *API_APPLICATION_APPS_STOP   = "/application/apps/:id/stop";
-
+const char *API_APPLICATION_APPS_CREATE = "/application/apps/:id/create";
+const char *API_APPLICATION_APPS_DELETE = "/application/apps/:id/delete";
+const char *API_APPLICATION_APPS_START  = "/application/apps/:id/start";
+const char *API_APPLICATION_APPS_STOP   = "/application/apps/:id/stop";
 
 #endif // __MODULE_REST_H__

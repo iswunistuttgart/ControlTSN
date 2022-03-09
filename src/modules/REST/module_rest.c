@@ -669,6 +669,107 @@ _api_application_images_get(const struct _u_request *request, struct _u_response
     return U_CALLBACK_COMPLETE;
 }
 
+static int
+_api_application_app_create(const struct _u_request *request, struct _u_response *response, void *user_data)
+{
+    const char *app_id = u_map_get(request->map_url, "id");
+    json_t *json_post_body;
+    TSN_App *app;
+    int ret, i;
+
+    if (!app_id)
+        return U_CALLBACK_ERROR;
+
+    json_post_body = ulfius_get_json_body_request(request, NULL);
+    if (!json_post_body)
+        return U_CALLBACK_ERROR;
+
+    app = deserialize_app(app_id, json_post_body);
+    if (!app)
+        return U_CALLBACK_ERROR;
+
+    ret = sysrepo_set_application_app(app);
+    if (ret == EXIT_FAILURE) {
+        ret = U_CALLBACK_ERROR;
+        goto out;
+    }
+
+    ret = U_CALLBACK_COMPLETE;
+
+out:
+    json_decref(json_post_body);
+    free(app->id);
+    free(app->name);
+    free(app->description);
+    free(app->version);
+    free(app->image_ref);
+
+    for (i = 0; i < app->count_parameters; ++i) {
+        free(app->parameters[i].name);
+        free(app->parameters[i].description);
+    }
+    free(app->parameters);
+    free(app);
+
+    return ret;
+}
+
+static int
+_api_application_app_delete(const struct _u_request *request, struct _u_response *response, void *user_data)
+{
+    // FIXME: Implement me!
+    return U_CALLBACK_ERROR;
+}
+
+static int
+_api_application_app_start(const struct _u_request *request, struct _u_response *response, void *user_data)
+{
+    const char *_app_id = u_map_get(request->map_url, "id");
+    char *app_id;
+    int ret;
+
+    if (!_app_id)
+        return U_CALLBACK_ERROR;
+
+    app_id = strdup(_app_id);
+
+    if (!app_id)
+        return U_CALLBACK_ERROR;
+
+    // Notify container module to start the app
+    ret = sysrepo_send_notification(EVENT_APPLICATION_APP_START_REQUESTED, NULL, app_id);
+    if (ret == EXIT_FAILURE) {
+        free(app_id);
+        return U_CALLBACK_ERROR;
+    }
+
+    return U_CALLBACK_COMPLETE;
+}
+
+static int
+_api_application_app_stop(const struct _u_request *request, struct _u_response *response, void *user_data)
+{
+    const char *_app_id = u_map_get(request->map_url, "id");
+    char *app_id;
+    int ret;
+
+    if (!_app_id)
+        return U_CALLBACK_ERROR;
+
+    app_id = strdup(_app_id);
+
+    if (!app_id)
+        return U_CALLBACK_ERROR;
+
+    // Notify container module to stop the app
+    ret = sysrepo_send_notification(EVENT_APPLICATION_APP_STOP_REQUESTED, NULL, app_id);
+    if (ret == EXIT_FAILURE) {
+        free(app_id);
+        return U_CALLBACK_ERROR;
+    }
+
+    return U_CALLBACK_COMPLETE;
+}
 
 
 // ------------------------------------
@@ -887,7 +988,10 @@ _init_server()
     ulfius_add_endpoint_by_val(&server_instance, "GET",     API_PREFIX, API_APPLICATION,		0, &_api_application_get,           NULL);
     ulfius_add_endpoint_by_val(&server_instance, "GET",     API_PREFIX, API_APPLICATION_APPS,   	0, &_api_application_apps_get,      NULL);
     ulfius_add_endpoint_by_val(&server_instance, "GET",     API_PREFIX, API_APPLICATION_IMAGES, 	0, &_api_application_images_get,    NULL);
-
+    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_APPLICATION_APPS_CREATE, 	0, &_api_application_app_create,    NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_APPLICATION_APPS_DELETE, 	0, &_api_application_app_delete,    NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_APPLICATION_APPS_START, 	0, &_api_application_app_start,     NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_APPLICATION_APPS_STOP, 	0, &_api_application_app_stop,      NULL);
 
     // JUST TESTING
     ulfius_add_endpoint_by_val(&server_instance, "GET", API_PREFIX, "/testing/set_topology",    0, &_api_testing_set_topology,    NULL);
