@@ -94,70 +94,82 @@ data_type_to_string(TSN_Module_Data_Entry_Type type)
     return NULL;
 }
 
-char *
-data_value_to_string(TSN_Module_Data_Entry entry)
+static char *
+_data_value_to_string(TSN_Module_Data_Entry_Type type, TSN_Module_Data_Entry_Value value)
 {
     char *str_val = NULL;
 
-    if (entry.type == BINARY) {
-        str_val = entry.value.binary_val;
+    if (type == BINARY) {
+        str_val = value.binary_val;
     }
-    else if (entry.type == BOOLEAN) {
-        str_val = entry.value.boolean_val ? strdup("TRUE") : strdup("FALSE");
+    else if (type == BOOLEAN) {
+        str_val = value.boolean_val ? strdup("TRUE") : strdup("FALSE");
     }
-    else if (entry.type == DECIMAL64) {
-        size_t size_needed = snprintf(NULL, 0, "%g", entry.value.decimal64_val) + 1;
+    else if (type == DECIMAL64) {
+        size_t size_needed = snprintf(NULL, 0, "%g", value.decimal64_val) + 1;
         str_val = malloc(size_needed);
-        sprintf(str_val, "%g", entry.value.decimal64_val);
+        sprintf(str_val, "%g", value.decimal64_val);
     }
-    else if (entry.type == INSTANCE_IDENTIFIER) {
-        str_val = entry.value.instance_identifier_val;
+    else if (type == INSTANCE_IDENTIFIER) {
+        str_val = value.instance_identifier_val;
     }
-    else if (entry.type == INT8) {
-        size_t size_needed = snprintf(NULL, 0, "%d", entry.value.int8_val) + 1;
+    else if (type == INT8) {
+        size_t size_needed = snprintf(NULL, 0, "%d", value.int8_val) + 1;
         str_val = malloc(size_needed);
-        sprintf(str_val, "%d", entry.value.int8_val);
+        sprintf(str_val, "%d", value.int8_val);
     }
-    else if (entry.type == INT16) {
-        size_t size_needed = snprintf(NULL, 0, "%d", entry.value.int16_val) + 1;
+    else if (type == INT16) {
+        size_t size_needed = snprintf(NULL, 0, "%d", value.int16_val) + 1;
         str_val = malloc(size_needed);
-        sprintf(str_val, "%d", entry.value.int16_val);
+        sprintf(str_val, "%d", value.int16_val);
     }
-    else if (entry.type == INT32) {
-        size_t size_needed = snprintf(NULL, 0, "%d", entry.value.int32_val) + 1;
+    else if (type == INT32) {
+        size_t size_needed = snprintf(NULL, 0, "%d", value.int32_val) + 1;
         str_val = malloc(size_needed);
-        sprintf(str_val, "%d", entry.value.int32_val);
+        sprintf(str_val, "%d", value.int32_val);
     }
-    else if (entry.type == INT64) {
-        size_t size_needed = snprintf(NULL, 0, "%ld", entry.value.int64_val) + 1;
+    else if (type == INT64) {
+        size_t size_needed = snprintf(NULL, 0, "%ld", value.int64_val) + 1;
         str_val = malloc(size_needed);
-        sprintf(str_val, "%ld", entry.value.int64_val);
+        sprintf(str_val, "%ld", value.int64_val);
     }
-    else if (entry.type == STRING) {
-        str_val = entry.value.string_val;
+    else if (type == STRING) {
+        str_val = value.string_val;
     }
-    else if (entry.type == UINT8) {
-        size_t size_needed = snprintf(NULL, 0, "%u", entry.value.uint8_val) + 1;
+    else if (type == UINT8) {
+        size_t size_needed = snprintf(NULL, 0, "%u", value.uint8_val) + 1;
         str_val = malloc(size_needed);
-        sprintf(str_val, "%u", entry.value.uint8_val);
+        sprintf(str_val, "%u", value.uint8_val);
     }
-    else if (entry.type == UINT16) {
-        size_t size_needed = snprintf(NULL, 0, "%u", entry.value.uint16_val) + 1;
+    else if (type == UINT16) {
+        size_t size_needed = snprintf(NULL, 0, "%u", value.uint16_val) + 1;
         str_val = malloc(size_needed);
-        sprintf(str_val, "%u", entry.value.uint16_val);
+        sprintf(str_val, "%u", value.uint16_val);
     }
-    else if (entry.type == UINT32) {
-        size_t size_needed = snprintf(NULL, 0, "%u", entry.value.uint32_val) + 1;
+    else if (type == UINT32) {
+        size_t size_needed = snprintf(NULL, 0, "%u", value.uint32_val) + 1;
         str_val = malloc(size_needed);
-        sprintf(str_val, "%u", entry.value.uint32_val);
+        sprintf(str_val, "%u", value.uint32_val);
     }
-    else if (entry.type == UINT64) {
-        size_t size_needed = snprintf(NULL, 0, "%lu", entry.value.uint64_val) + 1;
+    else if (type == UINT64) {
+        size_t size_needed = snprintf(NULL, 0, "%lu", value.uint64_val) + 1;
         str_val = malloc(size_needed);
-        sprintf(str_val, "%lu", entry.value.uint64_val);
+        sprintf(str_val, "%lu", value.uint64_val);
     }
 
     return str_val;
+}
+
+char *
+data_value_to_string(TSN_Module_Data_Entry entry)
+{
+    return _data_value_to_string(entry.type, entry.value);
+}
+
+char *
+parameter_data_value_to_string(TSN_App_Parameter *parameter)
+{
+    return _data_value_to_string(parameter->type, parameter->value);
 }
 
 TSN_Module_Data_Entry_Value

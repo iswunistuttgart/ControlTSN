@@ -260,6 +260,14 @@ typedef struct TSN_App_Parameter {
     TSN_Module_Data_Entry_Value value;
 } TSN_App_Parameter;
 
+/**
+ * @brief Converts a parameter data value to a string (e.g. for printing).
+ * @param parameter The parameter data entry
+ * @return The value represented as a string
+ */
+char *
+parameter_data_value_to_string(TSN_App_Parameter *parameter);
+
 typedef struct TSN_App {
     char *id;           // {name}_{version}
     char *name;

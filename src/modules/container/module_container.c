@@ -82,6 +82,7 @@ static void container_init_app_param(struct application_parameter *parameter)
 static void container_fill_app_param(struct application_parameter *parameter,
                                      const TSN_App *app)
 {
+    char *cpus = NULL, *ram = NULL;
     int i;
 
     parameter->name = app->name;
@@ -91,27 +92,31 @@ static void container_fill_app_param(struct application_parameter *parameter,
         TSN_App_Parameter *par = &app->parameters[i];
 
         if (!strcmp(par->name, "command"))
-            parameter->command = par->value.string_val;
+            parameter->command = parameter_data_value_to_string(par);
 
         if (!strcmp(par->name, "command_line"))
-            parameter->command_line = par->value.string_val;
+            parameter->command_line = parameter_data_value_to_string(par);
 
         if (!strcmp(par->name, "node"))
-            parameter->node_selector = par->value.string_val;
+            parameter->node_selector = parameter_data_value_to_string(par);
 
         if (!strcmp(par->name, "capabilities"))
-            parameter->capabilities = par->value.string_val;
+            parameter->capabilities = parameter_data_value_to_string(par);
 
         if (!strcmp(par->name, "cpus")) {
-            parameter->resource_cpus = atoi(par->value.string_val);
+            cpus = parameter_data_value_to_string(par);
+            parameter->resource_cpus = atoi(cpus);
             if (parameter->resource_cpus <= 0)
                 parameter->resource_cpus = APPLICATION_DEFAULT_RESOURCE_CPUS;
+            free(cpus);
         }
 
         if (!strcmp(par->name, "ram")) {
-            parameter->resource_ram_mb = atoi(par->value.string_val);
+            ram = parameter_data_value_to_string(par);
+            parameter->resource_ram_mb = atoi(ram);
             if (parameter->resource_ram_mb <= 0)
                 parameter->resource_ram_mb = APPLICATION_DEFAULT_RESOURCE_RAM_MB;
+            free(ram);
         }
     }
 }
@@ -419,13 +424,10 @@ cleanup:
         free(app->version);
         free(app->image_ref);
 
-        for (i = 0; i < app->count_parameters; ++i) {
+        for (i = 0; i < app->count_parameters; ++i)
             free(app->parameters[i].name);
-            free(app->parameters[i].description);
-        }
         free(app->parameters);
         free(app);
-        free(data.msg);
     }
 
     return;
