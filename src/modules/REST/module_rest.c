@@ -611,10 +611,6 @@ _api_application_discover_post(const struct _u_request *request, struct _u_respo
     if (ret == EXIT_FAILURE)
         return U_CALLBACK_ERROR;
 
-    ret = sysrepo_send_notification(EVENT_APPLICATION_LIST_OF_APPS_REQUESTED, NULL, "Application discovery requested via REST module");
-    if (ret == EXIT_FAILURE)
-        return U_CALLBACK_ERROR;
-
     return U_CALLBACK_COMPLETE;
 }
 
