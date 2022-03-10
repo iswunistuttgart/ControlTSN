@@ -229,5 +229,11 @@ int sysrepo_set_application_app(TSN_App *app);
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
 int sysrepo_get_application_app(const char *id, TSN_App **app);
+/**
+ * @brief Removes the stored data of a specific app.
+ * @param id The id of the app
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+ */
+int sysrepo_remove_application_app(const char *id);
 
 #endif // __SYSREPO_CLIENT_H__

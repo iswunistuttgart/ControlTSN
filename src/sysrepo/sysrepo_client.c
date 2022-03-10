@@ -5100,3 +5100,23 @@ cleanup:
 
     return ret ? EXIT_FAILURE : EXIT_SUCCESS;
 }
+
+int
+sysrepo_remove_application_app(const char *id)
+{
+    char *xpath_app = NULL;
+    int ret;
+
+    _create_xpath_key("/control-tsn-uni:tsn-uni/application/apps/app[id='%s']", (char *)id, &xpath_app);
+
+    ret = sr_delete_item(session, xpath_app, 0);
+    if (ret != SR_ERR_OK)
+        goto cleanup;
+
+    ret = sr_apply_changes(session, 0, 1);
+
+cleanup:
+    free(xpath_app);
+
+    return ret ? EXIT_FAILURE : EXIT_SUCCESS;
+}

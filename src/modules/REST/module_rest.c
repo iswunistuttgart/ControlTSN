@@ -706,8 +706,17 @@ out:
 static int
 _api_application_app_delete(const struct _u_request *request, struct _u_response *response, void *user_data)
 {
-    // FIXME: Implement me!
-    return U_CALLBACK_ERROR;
+    const char *app_id = u_map_get(request->map_url, "id");
+    int ret;
+
+    if (!app_id)
+        return U_CALLBACK_ERROR;
+
+    ret = sysrepo_remove_application_app(app_id);
+    if (ret != EXIT_SUCCESS)
+        return U_CALLBACK_ERROR;
+
+    return U_CALLBACK_COMPLETE;
 }
 
 static int
