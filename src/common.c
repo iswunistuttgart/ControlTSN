@@ -24,7 +24,7 @@ module_connect()
     return ret ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
-int 
+int
 module_init(char *module_name, TSN_Module **module, uint32_t adjusted_subscribed_events_mask, void (*cb_event)(TSN_Event_CB_Data))
 {
     // Connect (if not done yet)
@@ -68,7 +68,7 @@ cleanup:
     return ret;
 }
 
-int 
+int
 module_shutdown()
 {
     // Disconnect from sysrepo connection and stop listening
@@ -91,28 +91,28 @@ module_unregister(int module_id)
 }
 
 
-int 
+int
 module_get_id(int module_id, TSN_Module **module)
 {
     ret = sysrepo_get_module(module_id, module);
     return ret;
 }
 
-int 
+int
 module_get_all(TSN_Modules **modules)
 {
     ret = sysrepo_get_all_modules(modules);
     return ret;
 }
 
-int 
+int
 module_delete(int module_id)
 {
     ret = sysrepo_delete_module(module_id);
     return ret;
 }
 
-int 
+int
 module_start(int module_id)
 {
     // Get the module from sysrepo
@@ -132,7 +132,7 @@ module_start(int module_id)
         char *arg = malloc(strlen(module->name) + strlen("[ControlTSN Module] ") + 1);
         sprintf(arg, "[ControlTSN Module] %s", module->name);
         char *argv[] = {arg, NULL};
-        // Start the module 
+        // Start the module
         if (execv(module->path, argv) == -1) {
             printf("[COMMON] Error starting module '%s'!\n", module->name);
             return EXIT_FAILURE;
@@ -152,12 +152,12 @@ module_start(int module_id)
     }
     printf("[COMMON] Successfully started module '%s' with PID %d\n", module->name, pid);
     */
-    
-    
+
+
     return EXIT_SUCCESS;
 }
 
-int 
+int
 module_stop(int module_id)
 {
     // Get the module from sysrepo
@@ -225,7 +225,7 @@ module_get_data_entry(TSN_Module_Data *module_data, const char *entry_name)
 // ----------------------------------------------
 //      FUNCTIONS - Stream
 // ----------------------------------------------
-int 
+int
 streams_get_all(TSN_Streams **streams)
 {
     ret = sysrepo_get_all_streams(streams);
@@ -239,14 +239,14 @@ stream_request(TSN_Request *request, char **generated_stream_id)
     return ret;
 }
 
-int 
+int
 stream_set_computed(char *stream_id, TSN_Configuration *configuration)
 {
     ret = sysrepo_write_stream_configuration(stream_id, configuration);
     return ret;
 }
 
-int 
+int
 streams_delete(char *stream_id)
 {
     ret = sysrepo_delete_stream(stream_id);
@@ -256,12 +256,12 @@ streams_delete(char *stream_id)
 // ----------------------------------------------
 //      FUNCTIONS - Topology
 // ----------------------------------------------
-int 
+int
 topology_get(TSN_Topology **topology)
 {
     ret = sysrepo_get_topology(topology);
     return ret;
-} 
+}
 
 int
 topology_get_devices(TSN_Devices **devices)
@@ -300,4 +300,23 @@ application_get_images(TSN_Images **images)
 {
     ret = sysrepo_get_application_images(images);
     return ret;
+}
+
+void application_app_put(TSN_App *app)
+{
+    int i;
+
+    if (!app)
+        return;
+
+    free(app->id);
+    free(app->name);
+    free(app->description);
+    free(app->version);
+    free(app->image_ref);
+
+    for (i = 0; i < app->count_parameters; ++i)
+        free(app->parameters[i].name);
+    free(app->parameters);
+    free(app);
 }

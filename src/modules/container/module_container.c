@@ -368,7 +368,6 @@ static void _cb_event(TSN_Event_CB_Data data)
 {
     const char *event_name = NULL;
     TSN_App *app = NULL;
-    int i;
 
     if (data.event_id & EVENT_APPLICATION_LIST_OF_IMAGES_REQUESTED) {
         event_name = "EVENT_APPLICATION_LIST_OF_IMAGES_REQUESTED";
@@ -417,19 +416,8 @@ static void _cb_event(TSN_Event_CB_Data data)
     log("Event '%s' (%s, %s)", event_name, data.entry_id, data.msg);
 
 cleanup:
-    if (app) {
-        free(app->id);
-        free(app->name);
-        free(app->description);
-        free(app->version);
-        free(app->image_ref);
 
-        for (i = 0; i < app->count_parameters; ++i)
-            free(app->parameters[i].name);
-        free(app->parameters);
-        free(app);
-    }
-
+    application_app_put(app);
     return;
 }
 

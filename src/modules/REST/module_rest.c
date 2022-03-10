@@ -675,7 +675,7 @@ _api_application_app_create(const struct _u_request *request, struct _u_response
     const char *app_id = u_map_get(request->map_url, "id");
     json_t *json_post_body;
     TSN_App *app;
-    int ret, i;
+    int ret;
 
     if (!app_id)
         return U_CALLBACK_ERROR;
@@ -698,15 +698,7 @@ _api_application_app_create(const struct _u_request *request, struct _u_response
 
 out:
     json_decref(json_post_body);
-    free(app->id);
-    free(app->name);
-    free(app->description);
-    free(app->version);
-    free(app->image_ref);
-    for (i = 0; i < app->count_parameters; ++i)
-        free(app->parameters[i].name);
-    free(app->parameters);
-    free(app);
+    application_app_put(app);
 
     return ret;
 }

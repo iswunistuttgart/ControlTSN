@@ -190,6 +190,12 @@ int topology_get_graph(TSN_Graph **graph);
  */
 int application_get(TSN_Application **application);
 /**
+ * @brief Put the application information.
+ * @param application The TSN_App struct to free
+ * @return none
+ */
+void application_app_put(TSN_App *application);
+/**
  * @brief Get the stored apps.
  * @param apps The TSN_Apps struct to write on
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
