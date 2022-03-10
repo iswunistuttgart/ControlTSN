@@ -2,7 +2,7 @@
 #include <string.h>
 #include "type_definitions.h"
 
-TSN_Module_Data_Entry_Type 
+TSN_Module_Data_Entry_Type
 string_to_data_type(const char *enum_string)
 {
     if (strcmp("binary", enum_string) == 0) {
@@ -160,7 +160,7 @@ data_value_to_string(TSN_Module_Data_Entry entry)
     return str_val;
 }
 
-TSN_Module_Data_Entry_Value 
+TSN_Module_Data_Entry_Value
 sysrepo_data_to_data_value(sr_data_t data, TSN_Module_Data_Entry_Type type)
 {
     TSN_Module_Data_Entry_Value val;
@@ -204,7 +204,7 @@ sysrepo_data_to_data_value(sr_data_t data, TSN_Module_Data_Entry_Type type)
     else if (type == UINT64) {
         val.uint64_val = data.uint64_val;
     }
-    
+
     /*
     val.binary_val = data.binary_val;
     val.boolean_val = data.bool_val;
@@ -224,7 +224,105 @@ sysrepo_data_to_data_value(sr_data_t data, TSN_Module_Data_Entry_Type type)
     return val;
 }
 
-sr_val_t 
+TSN_Module_Data_Entry_Value sysrepo_value_to_data_value(sr_val_t value)
+{
+    TSN_Module_Data_Entry_Value val = { };
+
+    if (value.type == SR_BINARY_T) {
+        val.binary_val = strdup(value.data.binary_val);
+    }
+    else if (value.type == SR_BOOL_T) {
+        val.boolean_val = value.data.bool_val;
+    }
+    else if (value.type == SR_DECIMAL64_T) {
+        val.decimal64_val = value.data.decimal64_val;
+    }
+    else if (value.type == SR_INSTANCEID_T) {
+        val.instance_identifier_val = strdup(value.data.instanceid_val);
+    }
+    else if (value.type == SR_INT8_T) {
+        val.int8_val = value.data.int8_val;
+    }
+    else if (value.type == SR_INT16_T) {
+        val.int16_val = value.data.int16_val;
+    }
+    else if (value.type == SR_INT32_T) {
+        val.int32_val = value.data.int32_val;
+    }
+    else if (value.type == SR_INT64_T) {
+        val.int64_val = value.data.int64_val;
+    }
+    else if (value.type == SR_STRING_T) {
+        val.string_val = strdup(value.data.string_val);
+    }
+    else if (value.type == SR_UINT8_T) {
+        val.uint8_val = value.data.uint8_val;
+    }
+    else if (value.type == SR_UINT16_T) {
+        val.uint16_val = value.data.uint16_val;
+    }
+    else if (value.type == SR_UINT32_T) {
+        val.uint32_val = value.data.uint32_val;
+    }
+    else if (value.type == SR_UINT64_T) {
+        val.uint64_val = value.data.uint64_val;
+    }
+
+    return val;
+}
+
+TSN_Module_Data_Entry_Type sysrepo_value_to_data_type(sr_val_t value)
+{
+    TSN_Module_Data_Entry_Type type;
+
+    switch (value.type) {
+    case SR_BINARY_T:
+        type = BINARY;
+        break;
+    case SR_BOOL_T:
+        type = BOOLEAN;
+        break;
+    case SR_DECIMAL64_T:
+        type = DECIMAL64;
+        break;
+    case SR_INSTANCEID_T:
+        type = INSTANCE_IDENTIFIER;
+        break;
+    case SR_INT8_T:
+        type = INT8;
+        break;
+    case SR_INT16_T:
+        type = INT16;
+        break;
+    case SR_INT32_T:
+        type = INT32;
+        break;
+    case SR_INT64_T:
+        type = INT64;
+        break;
+    case SR_STRING_T:
+        type = STRING;
+        break;
+    case SR_UINT8_T:
+        type = UINT8;
+        break;
+    case SR_UINT16_T:
+        type = UINT16;
+        break;
+    case SR_UINT32_T:
+        type = UINT32;
+        break;
+    case SR_UINT64_T:
+        type = UINT64;
+        break;
+    default:
+        type = STRING;
+    }
+
+    return type;
+}
+
+sr_val_t
 data_value_to_sysrepo_value(TSN_Module_Data_Entry_Value value, TSN_Module_Data_Entry_Type type)
 {
     sr_val_t val;
@@ -284,4 +382,3 @@ data_value_to_sysrepo_value(TSN_Module_Data_Entry_Value value, TSN_Module_Data_E
 
     return val;
 }
-

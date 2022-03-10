@@ -3901,7 +3901,8 @@ _read_app_parameter(char *xpath, TSN_App_Parameter **parameter)
     if (rc != SR_ERR_OK) {
         goto cleanup;
     }
-    (*parameter)->value = sysrepo_data_to_data_value(val_param_value->data, (*parameter)->type);
+    (*parameter)->value = sysrepo_value_to_data_value(*val_param_value);
+    (*parameter)->type = sysrepo_value_to_data_type(*val_param_value);
 
 cleanup:
     sr_free_val(val_param_name);

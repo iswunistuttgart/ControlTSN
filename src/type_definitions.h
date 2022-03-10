@@ -63,6 +63,18 @@ typedef union TSN_Module_Data_Entry_Value {
  */
 TSN_Module_Data_Entry_Value sysrepo_data_to_data_value(sr_data_t data, TSN_Module_Data_Entry_Type type);
 /**
+ * @brief Converts a sysrepo value struct to the corresponding module data value.
+ * @param data The sr_val_t struct from sysrepo
+ * @return The converted module data value struct.
+ */
+TSN_Module_Data_Entry_Value sysrepo_value_to_data_value(sr_val_t value);
+/**
+ * @brief Converts a sysrepo value struct to the corresponding module data type.
+ * @param data The sr_val_t struct from sysrepo
+ * @return The converted module data type struct.
+ */
+TSN_Module_Data_Entry_Type sysrepo_value_to_data_type(sr_val_t value);
+/**
  * @brief Converts a module data value to the corresponding sysrepo value.
  * @param value The module data value
  * @param type The assigned type of this module data
