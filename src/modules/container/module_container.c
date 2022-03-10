@@ -71,10 +71,21 @@ static void container_log(const char * restrict func, const char * restrict fmt,
     va_end(args);
 }
 
+static char *x_strdup(const char *str)
+{
+    char *p = strdup(str);
+    if (!p) {
+        log("Error allocating memory!\n");
+        exit(EXIT_FAILURE);
+    }
+
+    return p;
+}
+
 static void container_init_app_param(struct application_parameter *parameter)
 {
     memset(parameter, '\0', sizeof(*parameter));
-    parameter->capabilities    = APPLICATION_DEFAULT_CAPABILITIES;
+    parameter->capabilities    = x_strdup(APPLICATION_DEFAULT_CAPABILITIES);
     parameter->resource_cpus   = APPLICATION_DEFAULT_RESOURCE_CPUS;
     parameter->resource_ram_mb = APPLICATION_DEFAULT_RESOURCE_RAM_MB;
 }
@@ -119,6 +130,17 @@ static void container_fill_app_param(struct application_parameter *parameter,
             free(ram);
         }
     }
+}
+
+static void container_free_app_param(struct application_parameter *parameter)
+{
+    if (!parameter)
+        return;
+
+    free((void *)parameter->command);
+    free((void *)parameter->command_line);
+    free((void *)parameter->node_selector);
+    free((void *)parameter->capabilities);
 }
 
 //--------------------------------------
@@ -366,8 +388,12 @@ out:
 // ------------------------------------
 static void _cb_event(TSN_Event_CB_Data data)
 {
+    struct application_parameter param;
     const char *event_name = NULL;
     TSN_App *app = NULL;
+
+    // Initialize with default values
+    container_init_app_param(&param);
 
     if (data.event_id & EVENT_APPLICATION_LIST_OF_IMAGES_REQUESTED) {
         event_name = "EVENT_APPLICATION_LIST_OF_IMAGES_REQUESTED";
@@ -376,13 +402,9 @@ static void _cb_event(TSN_Event_CB_Data data)
         event_name = "EVENT_APPLICATION_LIST_OF_APPS_REQUESTED";
         container_discover_apps();
     } else if (data.event_id & EVENT_APPLICATION_APP_START_REQUESTED) {
-        struct application_parameter param;
         int ret;
 
         event_name = "EVENT_APPLICATION_APP_START_REQUESTED";
-
-        // Initialize with default values
-        container_init_app_param(&param);
 
         // Get app from sysrepo
         ret = sysrepo_get_application_app(data.msg, &app);
@@ -394,13 +416,9 @@ static void _cb_event(TSN_Event_CB_Data data)
 
         container_start_app(&param);
     } else if (data.event_id & EVENT_APPLICATION_APP_STOP_REQUESTED) {
-        struct application_parameter param;
         int ret;
 
         event_name = "EVENT_APPLICATION_APP_STOP_REQUESTED";
-
-        // Initialize with default values
-        container_init_app_param(&param);
 
         // Get app from sysrepo
         ret = sysrepo_get_application_app(data.msg, &app);
@@ -416,7 +434,7 @@ static void _cb_event(TSN_Event_CB_Data data)
     log("Event '%s' (%s, %s)", event_name, data.entry_id, data.msg);
 
 cleanup:
-
+    container_free_app_param(&param);
     application_app_put(app);
     return;
 }
