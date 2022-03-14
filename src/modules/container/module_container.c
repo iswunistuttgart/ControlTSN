@@ -132,6 +132,23 @@ static void container_fill_app_param(struct application_parameter *parameter,
     }
 }
 
+static void container_find_app_node(struct application_parameter *parameter,
+                                    TSN_App *app, TSN_Devices *devices)
+{
+    int i;
+
+    for (i = 0; i < devices->count_enddevices; ++i) {
+        TSN_Enddevice *device = &devices->enddevices[i];
+
+        if (device->has_app) {
+            if (!strcmp(app->id, device->app_ref)) {
+                parameter->node_selector = device->mac;
+                break;
+            }
+        }
+    }
+}
+
 static void container_free_app_param(struct application_parameter *parameter)
 {
     if (!parameter)
@@ -308,7 +325,7 @@ static void container_start_app(const struct application_parameter *parameter)
     if (parameter->node_selector)
         len = snprintf(pod + len, sizeof(pod) - len - 1,
                        "  nodeSelector:\n"
-                       "    tsnnode: %s\n",
+                       "    mac: %s\n",
                        parameter->node_selector);
 
     // Make HTTP Request to the Kubernetes cluster
@@ -390,6 +407,7 @@ static void _cb_event(TSN_Event_CB_Data data)
 {
     struct application_parameter param;
     const char *event_name = NULL;
+    TSN_Devices *devices = NULL;
     TSN_App *app = NULL;
 
     // Initialize with default values
@@ -414,6 +432,17 @@ static void _cb_event(TSN_Event_CB_Data data)
         // Enrich application parameters from sysrepo data
         container_fill_app_param(&param, app);
 
+        // Get enddevices
+        devices = malloc(sizeof(TSN_Devices));
+        if (!devices)
+            goto cleanup;
+
+        ret = topology_get_devices(&devices);
+        if (ret != EXIT_SUCCESS)
+            goto cleanup;
+
+        container_find_app_node(&param, app, devices);
+
         container_start_app(&param);
     } else if (data.event_id & EVENT_APPLICATION_APP_STOP_REQUESTED) {
         int ret;
@@ -436,6 +465,7 @@ static void _cb_event(TSN_Event_CB_Data data)
 cleanup:
     container_free_app_param(&param);
     application_app_put(app);
+    topology_put_devices(devices);
     return;
 }
 

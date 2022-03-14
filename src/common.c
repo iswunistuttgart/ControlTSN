@@ -270,6 +270,27 @@ topology_get_devices(TSN_Devices **devices)
     return ret;
 }
 
+void
+topology_put_devices(TSN_Devices *devices)
+{
+    int i;
+
+    if (!devices)
+        return;
+
+    for (i = 0; i < devices->count_enddevices; ++i) {
+        free(devices->enddevices[i].mac);
+        free(devices->enddevices[i].app_ref);
+    }
+
+    for (i = 0; i < devices->count_switches; ++i)
+        free(devices->switches[i].mac);
+
+    free(devices->enddevices);
+    free(devices->switches);
+    free(devices);
+}
+
 int
 topology_get_graph(TSN_Graph **graph)
 {
