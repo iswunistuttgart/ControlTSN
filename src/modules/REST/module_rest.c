@@ -720,24 +720,16 @@ _api_application_app_delete(const struct _u_request *request, struct _u_response
 static int
 _api_application_app_start(const struct _u_request *request, struct _u_response *response, void *user_data)
 {
-    const char *_app_id = u_map_get(request->map_url, "id");
-    char *app_id;
+    const char *app_id = u_map_get(request->map_url, "id");
     int ret;
-
-    if (!_app_id)
-        return U_CALLBACK_ERROR;
-
-    app_id = strdup(_app_id);
 
     if (!app_id)
         return U_CALLBACK_ERROR;
 
     // Notify container module to start the app
-    ret = sysrepo_send_notification(EVENT_APPLICATION_APP_START_REQUESTED, NULL, app_id);
-    if (ret == EXIT_FAILURE) {
-        free(app_id);
+    ret = sysrepo_send_notification(EVENT_APPLICATION_APP_START_REQUESTED, NULL, (char *)app_id);
+    if (ret == EXIT_FAILURE)
         return U_CALLBACK_ERROR;
-    }
 
     return U_CALLBACK_COMPLETE;
 }
@@ -745,24 +737,16 @@ _api_application_app_start(const struct _u_request *request, struct _u_response 
 static int
 _api_application_app_stop(const struct _u_request *request, struct _u_response *response, void *user_data)
 {
-    const char *_app_id = u_map_get(request->map_url, "id");
-    char *app_id;
+    const char *app_id = u_map_get(request->map_url, "id");
     int ret;
-
-    if (!_app_id)
-        return U_CALLBACK_ERROR;
-
-    app_id = strdup(_app_id);
 
     if (!app_id)
         return U_CALLBACK_ERROR;
 
     // Notify container module to stop the app
-    ret = sysrepo_send_notification(EVENT_APPLICATION_APP_STOP_REQUESTED, NULL, app_id);
-    if (ret == EXIT_FAILURE) {
-        free(app_id);
+    ret = sysrepo_send_notification(EVENT_APPLICATION_APP_STOP_REQUESTED, NULL, (char *)app_id);
+    if (ret == EXIT_FAILURE)
         return U_CALLBACK_ERROR;
-    }
 
     return U_CALLBACK_COMPLETE;
 }
