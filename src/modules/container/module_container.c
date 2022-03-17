@@ -526,6 +526,9 @@ int main(void)
         log("Kubernetes URL: '%s'", kubernetes_url);
     }
 
+    // Start kubectl proxy for REST communication
+    system("kubectl proxy &");
+
     log("Container module successfully started and running");
 
     // Keep running
