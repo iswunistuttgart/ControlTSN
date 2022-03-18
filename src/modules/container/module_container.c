@@ -484,10 +484,6 @@ int main(void)
     signal(SIGTERM, signal_handler);
 
     // Init this module
-    this_module = malloc(sizeof(TSN_Module));
-    if (!this_module)
-        return EXIT_FAILURE;
-
     rc = module_init("Container", &this_module,
                      (EVENT_APPLICATION_LIST_OF_IMAGES_REQUESTED |
                       EVENT_APPLICATION_LIST_OF_APPS_REQUESTED |
@@ -539,6 +535,5 @@ int main(void)
 
 cleanup:
     module_shutdown();
-    free(this_module);
     return rc;
 }
