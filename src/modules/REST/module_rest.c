@@ -654,17 +654,30 @@ static int
 _api_application_images_get(const struct _u_request *request, struct _u_response *response, void *user_data)
 {
     TSN_Images *images = malloc(sizeof(TSN_Images));
-    rc = application_get_images(&images);
-    if (rc == EXIT_FAILURE) {
+    json_t *json_body = NULL;
+    int ret;
+
+    if (!images)
         return U_CALLBACK_ERROR;
+    memset(images, '\0', sizeof(*images));
+
+    ret = application_get_images(&images);
+    if (ret == EXIT_FAILURE) {
+        ret = U_CALLBACK_ERROR;
+        goto cleanup;
     }
 
-    json_t *json_body = serialize_images(images);
+    json_body = serialize_images(images);
     ulfius_set_json_body_response(response, 200, json_body);
 
-    json_decref(json_body);
+    ret = U_CALLBACK_COMPLETE;
 
-    return U_CALLBACK_COMPLETE;
+cleanup:
+    if (json_body)
+        json_decref(json_body);
+    application_put_images(images);
+
+    return ret;
 }
 
 static int

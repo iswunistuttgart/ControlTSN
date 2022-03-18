@@ -323,6 +323,23 @@ application_get_images(TSN_Images **images)
     return ret;
 }
 
+void application_put_images(TSN_Images *images)
+{
+    int i;
+
+    if (!images)
+        return;
+
+    for (i = 0; i < images->count_images; ++i) {
+        free(images->images[i].id);
+        free(images->images[i].name);
+        free(images->images[i].description);
+        free(images->images[i].version);
+    }
+    free(images->images);
+    free(images);
+}
+
 void application_app_put(TSN_App *app)
 {
     int i;

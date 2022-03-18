@@ -208,9 +208,14 @@ void application_app_put(TSN_App *application);
 int application_get_apps(TSN_Apps **apps);
 /**
  * @brief Get the stored images.
- * @param apps The TSN_Images struct to write on
+ * @param images The TSN_Images struct to write on
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
 int application_get_images(TSN_Images **images);
+/**
+ * @brief Put the stored images.
+ * @param images The TSN_Images struct to free
+ */
+void application_put_images(TSN_Images *images);
 
 #endif // __COMMON_H__

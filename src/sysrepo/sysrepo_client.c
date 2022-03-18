@@ -4125,6 +4125,7 @@ _read_images(char *xpath, TSN_Images **images)
             goto cleanup;
         }
         (*images)->images[i] = *im;
+        free(im);
     }
 
 cleanup:
