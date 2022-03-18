@@ -637,17 +637,30 @@ static int
 _api_application_apps_get(const struct _u_request *request, struct _u_response *response, void *user_data)
 {
     TSN_Apps *apps = malloc(sizeof(TSN_Apps));
-    rc = application_get_apps(&apps);
-    if (rc == EXIT_FAILURE) {
+    json_t *json_body = NULL;
+    int ret;
+
+    if (!apps)
         return U_CALLBACK_ERROR;
+    memset(apps, '\0', sizeof(*apps));
+
+    ret = application_get_apps(&apps);
+    if (ret == EXIT_FAILURE) {
+        ret = U_CALLBACK_ERROR;
+        goto cleanup;
     }
 
-    json_t *json_body = serialize_apps(apps);
+    json_body = serialize_apps(apps);
     ulfius_set_json_body_response(response, 200, json_body);
 
-    json_decref(json_body);
+    ret = U_CALLBACK_COMPLETE;
 
-    return U_CALLBACK_COMPLETE;
+cleanup:
+    if (json_body)
+        json_decref(json_body);
+    application_put_apps(apps);
+
+    return ret;
 }
 
 static int

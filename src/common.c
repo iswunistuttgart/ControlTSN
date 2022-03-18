@@ -316,6 +316,19 @@ application_get_apps(TSN_Apps **apps)
     return ret;
 }
 
+void application_put_apps(TSN_Apps *apps)
+{
+    int i;
+
+    if (!apps)
+        return;
+
+    for (i = 0; i < apps->count_apps; ++i)
+        application_app_put(&apps->apps[i]);
+
+    free(apps);
+}
+
 int
 application_get_images(TSN_Images **images)
 {

@@ -197,7 +197,6 @@ int application_get(TSN_Application **application);
 /**
  * @brief Put the application information.
  * @param application The TSN_App struct to free
- * @return none
  */
 void application_app_put(TSN_App *application);
 /**
@@ -206,6 +205,11 @@ void application_app_put(TSN_App *application);
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
 int application_get_apps(TSN_Apps **apps);
+/**
+ * @brief Put the stored apps.
+ * @param apps The TSN_Apps struct to free
+ */
+void application_put_apps(TSN_Apps *apps);
 /**
  * @brief Get the stored images.
  * @param images The TSN_Images struct to write on
