@@ -2777,6 +2777,7 @@ _read_module_data(char *xpath, TSN_Module_Data **module_data)
             goto cleanup;
         }
         (*module_data)->entries[i] = *e;
+        free(e);
     }
 
 cleanup:
@@ -2894,6 +2895,7 @@ _read_module(char *xpath, TSN_Module **mod)
         goto cleanup;
     }
     (*mod)->data = *data;
+    free(data);
 
     // ONLY READ PID OF REGISTERED MODULES
     if ((*mod)->registered) {
@@ -3092,6 +3094,7 @@ cleanup:
             goto cleanup;
         }
         (*modules)->modules[i] = *m;
+        free(m);
     }
 
 cleanup:
@@ -3208,6 +3211,7 @@ _read_devices(char *xpath, TSN_Devices **devices)
             goto cleanup;
         }
         (*devices)->enddevices[i] = *e;
+        free(e);
     }
 
     // Read all switches
@@ -3223,6 +3227,7 @@ _read_devices(char *xpath, TSN_Devices **devices)
             goto cleanup;
         }
         (*devices)->switches[i] = *s;
+        free(s);
     }
 
 cleanup:
@@ -3324,6 +3329,7 @@ _read_graph(char *xpath, TSN_Graph **graph)
             goto cleanup;
         }
         (*graph)->connections[i] = *c;
+        free(c);
     }
 
 cleanup:
@@ -3349,6 +3355,7 @@ _read_topology(char *xpath, TSN_Topology **topology)
         goto cleanup;
     }
     (*topology)->devices = *devices;
+    free(devices);
 
     // Graph
     _create_xpath(xpath, "/graph", &xpath_graph);
@@ -3359,6 +3366,7 @@ _read_topology(char *xpath, TSN_Topology **topology)
         goto cleanup;
     }
     (*topology)->graph = *graph;
+    free(graph);
 
 cleanup:
     free(xpath_devices);
@@ -3997,6 +4005,7 @@ _read_app(char *xpath, TSN_App **app)
             goto cleanup;
         }
         (*app)->parameters[i] = *p;
+        free(p);
     }
 
 cleanup:
@@ -4096,6 +4105,7 @@ _read_apps(char *xpath, TSN_Apps **apps)
             goto cleanup;
         }
         (*apps)->apps[i] = *a;
+        free(a);
     }
 
 cleanup:
@@ -4153,6 +4163,7 @@ _read_application(char *xpath, TSN_Application **application)
         goto cleanup;
     }
     (*application)->apps = *apps;
+    free(apps);
 
     // Images
     _create_xpath(xpath, "/images", &xpath_images);
@@ -4163,6 +4174,7 @@ _read_application(char *xpath, TSN_Application **application)
         goto cleanup;
     }
     (*application)->images = *images;
+    free(images);
 
 cleanup:
     sr_free_val(val_apps);
