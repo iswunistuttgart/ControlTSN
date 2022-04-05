@@ -333,12 +333,26 @@ static void container_start_app(const struct application_parameter *parameter)
     ulfius_init_response(&response);
 
     snprintf(url, sizeof(url) - 1, "%s/%s", kubernetes_url, API_KUBERNETES_PODS);
+    // Requires ulfius Version 267
+    /*
     ulfius_set_request_properties(&request,
                                   U_OPT_HTTP_VERB, "POST",
                                   U_OPT_HTTP_URL, url,
                                   U_OPT_STRING_BODY, pod,
                                   U_OPT_HEADER_PARAMETER, "Content-Type", "application/yaml",
                                   U_OPT_NONE);
+                                    */
+    
+    // Alternative (Stefan)
+    struct _u_map req_headers;
+    u_map_init(&req_headers);
+    u_map_put(&req_headers, "Content-Type", "application/yaml");
+    request.http_verb = strdup("POST");
+    request.http_url = strdup(url);
+    u_map_copy_into(request.map_header, &req_headers);
+    request.binary_body = strdup(pod);
+    request.binary_body_length = strlen(pod);
+
 
     ret = ulfius_send_http_request(&request, &response);
     if (ret != U_OK) {
@@ -381,10 +395,17 @@ static void container_stop_app(const struct application_parameter *parameter)
     snprintf(url, sizeof(url) - 1, "%s/%s/%s", kubernetes_url,
              API_KUBERNETES_PODS, parameter->name);
 
+    /*
     ulfius_set_request_properties(&request,
                                   U_OPT_HTTP_VERB, "DELETE",
                                   U_OPT_HTTP_URL, url,
                                   U_OPT_NONE);
+    */
+    // Alternative (Stefan)
+    
+    request.http_verb = strdup("DELETE");
+    request.http_url = strdup(url);
+
 
     ret = ulfius_send_http_request(&request, &response);
     if (ret != U_OK) {
