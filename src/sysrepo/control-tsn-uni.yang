@@ -167,10 +167,32 @@ module control-tsn-uni {
             type uint8;
             default 0;
         }
+        
+        /*
         leaf app-ref {
             type leafref {
                 path "/control-tsn-uni:tsn-uni/application/apps/app/id";
                 require-instance "false";
+            }
+        }
+        */
+        container apps {
+            /*
+            leaf-list app-ref {
+                type leafref {
+                    path "/control-tsn-uni:tsn-uni/application/apps/app/id";
+                    require-instance "false";
+                }
+            }
+            */
+            list app {
+                key "app-ref";
+                leaf app-ref {
+                    type leafref {
+                        path "/control-tsn-uni:tsn-uni/application/apps/app/id";
+                        require-instance "false";
+                    }
+                }
             }
         }
     }

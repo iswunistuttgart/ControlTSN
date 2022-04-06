@@ -3107,16 +3107,39 @@ cleanup:
 // -------------------------------
 // Topology
 // -------------------------------
+static int 
+_read_enddevice_app_ref(char *xpath, TSN_Enddevice_AppRef **app_ref)
+{
+    int rc = SR_ERR_OK;
+    sr_val_t *val_app_ref = NULL;
+    char *xpath_app_ref = NULL;
+
+    _create_xpath(xpath, "/app-ref", &xpath_app_ref);
+    rc = sr_get_item(session, xpath_app_ref, 0, &val_app_ref);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*app_ref)->app_ref = strdup(val_app_ref->data.string_val);
+
+cleanup:
+    sr_free_val(val_app_ref);
+    free(xpath_app_ref);
+
+    return rc;
+}
+
 static int
 _read_enddevice(char *xpath, TSN_Enddevice **enddevice)
 {
     int rc = SR_ERR_OK;
     sr_val_t *val_mac = NULL;
+    sr_val_t *val_apps = NULL;
     sr_val_t *val_has_app = NULL;
-    sr_val_t *val_app_ref = NULL;
+    //sr_val_t *val_app_ref = NULL;
     char *xpath_mac = NULL;
+    char *xpath_apps = NULL;
     char *xpath_has_app = NULL;
-    char *xpath_app_ref = NULL;
+    //char *xpath_app_ref = NULL;
 
     // MAC
     _create_xpath(xpath, "/mac", &xpath_mac);
@@ -3126,6 +3149,7 @@ _read_enddevice(char *xpath, TSN_Enddevice **enddevice)
     }
     (*enddevice)->mac = strdup(val_mac->data.string_val);
 
+    
     // Has App
     _create_xpath(xpath, "/has-app", &xpath_has_app);
     rc = sr_get_item(session, xpath_has_app, 0, &val_has_app);
@@ -3134,6 +3158,7 @@ _read_enddevice(char *xpath, TSN_Enddevice **enddevice)
     }
     (*enddevice)->has_app = val_has_app->data.uint8_val;
 
+    /*
     // App Ref
     if ((*enddevice)->has_app) {
         _create_xpath(xpath, "/app-ref", &xpath_app_ref);
@@ -3143,14 +3168,35 @@ _read_enddevice(char *xpath, TSN_Enddevice **enddevice)
         }
         (*enddevice)->app_ref = strdup(val_app_ref->data.string_val);
     }
+    */
+
+    // Apps
+    if ((*enddevice)->has_app) {
+        _create_xpath(xpath, "/apps/*", &xpath_apps);
+        size_t count_apps = 0;
+        rc = sr_get_items(session, xpath_apps, 0, 0, &val_apps, &count_apps);
+        (*enddevice)->count_apps = count_apps;
+        (*enddevice)->apps = (TSN_Enddevice_AppRef *) malloc(sizeof(TSN_Enddevice_AppRef) * count_apps);
+        for (int i=0; i<count_apps; ++i) {
+            TSN_Enddevice_AppRef *a = malloc(sizeof(TSN_Enddevice_AppRef));
+            rc = _read_enddevice_app_ref((&val_apps[i])->xpath, &a);
+            if (rc != SR_ERR_OK) {
+                goto cleanup;
+            }
+            (*enddevice)->apps[i] = *a;
+            free(a);
+        }
+    }
 
 cleanup:
     sr_free_val(val_mac);
     sr_free_val(val_has_app);
-    sr_free_val(val_app_ref);
+    //sr_free_val(val_app_ref);
+    sr_free_val(val_apps);
     free(xpath_mac);
     free(xpath_has_app);
-    free(xpath_app_ref);
+    //free(xpath_app_ref);
+    free(xpath_apps);
 
     return rc;
 }
@@ -3376,12 +3422,30 @@ cleanup:
 }
 
 static int
+_write_enddevice_app_ref(char *xpath, TSN_Enddevice_AppRef *app_ref)
+{
+    int rc = SR_ERR_OK;
+    char *xpath_app_ref = NULL;
+
+    _create_xpath(xpath, "/app-ref", &xpath_app_ref);
+    rc = sr_set_item_str(session, xpath_app_ref, app_ref->app_ref, NULL, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+cleanup:
+    free(xpath_app_ref);
+    return rc;
+}
+
+static int
 _write_enddevice(char *xpath, TSN_Enddevice *enddevice)
 {
     int rc = SR_ERR_OK;
     char *xpath_mac = NULL;
     char *xpath_has_app = NULL;
-    char *xpath_app_ref = NULL;
+    //char *xpath_app_ref = NULL;
+    char *xpath_apps = NULL;
 
     // Mac
     _create_xpath(xpath, "/mac", &xpath_mac);
@@ -3400,12 +3464,29 @@ _write_enddevice(char *xpath, TSN_Enddevice *enddevice)
         goto cleanup;
     }
 
+    /*
     // App Ref
     if (enddevice->has_app) {
         _create_xpath(xpath, "/app-ref", &xpath_app_ref);
         rc = sr_set_item_str(session, xpath_app_ref, enddevice->app_ref, NULL, 0);
         if (rc != SR_ERR_OK) {
             goto cleanup;
+        }  
+    }
+    */
+
+    // Apps
+    if (enddevice->has_app) {
+        _create_xpath(xpath, "/apps/app[app-ref='%s']", &xpath_apps);
+        for (int i=0; i<enddevice->count_apps; ++i) {
+            TSN_Enddevice_AppRef *ar = &(enddevice->apps[i]);
+            char *xpath_entry = NULL;
+            _create_xpath_key(xpath_apps, ar->app_ref, &xpath_entry);
+            rc = _write_enddevice_app_ref(xpath_entry, ar);
+            free(xpath_entry);
+            if (rc != SR_ERR_OK) {
+                goto cleanup;
+            }
         }
     }
 
@@ -3418,7 +3499,8 @@ _write_enddevice(char *xpath, TSN_Enddevice *enddevice)
 cleanup:
     free(xpath_mac);
     free(xpath_has_app);
-    free(xpath_app_ref);
+    //free(xpath_app_ref);
+    free(xpath_apps);
 
     return rc;
 }

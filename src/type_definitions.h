@@ -214,10 +214,16 @@ typedef struct TSN_Streams {
 // ---------------------------------------
 // Topology definitions
 // ---------------------------------------
+typedef struct TSN_Enddevice_AppRef {
+    char *app_ref;
+} TSN_Enddevice_AppRef;
+
 typedef struct TSN_Enddevice {
     char *mac;
     uint8_t has_app;
-    char *app_ref;
+    //char *app_ref;
+    TSN_Enddevice_AppRef *apps;
+    uint16_t count_apps;
 } TSN_Enddevice;
 
 typedef struct TSN_Switch {

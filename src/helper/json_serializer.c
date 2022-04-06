@@ -1253,6 +1253,17 @@ deserialize_streams(json_t *obj)
 // Topology
 // ------------------------------------
 json_t *
+serialize_enddevice_app_ref(TSN_Enddevice_AppRef *app_ref)
+{
+    json_t *root = NULL;
+    root = json_object();
+
+    json_object_set_new(root, "app_ref", json_string(app_ref->app_ref));
+
+    return root;
+}
+
+json_t *
 serialize_enddevice(TSN_Enddevice *enddevice)
 {
     json_t *root = NULL;
@@ -1261,7 +1272,15 @@ serialize_enddevice(TSN_Enddevice *enddevice)
     json_object_set_new(root, "mac", json_string(enddevice->mac));
     json_object_set_new(root, "has_app", json_integer(enddevice->has_app));
     if (enddevice->has_app) {
-        json_object_set_new(root, "app_ref", json_string(enddevice->app_ref));
+        //json_object_set_new(root, "app_ref", json_string(enddevice->app_ref));
+        json_t *array_apps = NULL;
+        array_apps = json_array();
+        for (int i=0; i<enddevice->count_apps; ++i) {
+            json_t *ar = NULL;
+            ar = serialize_enddevice_app_ref(&enddevice->apps[i]);
+            json_array_append_new(array_apps, ar);
+        }
+        json_object_set_new(root, "apps", array_apps);
     }
 
     return root;
@@ -1366,6 +1385,18 @@ serialize_topology(TSN_Topology *topology)
     return root;
 }
 
+TSN_Enddevice_AppRef *
+deserialize_enddevice_app_ref(json_t *obj)
+{
+    TSN_Enddevice_AppRef *app_ref = malloc(sizeof(TSN_Enddevice_AppRef));
+    json_t *ref;
+
+    ref = json_object_get(obj, "app_ref");
+    app_ref->app_ref = strdup(json_string_value(ref));
+
+    return app_ref;
+}
+
 TSN_Enddevice *
 deserialize_enddevice(json_t *obj)
 {
@@ -1381,8 +1412,16 @@ deserialize_enddevice(json_t *obj)
     enddevice->has_app = json_integer_value(has_app);
 
     if (enddevice->has_app) {
-        app_ref = json_object_get(obj, "app_ref");
-        enddevice->app_ref = strdup(json_string_value(app_ref));
+        //app_ref = json_object_get(obj, "app_ref");
+        //enddevice->app_ref = strdup(json_string_value(app_ref));
+        json_t *apps =json_object_get(obj, "apps");
+        enddevice->count_apps = json_array_size(apps);
+        enddevice->apps = (TSN_Enddevice_AppRef *) malloc(sizeof(TSN_Enddevice_AppRef) * enddevice->count_apps);
+        for (int i=0; i<enddevice->count_apps; ++i) {
+            json_t *entry = json_array_get(apps, i);
+            TSN_Enddevice_AppRef *x = deserialize_enddevice_app_ref(entry);
+            enddevice->apps[i] = *x;
+        }
     }
 
     return enddevice;

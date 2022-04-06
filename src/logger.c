@@ -7,7 +7,11 @@ static void
 _print_enddevice(TSN_Enddevice enddevice)
 {
     printf("MAC:     %s\n", enddevice.mac);
-    printf("App-Ref: %s\n", enddevice.app_ref);
+    //printf("App-Ref: %s\n", enddevice.app_ref);
+    printf("Apps:\n");
+    for (int i=0; i<enddevice.count_apps; ++i) {
+        printf("   %s\n", enddevice.apps[i].app_ref);
+    }
 }
 
 static void

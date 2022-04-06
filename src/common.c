@@ -280,7 +280,11 @@ topology_put_devices(TSN_Devices *devices)
 
     for (i = 0; i < devices->count_enddevices; ++i) {
         free(devices->enddevices[i].mac);
-        free(devices->enddevices[i].app_ref);
+        //free(devices->enddevices[i].app_ref);
+        int j;
+        for (j = 0; j < devices->enddevices[i].count_apps; ++j) {
+            free(devices->enddevices[i].apps[j].app_ref);
+        }
     }
 
     for (i = 0; i < devices->count_switches; ++i)

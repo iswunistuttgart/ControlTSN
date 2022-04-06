@@ -15,6 +15,7 @@ Development repo for the framework of the project ControlTSN.<br>
     2. [Building](#building)
     3. [Starting](#starting)
     4. [Interact with the framework](#interact-with-the-framework)
+4. [ToDos](#todos)
 
 <br>
 
@@ -60,7 +61,11 @@ The following table gives an overview of the currently implemented (or subscriba
 | EVENT_TOPOLOGY_DISCOVERED | 0x00020000 | 131072 | The toplogy was updated in the datastore  |
 | EVENT_TOPOLOGY_... | ... | ... | ... |
 | **Application specific** | | | |
-| EVENT_APPLICATION_... | 0x00100000 | ... | ... |
+| EVENT_APPLICATION_LIST_OF_IMAGES_REQUESTED | 0x01000000 | 16777216 | Request the discovery of images in the container registry |
+| EVENT_APPLICATION_LIST_OF_APPS_REQUESTED | 0x02000000 | 33554432 | Request the discovery of apps from kubernetes |
+| EVENT_APPLICATION_APP_START_REQUESTED | 0x04000000 | 67108864 | The start of an app was requested |
+| EVENT_APPLICATION_APP_STOP_REQUESTED | 0x08000000 | 134217728 | The stop of an app was requested |
+| EVENT_APPLICATION_... | 0x10000000 | ... | ... |
 
 
 ### **Module structure**
@@ -197,3 +202,8 @@ To start a module individually call `./<Module>` (e.g. `./RESTModule`).
 
 ### **Interact with the framework**
 The `RESTModule` starts a webserver which can be used to interact with the framework. Call [http://localhost:8080](http://localhost:8080) in a web browser to see a list of provided API Endpoints. From there you can interact by HTTP requests like `GET` and `POST`.
+
+## Todos
+The following list only serves to store all open items and does not include any prioritization.
+- The [sysrepo plugin](src/sysrepo/plugin/controltsn_plugin.c) must be adapted to the new events and data models.
+- The [common interface](src/common.c) implements many functions that simply call another function of the [sysrepo client](src/sysrepo/sysrepo_client.c) . There could be removed for the sake of clarity.

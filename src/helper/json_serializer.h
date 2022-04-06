@@ -73,6 +73,7 @@ TSN_Streams *deserialize_streams(json_t *obj);
 // ------------------------------------
 // Topology
 // ------------------------------------
+json_t *serialize_enddevice_app_ref(TSN_Enddevice_AppRef *app_ref);
 json_t *serialize_enddevice(TSN_Enddevice *enddevice);
 json_t *serialize_switch(TSN_Switch *sw);
 json_t *serialize_devices(TSN_Devices *devices);
@@ -80,6 +81,7 @@ json_t *serialize_connection(TSN_Connection *connection);
 json_t *serialize_graph(TSN_Graph *graph);
 json_t *serialize_topology(TSN_Topology *topology);
 
+TSN_Enddevice_AppRef *deserialize_enddevice_app_ref(json_t *obj);
 TSN_Enddevice *deserialize_enddevice(json_t *obj);
 TSN_Switch *deserialize_switch(json_t *obj);
 TSN_Devices *deserialize_devices(json_t *obj);
