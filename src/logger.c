@@ -78,3 +78,32 @@ print_topology(TSN_Topology topology)
         _print_connection(topology.graph.connections[i]);
     }
 }
+
+void
+print_stream_request(TSN_Request request)
+{
+    printf("----- Stream Request -----\n");
+    printf("Talker:\n");
+    for (int i=0; i<request.talker.count_end_station_interfaces; ++i) {
+        printf("   End station interface #%02d: %s '%s'\n", i+1, request.talker.end_station_interfaces[i].mac_address, request.talker.end_station_interfaces[i].interface_name);
+    }
+    printf("   Traffic specification:\n");
+    printf("      Interval: %d / %d\n", request.talker.traffic_specification.interval.numerator, request.talker.traffic_specification.interval.denominator);
+    printf("      Max frames per interval: %d\n", request.talker.traffic_specification.max_frames_per_interval);
+    printf("      Max frame size: %d\n", request.talker.traffic_specification.max_frame_size);
+    printf("      Time aware:\n");
+    printf("         Earliest transmit offset: %d\n", request.talker.traffic_specification.time_aware.earliest_transmit_offset);
+    printf("         Latest transmit offset:   %d\n", request.talker.traffic_specification.time_aware.latest_transmit_offset);
+    printf("   User to network requirements:\n");
+    printf("      Max latency: %d\n", request.talker.user_to_network_requirements.max_latency);
+
+    printf("Listeners (%d):\n", request.count_listeners);
+    for (int i=0; i<request.count_listeners; ++i) {
+        printf("   Listener #%d", request.listener_list[i].index);
+        for (int j=0; j<request.listener_list[i].count_end_station_interfaces; ++j) {
+            printf("      End station interface #%02d: %s '%s'\n", i+1, request.listener_list[i].end_station_interfaces[j].mac_address, request.listener_list[i].end_station_interfaces[j].interface_name);
+        }
+        printf("      User to network requirements:\n");
+        printf("         Max latency: %d\n", request.listener_list[i].user_to_network_requirements.max_latency);
+    }
+}

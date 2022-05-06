@@ -343,10 +343,10 @@ _api_modules_register(const struct _u_request *request, struct _u_response *resp
     */
 
     json_t *json_post_body = ulfius_get_json_body_request(request, NULL);
-    int adjusted_mask = -1;
-    if (json_post_body) {
-        adjusted_mask = json_number_value(json_object_get(json_post_body, "mask"));
-    }
+    //int adjusted_mask = -1;
+    //if (json_post_body) {
+    //    adjusted_mask = json_number_value(json_object_get(json_post_body, "mask"));
+    //}
 
     rc = module_register(module_id);
     json_decref(json_post_body);
@@ -489,11 +489,32 @@ _api_streams_request(const struct _u_request *request, struct _u_response *respo
         return U_CALLBACK_ERROR;
     }
 
-    TSN_Request *req = deserialize_stream_request(json_object_get(json_post_body, "request"));
+    //TSN_Request *req = deserialize_stream_request(json_object_get(json_post_body, "request"));
+
+
+
+    // User input contains the talker and listener(s), the traffic specification and the qos for the talker and the listeners
+    TSN_Enddevice *talker_device = deserialize_enddevice(json_object_get(json_post_body, "talker"));
+    json_t *listeners = json_object_get(json_post_body, "listener_list");
+    uint16_t count_listeners = json_array_size(listeners);
+    TSN_Enddevice *listener_devices = (TSN_Enddevice *) malloc(sizeof(TSN_Enddevice) * count_listeners);
+    for (int i=0; i<count_listeners; ++i) {
+        json_t *e = json_array_get(listeners, i);
+        listener_devices[i] = *(deserialize_enddevice(e));
+    }
+    IEEE_TrafficSpecification *traffic_spec = deserialize_traffic_specification(json_object_get(json_post_body, "traffic_specification"));
+    IEEE_UserToNetworkRequirements *qos_talker = deserialize_user_to_network_requirements(json_object_get(json_post_body, "qos_talker"));
+    IEEE_UserToNetworkRequirements *qos_listeners = deserialize_user_to_network_requirements(json_object_get(json_post_body, "qos_listeners"));
+
+    TSN_Request req = create_stream_request(talker_device, count_listeners, listener_devices, traffic_spec, qos_talker, qos_listeners);
+    print_stream_request(req);
+
+    return U_CALLBACK_COMPLETE;
+    
 
     // Write stream request to sysrepo
     char *generated_stream_id = NULL;
-    rc = stream_request(req, &generated_stream_id);
+    rc = stream_request(&req, &generated_stream_id);
 
     json_decref(json_post_body);
     if (rc == EXIT_SUCCESS) {

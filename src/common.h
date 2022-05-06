@@ -136,6 +136,13 @@ TSN_Module_Data_Entry *module_get_data_entry(TSN_Module_Data *module_data, const
 int streams_get_all(TSN_Streams **streams);
 
 /**
+ * @brief Converts the user (or app) requirements to the request model that the CUC expects.
+ * NOTICE: I am not sure if this function should be part of the CUC (i.e. the CUC would only get the user requirements as input)
+ * or if a middleware like this engineering framework can/should handle it.
+ */
+TSN_Request create_stream_request(TSN_Enddevice *talker_device, uint16_t count_listeners, TSN_Enddevice *listener_devices, IEEE_TrafficSpecification *traffic_spec, IEEE_UserToNetworkRequirements *qos_talker, IEEE_UserToNetworkRequirements *qos_listeners);
+
+/**
  * @brief Request a new stream.
  * @param request The TSN_Request struct containing the necessary information for the computation
  * @param generated_stream_id The generated stream id will be written to this string

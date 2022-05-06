@@ -24,4 +24,6 @@ void print_module(TSN_Module module);
  */
 void print_topology(TSN_Topology topology);
 
+void print_stream_request(TSN_Request request);
+
 #endif // __LOGGER_H__

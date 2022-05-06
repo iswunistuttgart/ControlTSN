@@ -232,6 +232,61 @@ streams_get_all(TSN_Streams **streams)
     return ret;
 }
 
+TSN_Request 
+create_stream_request(TSN_Enddevice *talker_device, 
+                      uint16_t count_listeners, 
+                      TSN_Enddevice *listener_devices, 
+                      IEEE_TrafficSpecification *traffic_spec, 
+                      IEEE_UserToNetworkRequirements *qos_talker, 
+                      IEEE_UserToNetworkRequirements *qos_listeners)
+{
+    TSN_Request request;
+    TSN_Talker talker;
+    TSN_Listener *listener_list;
+    
+    // Talker
+    // End station interfaces
+    IEEE_InterfaceId talker_if;
+    talker_if.interface_name = "";
+    talker_if.mac_address = strdup(talker_device->mac);
+    talker.count_end_station_interfaces = 1;
+    talker.end_station_interfaces = malloc(sizeof(IEEE_InterfaceId) * talker.count_end_station_interfaces);
+    talker.end_station_interfaces[0] = talker_if;
+
+    // Traffic specification
+    talker.traffic_specification = *traffic_spec;
+
+    // User to network requirements
+    talker.user_to_network_requirements = *qos_talker;
+
+
+    // Listeners
+    listener_list = malloc(sizeof(TSN_Listener) * count_listeners);
+    for (int i=0; i<count_listeners; ++i) {
+        TSN_Listener listener;
+
+        // Index
+        listener.index = i;
+
+        // End station interfaces
+        IEEE_InterfaceId listener_if;
+        listener_if.interface_name = "";
+        listener_if.mac_address = strdup(listener_devices[i].mac);
+        listener.count_end_station_interfaces = 1;
+        listener.end_station_interfaces = malloc(sizeof(IEEE_InterfaceId) * listener.count_end_station_interfaces);
+        listener.end_station_interfaces[0] = listener_if;
+
+        // User to network requirements
+        listener.user_to_network_requirements = qos_listeners[i];
+    }
+    
+    request.talker = talker;
+    request.count_listeners = count_listeners;
+    request.listener_list = listener_list;
+
+    return request;
+}
+
 int
 stream_request(TSN_Request *request, char **generated_stream_id)
 {
