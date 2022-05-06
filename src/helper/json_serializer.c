@@ -1403,7 +1403,6 @@ deserialize_enddevice(json_t *obj)
     TSN_Enddevice *enddevice = malloc(sizeof(TSN_Enddevice));
     json_t *mac;
     json_t *has_app;
-    json_t *app_ref;
 
     mac = json_object_get(obj, "mac");
     enddevice->mac = strdup(json_string_value(mac));
@@ -1557,6 +1556,8 @@ serialize_app(TSN_App *app)
     json_object_set_new(root, "id", json_string(app->id));
     json_object_set_new(root, "name", json_string(app->name));
     json_object_set_new(root, "description", json_string(app->description));
+    json_object_set_new(root, "has_virtual_mac", json_integer(app->has_virtual_mac));
+    json_object_set_new(root, "virtual_mac", json_string(app->virtual_mac));
     json_object_set_new(root, "version", json_string(app->version));
     json_object_set_new(root, "has_image", json_integer(app->has_image));
     json_object_set_new(root, "image_ref", json_string(app->image_ref));
@@ -1771,7 +1772,10 @@ TSN_App *deserialize_app(const char *id, json_t *obj)
 {
     json_t *name = json_object_get(obj, "name");
     json_t *desc = json_object_get(obj, "description");
+    json_t *has_virtual_mac = json_object_get(obj, "has_virtual_mac");
+    json_t *virtual_mac = json_object_get(obj, "virtual_mac");
     json_t *version = json_object_get(obj, "version");
+    json_t *has_image = json_object_get(obj, "has_image");
     json_t *image = json_object_get(obj, "image");
     json_t *param = json_object_get(obj, "parameters");
     const char *key;
@@ -1803,16 +1807,26 @@ TSN_App *deserialize_app(const char *id, json_t *obj)
     if (!app->version)
         goto err3;
 
+    app->has_virtual_mac = json_integer_value(has_virtual_mac);
+    if (app->has_virtual_mac) {
+        app->virtual_mac = strdup(json_string_value(virtual_mac));
+        if (!app->virtual_mac) {
+            goto err3_2;
+        }
+    }
+
     // Description
     app->description = strdup(json_string_value(desc));
     if (!app->description)
         goto err4;
 
     // Image ref
-    app->has_image = 1;
-    app->image_ref = strdup(json_string_value(image));
-    if (!app->image_ref)
-        goto err5;
+    app->has_image = json_integer_value(has_image);
+    if (app->has_image) {
+        app->image_ref = strdup(json_string_value(image));
+        if (!app->image_ref)
+            goto err5;
+    }
 
     // Parameters
     app->count_parameters = 0;
@@ -1847,11 +1861,15 @@ TSN_App *deserialize_app(const char *id, json_t *obj)
 err7:
     free(app->parameters);
 err6:
+    free(app->has_image);
     free(app->image_ref);
 err5:
     free(app->description);
 err4:
     free(app->version);
+err3_2:
+    free(app->has_virtual_mac);
+    free(app->virtual_mac);
 err3:
     free(app->id);
 err2:

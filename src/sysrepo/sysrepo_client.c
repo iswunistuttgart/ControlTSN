@@ -4012,6 +4012,8 @@ _read_app(char *xpath, TSN_App **app)
     sr_val_t *val_id = NULL;
     sr_val_t *val_name = NULL;
     sr_val_t *val_desc = NULL;
+    sr_val_t *val_has_virtual_mac = NULL;
+    sr_val_t *val_virtual_mac = NULL;
     sr_val_t *val_version = NULL;
     sr_val_t *val_has_image = NULL;
     sr_val_t *val_image_ref = NULL;
@@ -4019,6 +4021,8 @@ _read_app(char *xpath, TSN_App **app)
     char *xpath_id = NULL;
     char *xpath_name = NULL;
     char *xpath_desc = NULL;
+    char *xpath_has_virtual_mac = NULL;
+    char *xpath_virtual_mac = NULL;
     char *xpath_version = NULL;
     char *xpath_has_image = NULL;
     char *xpath_image_ref = NULL;
@@ -4047,6 +4051,23 @@ _read_app(char *xpath, TSN_App **app)
         goto cleanup;
     }
     (*app)->description = strdup(val_desc->data.string_val);
+
+    // Virtual MAC
+    _create_xpath(xpath, "/has-virtual-mac", &xpath_has_virtual_mac);
+    rc = sr_get_item(session, xpath_has_virtual_mac, 0, &val_has_virtual_mac);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*app)->has_virtual_mac = val_has_virtual_mac->data.uint8_val;
+
+    if ((*app)->has_virtual_mac) {
+        _create_xpath(xpath, "/virtual-mac", &xpath_virtual_mac);
+        rc = sr_get_item(session, xpath_virtual_mac, 0, &val_virtual_mac);
+        if (rc != SR_ERR_OK) {
+            goto cleanup;
+        }
+        (*app)->virtual_mac = strdup(val_virtual_mac->data.string_val);
+    }
 
     // Version
     _create_xpath(xpath, "/version", &xpath_version);
@@ -4094,6 +4115,8 @@ cleanup:
     sr_free_val(val_id);
     sr_free_val(val_name);
     sr_free_val(val_desc);
+    sr_free_val(val_has_virtual_mac);
+    sr_free_val(val_virtual_mac);
     sr_free_val(val_version);
     sr_free_val(val_has_image);
     sr_free_val(val_image_ref);
@@ -4101,6 +4124,8 @@ cleanup:
     free(xpath_id);
     free(xpath_name);
     free(xpath_desc);
+    free(xpath_has_virtual_mac);
+    free(xpath_virtual_mac);
     free(xpath_version);
     free(xpath_has_image);
     free(xpath_image_ref);
