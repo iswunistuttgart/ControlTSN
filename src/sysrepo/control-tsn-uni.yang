@@ -160,7 +160,7 @@ module control-tsn-uni {
     grouping enddevice {
         leaf mac {
             type string {
-                pattern '[0-9a-fA-F]{2}(:[0-9a-fA-F]{2}){5}';
+                pattern '[0-9a-fA-F]{2}(-[0-9a-fA-F]{2}){5}';
             }
         }
         leaf has-app {
@@ -200,7 +200,7 @@ module control-tsn-uni {
     grouping switch {
         leaf mac {
             type string {
-                pattern '[0-9a-fA-F]{2}(:[0-9a-fA-F]{2}){5}';
+                pattern '[0-9a-fA-F]{2}(-[0-9a-fA-F]{2}){5}';
             }
         }
         leaf ports-count {
@@ -291,7 +291,7 @@ module control-tsn-uni {
         }
         leaf virtual-mac {
             type string {
-                pattern '[0-9a-fA-F]{2}(:[0-9a-fA-F]{2}){5}';
+                pattern '[0-9a-fA-F]{2}(-[0-9a-fA-F]{2}){5}';
             }
             description "The virtual MAC of this app or container in case multiple containers are running on one (physical) enddevice";
         }        

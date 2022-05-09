@@ -500,17 +500,21 @@ _api_streams_request(const struct _u_request *request, struct _u_response *respo
     TSN_Enddevice *listener_devices = (TSN_Enddevice *) malloc(sizeof(TSN_Enddevice) * count_listeners);
     for (int i=0; i<count_listeners; ++i) {
         json_t *e = json_array_get(listeners, i);
-        listener_devices[i] = *(deserialize_enddevice(e));
+        TSN_Enddevice *x = deserialize_enddevice(e);
+        listener_devices[i] = *x;
     }
     IEEE_TrafficSpecification *traffic_spec = deserialize_traffic_specification(json_object_get(json_post_body, "traffic_specification"));
     IEEE_UserToNetworkRequirements *qos_talker = deserialize_user_to_network_requirements(json_object_get(json_post_body, "qos_talker"));
-    IEEE_UserToNetworkRequirements *qos_listeners = deserialize_user_to_network_requirements(json_object_get(json_post_body, "qos_listeners"));
+    json_t *qos_listener_list = json_object_get(json_post_body, "qos_listeners");
+    IEEE_UserToNetworkRequirements *qos_listeners = (IEEE_UserToNetworkRequirements *) malloc(sizeof(IEEE_UserToNetworkRequirements) * count_listeners);
+    for (int i=0; i<count_listeners; ++i) {
+        json_t *e = json_array_get(qos_listener_list, i);
+        IEEE_UserToNetworkRequirements *x = deserialize_user_to_network_requirements(e);
+        qos_listeners[i] = *x;
+    }
 
     TSN_Request req = create_stream_request(talker_device, count_listeners, listener_devices, traffic_spec, qos_talker, qos_listeners);
-    print_stream_request(req);
 
-    return U_CALLBACK_COMPLETE;
-    
 
     // Write stream request to sysrepo
     char *generated_stream_id = NULL;
@@ -822,7 +826,7 @@ _api_testing_set_topology(const struct _u_request *request, struct _u_response *
 
     // 2 Enddevices
     e1 = malloc(sizeof(TSN_Enddevice));
-    e1->mac = strdup("00:00:00:00:00:01");
+    e1->mac = strdup("00-00-00-00-00-01");
     e1->has_app = 1;
     e1->count_apps = 1;
     e1->apps = (TSN_Enddevice_AppRef *) malloc(sizeof(TSN_Enddevice_AppRef) * e1->count_apps);
@@ -830,13 +834,13 @@ _api_testing_set_topology(const struct _u_request *request, struct _u_response *
 
     //e1->app_ref = NULL;
     e2 = malloc(sizeof(TSN_Enddevice));
-    e2->mac = strdup("00:00:00:00:00:02");
+    e2->mac = strdup("00-00-00-00-00-02");
     e2->has_app = 0;
     //e2->app_ref = NULL;
 
     // 1 Switch
     s1 = malloc(sizeof(TSN_Switch));
-    s1->mac = strdup("01:02:03:04:05:06");
+    s1->mac = strdup("01-02-03-04-05-06");
     srand(time(NULL));
     int test = rand() % 100;
     printf("Random: %d\n", test);

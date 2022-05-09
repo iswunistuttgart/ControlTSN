@@ -26,19 +26,19 @@ _test_emulate_discovered_topology()
 
     // 2 Enddevices
     e1 = malloc(sizeof(TSN_Enddevice));
-    e1->mac = strdup("00:00:00:00:00:01");
+    e1->mac = strdup("00-00-00-00-00-01");
     e1->has_app = 0;
     //e1->app_ref = NULL;
     
     //e1->app_ref = NULL;
     e2 = malloc(sizeof(TSN_Enddevice));
-    e2->mac = strdup("00:00:00:00:00:02");
+    e2->mac = strdup("00-00-00-00-00-02");
     e2->has_app = 0;
     //e2->app_ref = NULL;
 
     // 1 Switch
     s1 = malloc(sizeof(TSN_Switch));
-    s1->mac = strdup("01:02:03:04:05:06");
+    s1->mac = strdup("01-02-03-04-05-06");
     srand(time(NULL));
     int test = rand() % 100;
     printf("Random: %d\n", test);

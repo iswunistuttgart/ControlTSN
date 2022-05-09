@@ -99,7 +99,7 @@ print_stream_request(TSN_Request request)
 
     printf("Listeners (%d):\n", request.count_listeners);
     for (int i=0; i<request.count_listeners; ++i) {
-        printf("   Listener #%d", request.listener_list[i].index);
+        printf("   Listener #%d\n", request.listener_list[i].index);
         for (int j=0; j<request.listener_list[i].count_end_station_interfaces; ++j) {
             printf("      End station interface #%02d: %s '%s'\n", i+1, request.listener_list[i].end_station_interfaces[j].mac_address, request.listener_list[i].end_station_interfaces[j].interface_name);
         }

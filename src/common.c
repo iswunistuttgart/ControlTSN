@@ -256,8 +256,20 @@ create_stream_request(TSN_Enddevice *talker_device,
     // Traffic specification
     talker.traffic_specification = *traffic_spec;
 
+    // Dataframe specification
+    talker.count_data_frame_specifications = 1;                 // Why is this necessary? The YANG module description says this list is optional but it also defines min-elements: 1 
+    IEEE_DataFrameSpecification dfspec;     
+    dfspec.field_type = DATA_FRAME_SPECIFICATION_VLAN_TAG;
+    dfspec.ieee802_vlan_tag->vlan_id = 0;
+    dfspec.ieee802_vlan_tag->priority_code_point = 6;
+    talker.data_frame_specification[0] = dfspec;
+
     // User to network requirements
     talker.user_to_network_requirements = *qos_talker;
+
+    // Interface capabilities
+    talker.interface_capabilities.count_cb_stream_iden_types = 0;
+    talker.interface_capabilities.count_cb_sequence_types = 0;
 
 
     // Listeners
@@ -278,6 +290,12 @@ create_stream_request(TSN_Enddevice *talker_device,
 
         // User to network requirements
         listener.user_to_network_requirements = qos_listeners[i];
+
+        // Interface capabilities
+        listener.interface_capabilities.count_cb_stream_iden_types = 0;
+        listener.interface_capabilities.count_cb_sequence_types = 0;
+
+        listener_list[i] = listener;
     }
     
     request.talker = talker;
