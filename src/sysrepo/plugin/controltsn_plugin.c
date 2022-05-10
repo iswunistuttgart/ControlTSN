@@ -197,8 +197,9 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
                 }
             }
 
+            // Configured
             if ((!strcmp(val->xpath + strlen(val->xpath) - strlen("/configured"), "/configured")) 
-                && (op == SR_OP_MODIFIED)) {
+                && (op == SR_OP_MODIFIED || op == SR_OP_CREATED) && (val->data.bool_val == 1)) {
 
                 if ((already_send_mask & EVENT_STREAM_CONFIGURED) == 0) {
                     char *key = _extract_key(val->xpath, "stream-id");

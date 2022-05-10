@@ -115,9 +115,10 @@ int sysrepo_update_module_attributes(int module_id, const char *name, const char
 /**
  * @brief Returns all stored streams.
  * @param streams The struct to write on
+ * @param without_configured_ones Set to 1 if only the not yet configured streams are desired
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
-int sysrepo_get_all_streams(TSN_Streams **streams);
+int sysrepo_get_all_streams(TSN_Streams **streams, uint8_t without_configured_ones);
 
 /**
  * @brief Writes the request information for a new stream to the datastore.

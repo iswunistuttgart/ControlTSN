@@ -464,7 +464,7 @@ _api_streams_get(const struct _u_request *request, struct _u_response *response,
 {
     // Get all streams from sysrepo
     TSN_Streams *streams = malloc(sizeof(TSN_Streams));
-    rc = streams_get_all(&streams);
+    rc = streams_get_all(&streams, 0);
     if (rc == EXIT_FAILURE) {
         return U_CALLBACK_ERROR;
     }
@@ -489,9 +489,37 @@ _api_streams_request(const struct _u_request *request, struct _u_response *respo
         return U_CALLBACK_ERROR;
     }
 
-    //TSN_Request *req = deserialize_stream_request(json_object_get(json_post_body, "request"));
+    TSN_Request *req = deserialize_stream_request(json_object_get(json_post_body, "request"));
+
+    // Write stream request to sysrepo
+    char *generated_stream_id = NULL;
+    rc = stream_request(req, &generated_stream_id);
+
+    json_decref(json_post_body);
+    if (rc == EXIT_SUCCESS) {
+        // Return the stream id as response
+        json_t *json_response = serialize_stream_id(generated_stream_id);
+        ulfius_set_json_body_response(response, 200, json_response);
+
+        return U_CALLBACK_COMPLETE;
+    }
+
+    return U_CALLBACK_ERROR;
+}
 
 
+/**
+ * Prototype function to request a stream without knowing the full Qcc data model.
+ * Currently only a test. Needs to be evaluated if this function is necessary and what interface it has.
+ */
+static int
+_api_streams_request_simplified(const struct _u_request *request, struct _u_response *response, void *user_data)
+{
+    // Get the stream request from the json body
+    json_t *json_post_body = ulfius_get_json_body_request(request, NULL);
+    if (json_post_body == NULL) {
+        return U_CALLBACK_ERROR;
+    }
 
     // User input contains the talker and listener(s), the traffic specification and the qos for the talker and the listeners
     TSN_Enddevice *talker_device = deserialize_enddevice(json_object_get(json_post_body, "talker"));
@@ -1013,10 +1041,11 @@ _init_server()
     ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_MODULES_ID_DATA,        0, &_api_modules_set_data_id,       NULL);
     ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_MODULES_ID_UPDATE,      0, &_api_modules_update,            NULL);
     // Streams
-    ulfius_add_endpoint_by_val(&server_instance, "GET",     API_PREFIX, API_STREAMS,            0, &_api_streams_get,       NULL);
-    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_STREAMS_REQUEST,    0, &_api_streams_request,   NULL);
-    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_STREAMS_ID_DELETE,  0, &_api_streams_delete,    NULL);
-    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_STREAMS_COMPUTE,    0, &_api_streams_compute,   NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "GET",     API_PREFIX, API_STREAMS,                    0, &_api_streams_get,               NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_STREAMS_REQUEST,            0, &_api_streams_request,           NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_STREAMS_REQUEST_SIMPLIFIED, 0, &_api_streams_request_simplified, NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_STREAMS_ID_DELETE,          0, &_api_streams_delete,            NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_STREAMS_COMPUTE,            0, &_api_streams_compute,           NULL);
 
     // Topology
     ulfius_add_endpoint_by_val(&server_instance, "GET",     API_PREFIX, API_TOPOLOGY,           0, &_api_topology_get,          NULL);

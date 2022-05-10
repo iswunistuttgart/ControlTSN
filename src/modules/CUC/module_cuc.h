@@ -23,5 +23,6 @@ void cnc_compute_requests(TSN_Streams *streams);
 // Endpoints Interface
 // ------------------------------------
 const char *ENDPOINT_INTERFACE_DEPLOY_CONIFUGRATION = "/deploy_configuration";
+void deploy_configuration(TSN_Enddevice *enddevice, TSN_App *app, TSN_Configuration *stream_configuration);
 
 #endif // __MODULE_CUC_H__

@@ -113,6 +113,13 @@ cnc_compute_requests(TSN_Streams *streams)
 }
 
 
+void 
+deploy_configuration(TSN_Enddevice *enddevice, TSN_App *app, TSN_Configuration *stream_configuration)
+{
+    
+}
+
+
 // ------------------------------------
 // Callback handler
 // ------------------------------------
@@ -133,11 +140,33 @@ _cb_event(TSN_Event_CB_Data data)
     }
 
     // --- STREAMS ----------------------
-    else if(data.event_id == EVENT_STREAM_COMPUTATION_REQUESTED) {
+    else if (data.event_id == EVENT_STREAM_COMPUTATION_REQUESTED) {
         printf("[CUC][CB] Stream computation requested!\n");
         TSN_Streams *streams = malloc(sizeof(TSN_Streams));
-        rc = streams_get_all(&streams);
-        cnc_compute_requests(streams);
+        rc = streams_get_all(&streams, 1);
+        if (rc == EXIT_SUCCESS) {
+            if (streams->count_streams > 0) {
+                cnc_compute_requests(streams);
+            } else {
+                printf("[CUC][CB] There are no streams that are not yet configured!\n");
+            }
+        } else {
+            printf("[CUC][CB] Error reading streams from sysrepo!\n");
+        }
+    }
+
+    else if (data.event_id == EVENT_STREAM_CONFIGURED) {
+        printf("[CUC][CB] Stream '%s' configured!\n", data.entry_id);
+        // Read Stream configuration and deploy it to the corresponding enddevices
+        TSN_Stream *configured_stream = malloc(sizeof(TSN_Stream));
+        rc = sysrepo_get_stream(data.entry_id, &configured_stream);
+        if (rc == EXIT_SUCCESS) {
+            printf("---> %s: %s \n", configured_stream->stream_id, configured_stream->configuration->status_info.talker_status);
+        }
+        else {
+            printf("ERROR READING STREAM... \n");
+        }
+        
     }
 
     return;

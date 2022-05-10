@@ -131,9 +131,10 @@ TSN_Module_Data_Entry *module_get_data_entry(TSN_Module_Data *module_data, const
 /**
  * @brief Get all streams stored in the datastore.
  * @param streams The TSN_Streams struct to write on
+ * @param without_configured_ones Set to 1 if only the not yet configured streams are desired
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
-int streams_get_all(TSN_Streams **streams);
+int streams_get_all(TSN_Streams **streams, uint8_t without_configured_ones);
 
 /**
  * @brief Converts the user (or app) requirements to the request model that the CUC expects.

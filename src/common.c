@@ -30,7 +30,7 @@ module_init(char *module_name, TSN_Module **module, uint32_t adjusted_subscribed
     // Connect (if not done yet)
     ret = module_connect();
 
-    // Get the reegistered modules
+    // Get the registered modules
     TSN_Modules *all_modules = malloc(sizeof(TSN_Modules));
     ret = sysrepo_get_all_modules(&all_modules);
 
@@ -226,9 +226,9 @@ module_get_data_entry(TSN_Module_Data *module_data, const char *entry_name)
 //      FUNCTIONS - Stream
 // ----------------------------------------------
 int
-streams_get_all(TSN_Streams **streams)
+streams_get_all(TSN_Streams **streams, uint8_t without_configured_ones)
 {
-    ret = sysrepo_get_all_streams(streams);
+    ret = sysrepo_get_all_streams(streams, without_configured_ones);
     return ret;
 }
 
@@ -257,11 +257,14 @@ create_stream_request(TSN_Enddevice *talker_device,
     talker.traffic_specification = *traffic_spec;
 
     // Dataframe specification
-    talker.count_data_frame_specifications = 1;                 // Why is this necessary? The YANG module description says this list is optional but it also defines min-elements: 1 
+    talker.count_data_frame_specifications = 1; // Why is this necessary? The YANG module description says this list is optional but it also defines min-elements: 1 
     IEEE_DataFrameSpecification dfspec;     
     dfspec.field_type = DATA_FRAME_SPECIFICATION_VLAN_TAG;
-    dfspec.ieee802_vlan_tag->vlan_id = 0;
-    dfspec.ieee802_vlan_tag->priority_code_point = 6;
+    IEEE_VlanTag *v_tag = malloc(sizeof(IEEE_VlanTag));
+    v_tag->vlan_id = 0;
+    v_tag->priority_code_point = 6;
+    dfspec.ieee802_vlan_tag = v_tag;
+    talker.data_frame_specification = malloc(sizeof(IEEE_DataFrameSpecification) * talker.count_data_frame_specifications);
     talker.data_frame_specification[0] = dfspec;
 
     // User to network requirements
@@ -277,6 +280,7 @@ create_stream_request(TSN_Enddevice *talker_device,
     for (int i=0; i<count_listeners; ++i) {
         TSN_Listener listener;
 
+        printf("HERE 4.%d \n", i);
         // Index
         listener.index = i;
 
@@ -296,6 +300,8 @@ create_stream_request(TSN_Enddevice *talker_device,
         listener.interface_capabilities.count_cb_sequence_types = 0;
 
         listener_list[i] = listener;
+
+        printf("HERE 4.%d - 2 \n", i);
     }
     
     request.talker = talker;

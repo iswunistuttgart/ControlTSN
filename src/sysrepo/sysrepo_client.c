@@ -226,7 +226,7 @@ _generate_stream_id(TSN_Request stream_request)
 
     // Get a list of all streams
     TSN_Streams *all_streams = malloc(sizeof(TSN_Streams));
-    rc = sysrepo_get_all_streams(&all_streams);
+    rc = sysrepo_get_all_streams(&all_streams, 0);
     if (rc != EXIT_SUCCESS) {
         goto cleanup;
     }
@@ -2610,7 +2610,7 @@ cleanup:
 }
 
 static int
-_read_streams(char *xpath, TSN_Streams **streams)
+_read_streams(char *xpath, TSN_Streams **streams, uint8_t without_configured_ones)
 {
     int rc = SR_ERR_OK;
     sr_val_t *val_streams = NULL;
@@ -2619,7 +2619,8 @@ _read_streams(char *xpath, TSN_Streams **streams)
     _create_xpath(xpath, "/*", &xpath_streams);
     size_t count_streams = 0;
     rc = sr_get_items(session, xpath_streams, 0, 0, &val_streams, &count_streams);
-    (*streams)->count_streams = count_streams;
+    //(*streams)->count_streams = count_streams;
+    uint16_t count_s = 0;
     (*streams)->streams = (TSN_Stream *) malloc(sizeof(TSN_Stream) * count_streams);
     for (int i=0; i<count_streams; ++i) {
         TSN_Stream *s = malloc(sizeof(TSN_Stream));
@@ -2627,8 +2628,13 @@ _read_streams(char *xpath, TSN_Streams **streams)
         if (rc != SR_ERR_OK) {
             goto cleanup;
         }
+        if (without_configured_ones && s->configured) {
+            continue;
+        }
         (*streams)->streams[i] = *s;
+        count_s += 1;
     }
+    (*streams)->count_streams = count_s;
 
 cleanup:
     sr_free_val(val_streams);
@@ -4851,9 +4857,9 @@ cleanup:
 //  Stream handling
 // -------------------------------------------------------- //
 int
-sysrepo_get_all_streams(TSN_Streams **streams)
+sysrepo_get_all_streams(TSN_Streams **streams, uint8_t without_configured_ones)
 {
-    rc = _read_streams("/control-tsn-uni:tsn-uni/streams", streams);
+    rc = _read_streams("/control-tsn-uni:tsn-uni/streams", streams, without_configured_ones);
     if (rc != SR_ERR_OK) {
         goto cleanup;
     }
@@ -4965,7 +4971,9 @@ sysrepo_get_stream(char *stream_id, TSN_Stream **stream)
     char *xpath_stream = NULL;
 
     _create_xpath_key("/control-tsn-uni:tsn-uni/streams/stream[stream-id='%s']", stream_id, &xpath_stream);
+    printf("Reading stream from path: %s\n", xpath_stream);
     rc = _read_stream(xpath_stream, stream);
+
     if (rc != SR_ERR_OK) {
         goto cleanup;
     }
