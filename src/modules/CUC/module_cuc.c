@@ -113,9 +113,45 @@ cnc_compute_requests(TSN_Streams *streams)
 }
 
 
-void 
-deploy_configuration(TSN_Enddevice *enddevice, TSN_App *app, TSN_Configuration *stream_configuration)
+TSN_App *
+_find_app_for_mac(char *mac, TSN_Apps *apps)
 {
+    // Search through the apps and find the one to which the given MAC belongs
+    for (int i=0; i<apps->count_apps; ++i) {
+        if (apps->apps[i].has_mac && (strcmp(apps->apps[i].mac, mac) == 0)) {
+            return &apps->apps[i];
+        }
+    }
+
+    return NULL;
+}
+
+TSN_App_Parameter *
+_find_app_parameter(TSN_App *app, const char *parameter_name)
+{
+    for (int i=0; i<app->count_parameters; ++i) {
+        if (strcmp(app->parameters[i].name, parameter_name) == 0) {
+            return &(app->parameters[i]);
+        }
+    }
+
+    return NULL;
+}
+
+void 
+deploy_configuration(TSN_App *app, TSN_Configuration *stream_configuration)
+{
+    // TODO!...
+
+    // Get the OPC UA Endpoint from the app parameters
+    TSN_App_Parameter *param_opcua_endpoint = _find_app_parameter(app, APP_PARAMETER_IDENTIFIER_OPCUA_ENDPOINT);
+    if (param_opcua_endpoint == NULL) {
+        printf("[CUC] Could not deploy configuration to app '%s' because of missing opc ua endpoint parameter!\n", app->name);
+        return;
+    }
+
+    // Write the stream configuration to the OPC UA server of the app
+    // ...
     
 }
 
@@ -153,6 +189,7 @@ _cb_event(TSN_Event_CB_Data data)
         } else {
             printf("[CUC][CB] Error reading streams from sysrepo!\n");
         }
+        free(streams);
     }
 
     else if (data.event_id == EVENT_STREAM_CONFIGURED) {
@@ -161,12 +198,45 @@ _cb_event(TSN_Event_CB_Data data)
         TSN_Stream *configured_stream = malloc(sizeof(TSN_Stream));
         rc = sysrepo_get_stream(data.entry_id, &configured_stream);
         if (rc == EXIT_SUCCESS) {
-            printf("---> %s: %s \n", configured_stream->stream_id, configured_stream->configuration->status_info.talker_status);
+
+            // Read all apps from datastore
+            TSN_Apps *all_apps = malloc(sizeof(TSN_Apps));
+            rc = sysrepo_get_application_apps(&all_apps);
+            if (rc == EXIT_SUCCESS) {
+                // Get the app that belongs to the talker mac
+                TSN_App *app_talker = NULL;
+                // NOTICE: We use the first entry in the list of endstation interfaces (TODO: should we rether use all interfaces for the search?)
+                app_talker = _find_app_for_mac(configured_stream->configuration->talker.interface_configuration.interface_list[0].mac_address, all_apps);
+                if (app_talker != NULL) {
+                    // Send the configuration to the talker
+                    printf("[CUC][CB] Deploying configuration for stream '%s' to talker application '%s@%s'\n", configured_stream->stream_id, app_talker->name, app_talker->mac);
+                    deploy_configuration(app_talker, configured_stream->configuration);
+                } else {
+                    printf("[CUC][CB][ERROR] Could not find Application for mac '%s'\n", configured_stream->configuration->talker.interface_configuration.interface_list[0].mac_address);
+                }
+                
+                // Get the app(s) that belong to the listener macs
+                for (int i=0; i<configured_stream->configuration->count_listeners; ++i) {
+                    TSN_App *app_listener = NULL;
+                    app_listener = _find_app_for_mac(configured_stream->configuration->listener_list[i].interface_configuration.interface_list[0].mac_address, all_apps);
+                    if (app_listener != NULL) {
+                        // Send the configuration to the listener
+                        printf("[CUC][CB] Deploying configuration for stream '%s' to listener application '%s@%s'\n", configured_stream->stream_id, app_listener->name, app_listener->mac);
+                        deploy_configuration(app_listener, configured_stream->configuration);
+                    } else {
+                        printf("[CUC][CB][ERROR] Could not find Application for mac '%s'\n", configured_stream->configuration->listener_list[i].interface_configuration.interface_list[0].mac_address);
+                    }
+                }   
+
+            } else {
+                printf("[CUC][CB][ERROR] Could not read applications from the datastore!\n");
+            }
         }
         else {
             printf("ERROR READING STREAM... \n");
         }
         
+        free(configured_stream);
     }
 
     return;

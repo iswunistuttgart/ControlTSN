@@ -67,21 +67,83 @@
   <application>
     <apps>
       <app>
-        <id>Test_0.0.1</id>
-        <name>Test</name>
-        <desc>Test Application</desc>
+        <id>Talker_0.0.1</id>
+        <name>Talker</name>
+        <desc>Talker Application Dummy</desc>
         <version>0.0.1</version>
         <has-image>1</has-image>
-        <image-ref>TestImg_0.0.1</image-ref>
+        <image-ref>TalkerImage_0.0.1</image-ref>
+        <has-mac>1</has-mac>
+        <mac>00-00-00-00-00-01</mac>
+      </app>
+      <app>
+        <id>Listener_0.0.1</id>
+        <name>Listener</name>
+        <desc>Listener Application Dummy</desc>
+        <version>0.0.1</version>
+        <has-image>1</has-image>
+        <image-ref>ListenerImage_0.0.1</image-ref>
+        <has-mac>1</has-mac>
+        <mac>00-00-00-00-00-02</mac>
       </app>
     </apps>
     <images>
       <image>
-        <id>TestImg_0.0.1</id>
-        <name>TestImg</name>
-        <desc>Test Image</desc>
+        <id>TalkerImage_0.0.1</id>
+        <name>TalkerImage</name>
+        <desc>Talker Image Dummy</desc>
+        <version>0.0.1</version>
+      </image>
+      <image>
+        <id>ListenerImage_0.0.1</id>
+        <name>ListenerImage</name>
+        <desc>Listener Image Dummy</desc>
         <version>0.0.1</version>
       </image>
     </images>
   </application>
+  <topology>
+    <devices>
+      <enddevices>
+        <enddevice>
+          <mac>00-00-00-00-00-01</mac>
+          <has-app>1</has-app>
+          <apps>
+            <app><app-ref>Talker_0.0.1</app-ref></app>
+          </apps>
+        </enddevice>
+        <enddevice>
+          <mac>00-00-00-00-00-02</mac>
+          <has-app>1</has-app>
+          <apps>
+            <app><app-ref>Listener_0.0.1</app-ref></app>
+          </apps>
+        </enddevice>
+      </enddevices>
+      <switches>
+        <switch>
+          <mac>01-02-03-04-05-06</mac>
+          <ports-count>56</ports-count>
+        </switch>
+      </switches>
+    </devices>
+    <graph>
+      <connections>
+        <connection>
+          <id>1</id>
+          <from-mac>00-00-00-00-00-01</from-mac>
+          <from-port>1</from-port>
+          <to-mac>01-02-03-04-05-06</to-mac>
+          <to-port>1</to-port>
+        </connection>
+        <connection>
+          <id>2</id>
+          <from-mac>01-02-03-04-05-06</from-mac>
+          <from-port>2</from-port>
+          <to-mac>00-00-00-00-00-02</to-mac>
+          <to-port>1</to-port>
+        </connection>
+      </connections>
+    </graph>
+  </topology>
 </tsn-uni>

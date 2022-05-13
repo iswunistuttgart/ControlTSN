@@ -285,15 +285,15 @@ module control-tsn-uni {
         leaf desc {
             type string;
         }
-        leaf has-virtual-mac {
+        leaf has-mac {
             type uint8;
             default 0;
         }
-        leaf virtual-mac {
+        leaf mac {
             type string {
                 pattern '[0-9a-fA-F]{2}(-[0-9a-fA-F]{2}){5}';
             }
-            description "The virtual MAC of this app or container in case multiple containers are running on one (physical) enddevice";
+            description "The (virtual) MAC of this app or container in case multiple containers are running on one (physical) enddevice";
         }        
         leaf version {
             type string;

@@ -32,8 +32,6 @@ signal_handler(int signum)
 static void
 _cb_event(TSN_Event_CB_Data data)
 {
-    printf("[REST] Triggered callback for event ID %d\n", data.event_id);
-
     // Sending events in the websocket if it's open
     if (_websocket_manager) {
         // TODO: Newer version of ulfius supports sending json message 'ulfius_websocket_send_json_message'

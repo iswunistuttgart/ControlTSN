@@ -278,8 +278,8 @@ typedef struct TSN_App {
     char *id;           // {name}_{version}
     char *name;
     char *description;
-    uint8_t has_virtual_mac;
-    char *virtual_mac;          // Virtual MAC
+    uint8_t has_mac;
+    char *mac;          // (Virtual) MAC
     char *version;      // {X}.{Y}.{Z}
     uint8_t has_image;
     char *image_ref;

@@ -1556,8 +1556,8 @@ serialize_app(TSN_App *app)
     json_object_set_new(root, "id", json_string(app->id));
     json_object_set_new(root, "name", json_string(app->name));
     json_object_set_new(root, "description", json_string(app->description));
-    json_object_set_new(root, "has_virtual_mac", json_integer(app->has_virtual_mac));
-    json_object_set_new(root, "virtual_mac", json_string(app->virtual_mac));
+    json_object_set_new(root, "has_mac", json_integer(app->has_mac));
+    json_object_set_new(root, "mac", json_string(app->mac));
     json_object_set_new(root, "version", json_string(app->version));
     json_object_set_new(root, "has_image", json_integer(app->has_image));
     json_object_set_new(root, "image_ref", json_string(app->image_ref));
@@ -1772,8 +1772,8 @@ TSN_App *deserialize_app(const char *id, json_t *obj)
 {
     json_t *name = json_object_get(obj, "name");
     json_t *desc = json_object_get(obj, "description");
-    json_t *has_virtual_mac = json_object_get(obj, "has_virtual_mac");
-    json_t *virtual_mac = json_object_get(obj, "virtual_mac");
+    json_t *has_mac = json_object_get(obj, "has_mac");
+    json_t *mac = json_object_get(obj, "mac");
     json_t *version = json_object_get(obj, "version");
     json_t *has_image = json_object_get(obj, "has_image");
     json_t *image = json_object_get(obj, "image");
@@ -1807,10 +1807,10 @@ TSN_App *deserialize_app(const char *id, json_t *obj)
     if (!app->version)
         goto err3;
 
-    app->has_virtual_mac = json_integer_value(has_virtual_mac);
-    if (app->has_virtual_mac) {
-        app->virtual_mac = strdup(json_string_value(virtual_mac));
-        if (!app->virtual_mac) {
+    app->has_mac = json_integer_value(has_mac);
+    if (app->has_mac) {
+        app->mac = strdup(json_string_value(mac));
+        if (!app->mac) {
             goto err3_2;
         }
     }
@@ -1868,8 +1868,8 @@ err5:
 err4:
     free(app->version);
 err3_2:
-    free(app->has_virtual_mac);
-    free(app->virtual_mac);
+    free(app->has_mac);
+    free(app->mac);
 err3:
     free(app->id);
 err2:
