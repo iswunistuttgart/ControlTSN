@@ -40,7 +40,7 @@ print_module_data(TSN_Module_Data data)
 {
     for (int i=0; i<data.count_entries; ++i) {
         char *type_str = data_type_to_string(data.entries[i].type);
-        char *val_str = data_value_to_string(data.entries[i]);
+        char *val_str = data_value_to_string(data.entries[i].type, data.entries[i].value);
         printf("   %s (%s): %s\n", data.entries[i].name, type_str, val_str);
     }
 }
@@ -105,5 +105,23 @@ print_stream_request(TSN_Request request)
         }
         printf("      User to network requirements:\n");
         printf("         Max latency: %d\n", request.listener_list[i].user_to_network_requirements.max_latency);
+    }
+}
+
+void 
+print_app(TSN_App app)
+{
+    printf("----- App -----\n");
+    printf("ID: %s\n", app.id);
+    printf("Name: %s\n", app.name);
+    printf("Version: %s\n", app.version);
+    printf("Description: %s\n", app.description);
+    printf("MAC: %s\n", app.has_mac ? app.mac : "-");
+    printf("Image: %s\n", app.has_image ? app.image_ref : "-");
+    printf("Parameters (%d):\n", app.count_parameters);
+    for (int i=0; i<app.count_parameters; ++i) {
+        char *type_str = data_type_to_string(app.parameters[i].type);
+        char *val_str = data_value_to_string(app.parameters[i].type, app.parameters[i].value);
+        printf("   %s (%s): %s | %s\n", app.parameters[i].name, type_str, val_str, app.parameters[i].description);
     }
 }

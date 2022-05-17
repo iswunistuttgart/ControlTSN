@@ -26,4 +26,6 @@ void print_topology(TSN_Topology topology);
 
 void print_stream_request(TSN_Request request);
 
+void print_app(TSN_App app);
+
 #endif // __LOGGER_H__

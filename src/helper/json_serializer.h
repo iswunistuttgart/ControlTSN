@@ -101,7 +101,7 @@ json_t *serialize_application(TSN_Application *application);
 
 TSN_Images *deserialize_images(json_t *obj, const char *docker_host);
 TSN_Apps *deserialize_apps(json_t *obj);
-TSN_App *deserialize_app(const char *id, json_t *obj);
+TSN_App *deserialize_app(json_t *obj);
 
 // ------------------------------------
 // Other

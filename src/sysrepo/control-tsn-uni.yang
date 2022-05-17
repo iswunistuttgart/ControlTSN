@@ -273,6 +273,9 @@ module control-tsn-uni {
                 type decimal64              {fraction-digits 5;}
             }
         }
+        leaf param-desc {
+            type string;
+        }
     }
     
     grouping app {
@@ -305,6 +308,7 @@ module control-tsn-uni {
         leaf image-ref {
             type leafref {
                 path "/control-tsn-uni:tsn-uni/application/images/image/id";
+                require-instance "true";
             }
         }
         container parameters {

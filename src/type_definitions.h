@@ -91,10 +91,11 @@ typedef struct TSN_Module_Data_Entry
 
 /**
  * @brief Converts a module data value to a string (e.g. for printing).
- * @param entry The module data entry
+ * @param type The module data entry type
+ * @param value The module data entry value
  * @return The value represented as a string
  */
-char *data_value_to_string(TSN_Module_Data_Entry entry);
+char *data_value_to_string(TSN_Module_Data_Entry_Type type, TSN_Module_Data_Entry_Value value);
 
 typedef struct TSN_Module_Data
 {

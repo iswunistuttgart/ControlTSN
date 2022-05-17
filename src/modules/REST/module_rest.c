@@ -747,19 +747,19 @@ cleanup:
 static int
 _api_application_app_create(const struct _u_request *request, struct _u_response *response, void *user_data)
 {
-    const char *app_id = u_map_get(request->map_url, "id");
+    //const char *app_id = u_map_get(request->map_url, "id");
     json_t *json_post_body;
     TSN_App *app;
     int ret;
 
-    if (!app_id)
-        return U_CALLBACK_ERROR;
+    //if (!app_id)
+    //    return U_CALLBACK_ERROR;
 
     json_post_body = ulfius_get_json_body_request(request, NULL);
     if (!json_post_body)
         return U_CALLBACK_ERROR;
 
-    app = deserialize_app(app_id, json_post_body);
+    app = deserialize_app(json_post_body);
     if (!app)
         return U_CALLBACK_ERROR;
 
@@ -826,6 +826,40 @@ _api_application_app_stop(const struct _u_request *request, struct _u_response *
         return U_CALLBACK_ERROR;
 
     return U_CALLBACK_COMPLETE;
+}
+
+static int
+_api_application_app_update(const struct _u_request *request, struct _u_response *response, void *user_data)
+{
+    const char *app_id = u_map_get(request->map_url, "id");
+    json_t *json_post_body;
+    TSN_App *app;
+    int ret;
+
+    if (!app_id)
+        return U_CALLBACK_ERROR;
+        
+    json_post_body = ulfius_get_json_body_request(request, NULL);
+    if (!json_post_body)
+        return U_CALLBACK_ERROR;
+
+    app = deserialize_app(json_post_body);
+    if (!app)
+        return U_CALLBACK_ERROR;
+
+    ret = sysrepo_set_application_app(app);
+    if (ret == EXIT_FAILURE) {
+        ret = U_CALLBACK_ERROR;
+        goto out;
+    }
+
+    ret = U_CALLBACK_COMPLETE;
+
+out:
+    json_decref(json_post_body);
+    application_app_put(app);
+
+    return ret;
 }
 
 
@@ -1051,14 +1085,15 @@ _init_server()
     ulfius_add_endpoint_by_val(&server_instance, "GET",     API_PREFIX, API_TOPOLOGY_GRAPH,     0, &_api_topology_graph_get,    NULL);
     ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_TOPOLOGY_DISCOVER,  0, &_api_topology_discover,     NULL);
     // Application
-    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_APPLICATION_DISCOVER,	0, &_api_application_discover_post, NULL);
-    ulfius_add_endpoint_by_val(&server_instance, "GET",     API_PREFIX, API_APPLICATION,		0, &_api_application_get,           NULL);
-    ulfius_add_endpoint_by_val(&server_instance, "GET",     API_PREFIX, API_APPLICATION_APPS,   	0, &_api_application_apps_get,      NULL);
-    ulfius_add_endpoint_by_val(&server_instance, "GET",     API_PREFIX, API_APPLICATION_IMAGES, 	0, &_api_application_images_get,    NULL);
-    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_APPLICATION_APPS_CREATE, 	0, &_api_application_app_create,    NULL);
-    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_APPLICATION_APPS_DELETE, 	0, &_api_application_app_delete,    NULL);
-    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_APPLICATION_APPS_START, 	0, &_api_application_app_start,     NULL);
-    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_APPLICATION_APPS_STOP, 	0, &_api_application_app_stop,      NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_APPLICATION_DISCOVER,	 0, &_api_application_discover_post, NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "GET",     API_PREFIX, API_APPLICATION,		     0, &_api_application_get,           NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "GET",     API_PREFIX, API_APPLICATION_APPS,   	 0, &_api_application_apps_get,      NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "GET",     API_PREFIX, API_APPLICATION_IMAGES, 	 0, &_api_application_images_get,    NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_APPLICATION_APPS_CREATE, 0, &_api_application_app_create,    NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_APPLICATION_APPS_DELETE, 0, &_api_application_app_delete,    NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_APPLICATION_APPS_START,  0, &_api_application_app_start,     NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_APPLICATION_APPS_STOP, 	 0, &_api_application_app_stop,      NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_APPLICATION_APPS_UPDATE, 0, &_api_application_app_update,    NULL);
 
     // JUST TESTING
     ulfius_add_endpoint_by_val(&server_instance, "GET", API_PREFIX, "/testing/set_topology",    0, &_api_testing_set_topology,    NULL);

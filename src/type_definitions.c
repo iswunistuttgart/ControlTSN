@@ -161,9 +161,9 @@ _data_value_to_string(TSN_Module_Data_Entry_Type type, TSN_Module_Data_Entry_Val
 }
 
 char *
-data_value_to_string(TSN_Module_Data_Entry entry)
+data_value_to_string(TSN_Module_Data_Entry_Type type, TSN_Module_Data_Entry_Value value)
 {
-    return _data_value_to_string(entry.type, entry.value);
+    return _data_value_to_string(type, value);
 }
 
 char *

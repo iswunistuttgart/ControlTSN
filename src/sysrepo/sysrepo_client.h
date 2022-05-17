@@ -223,6 +223,7 @@ int sysrepo_set_application_apps(TSN_Apps *apps);
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
 int sysrepo_set_application_app(TSN_App *app);
+
 /**
  * @brief Gets the stored data of a specific app.
  * @param id The id of the app

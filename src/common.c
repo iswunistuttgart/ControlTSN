@@ -280,7 +280,6 @@ create_stream_request(TSN_Enddevice *talker_device,
     for (int i=0; i<count_listeners; ++i) {
         TSN_Listener listener;
 
-        printf("HERE 4.%d \n", i);
         // Index
         listener.index = i;
 

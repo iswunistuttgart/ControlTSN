@@ -1768,23 +1768,24 @@ err1:
 //
 // Deserialize from application create request (see REST module).
 //
-TSN_App *deserialize_app(const char *id, json_t *obj)
+TSN_App *deserialize_app(json_t *obj)
 {
+    json_t *existing_id = json_object_get(obj, "id");
     json_t *name = json_object_get(obj, "name");
     json_t *desc = json_object_get(obj, "description");
     json_t *has_mac = json_object_get(obj, "has_mac");
     json_t *mac = json_object_get(obj, "mac");
     json_t *version = json_object_get(obj, "version");
     json_t *has_image = json_object_get(obj, "has_image");
-    json_t *image = json_object_get(obj, "image");
-    json_t *param = json_object_get(obj, "parameters");
+    json_t *image = json_object_get(obj, "image_ref");
+    json_t *params = json_object_get(obj, "parameters");
     const char *key;
     json_t *value;
     TSN_App *app;
     int i = 0;
 
     // Invalid request
-    if (!name || !desc || !version || !image || !param)
+    if (!name || !desc || !version || !image || !params)
         return NULL;
 
     app = malloc(sizeof(*app));
@@ -1797,15 +1798,23 @@ TSN_App *deserialize_app(const char *id, json_t *obj)
     if (!app->name)
         goto err1;
 
-    // Id
-    app->id = strdup(id);
-    if (!app->id)
-        goto err2;
-
     // Version
     app->version = strdup(json_string_value(version));
     if (!app->version)
+        goto err2;
+
+    // Id   (Notation: {Name}_{Version})
+    if (existing_id == NULL) {
+        // New app -> generate id
+        char *new_id = malloc(strlen(app->name) + 1 + strlen(app->version) + 1);
+        sprintf(new_id, "%s_%s", app->name, app->version);
+        app->id = strdup(new_id);
+    } else {
+        app->id = strdup(json_string_value(existing_id));
+    }
+    if (!app->id)
         goto err3;
+    
 
     app->has_mac = json_integer_value(has_mac);
     if (app->has_mac) {
@@ -1829,6 +1838,7 @@ TSN_App *deserialize_app(const char *id, json_t *obj)
     }
 
     // Parameters
+    /*
     app->count_parameters = 0;
 
     // Note: Currently there are about ~10 known parameters.
@@ -1855,6 +1865,26 @@ TSN_App *deserialize_app(const char *id, json_t *obj)
         if (i == 10)
             break;
     }
+    */
+
+    uint8_t count_parameters = json_array_size(params);
+    app->count_parameters = count_parameters;
+    app->parameters = malloc(sizeof(TSN_App_Parameter) * count_parameters);
+    for (int i=0; i<count_parameters; ++i) {
+        json_t *p_j = json_array_get(params, i);
+        const json_t *p_name = json_object_get(p_j, "name");
+        const json_t *p_type = json_object_get(p_j, "type");
+        const json_t *p_value = json_object_get(p_j, "value");
+        const json_t *p_description = json_object_get(p_j, "description");
+
+        TSN_App_Parameter *p = malloc(sizeof(TSN_App_Parameter));
+        p->name = strdup(json_string_value(p_name));
+        p->type = string_to_data_type(json_string_value(p_type));
+        p->description = strdup(json_string_value(p_description));
+        p->value = _json_to_data_value(p_value, p->type);
+        
+        app->parameters[i] = *p;
+    }
 
     return app;
 
@@ -1871,9 +1901,9 @@ err3_2:
     free(app->has_mac);
     free(app->mac);
 err3:
-    free(app->id);
-err2:
     free(app->name);
+err2:
+    free(app->id);
 err1:
     free(app);
     return NULL;

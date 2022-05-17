@@ -3869,12 +3869,6 @@ static int _write_app(char *xpath, TSN_App *app)
     if (ret != SR_ERR_OK)
         goto cleanup;
 
-    // Image
-    _create_xpath(xpath, "/image-ref", &xpath_image);
-    ret = sr_set_item_str(session, xpath_image, app->image_ref, NULL, 0);
-    if (ret != SR_ERR_OK)
-        goto cleanup;
-
     // Has-Image
     _create_xpath(xpath, "/has-image", &xpath_has_image);
     has_image.type = SR_UINT8_T;
@@ -3882,6 +3876,15 @@ static int _write_app(char *xpath, TSN_App *app)
     ret = sr_set_item(session, xpath_has_image, &has_image, 0);
     if (ret != SR_ERR_OK)
         goto cleanup;
+
+    // Image
+    if (app->has_image) {
+        _create_xpath(xpath, "/image-ref", &xpath_image);
+        ret = sr_set_item_str(session, xpath_image, app->image_ref, NULL, 0);
+        if (ret != SR_ERR_OK)
+            goto cleanup;
+    }
+
 
     // Parameters
     _create_xpath(xpath, "/parameters/parameter[param-name='%s']", &xpath_parameters);
