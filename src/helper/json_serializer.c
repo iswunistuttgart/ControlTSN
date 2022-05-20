@@ -1543,6 +1543,7 @@ serialize_app_parameter(TSN_App_Parameter *param)
     json_object_set_new(root, "name", json_string(param->name));
     json_object_set_new(root, "type", json_string(data_type_to_string(param->type)));
     json_object_set_new(root, "value", _data_value_to_json(param->type, param->value));
+    json_object_set_new(root, "description", json_string(param->description));
 
     return root;
 }

@@ -213,6 +213,8 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
                 }
             }
 
+            // Modified (currently not used)
+
 
         // MODULES ---------------------------------------------------
         } else if (strstr(val->xpath, "/modules/") != NULL) {
@@ -300,6 +302,13 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
                 //already_send_mask |= EVENT_TOPOLOGY_DISCOVERED;
                 
             }
+
+        // APPLICATION ---------------------------------------------------
+        } else if (strstr(val->xpath, "/application/") != NULL) {
+            // EVENT_APPLICATION_LIST_OF_IMAGES_REQUESTED   (directly from sysrepo)
+            // EVENT_APPLICATION_LIST_OF_APPS_REQUESTED     (currently not used)
+            // EVENT_APPLICATION_APP_START_REQUESTED        (directly from sysrepo)
+            // EVENT_APPLICATION_APP_STOP_REQUESTED         (directly from sysrepo)
         }
     }
 

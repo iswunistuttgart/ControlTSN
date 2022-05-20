@@ -3802,6 +3802,7 @@ _write_parameter(char *xpath, TSN_App_Parameter *parameter)
     char *xpath_param_name = NULL;
     char *xpath_param_type = NULL;
     char *xpath_param_value = NULL;
+    char *xpath_param_desc = NULL;
     sr_val_t val_param_value;
     sr_val_t val_param_type;
     int ret = SR_ERR_OK;
@@ -3825,24 +3826,35 @@ _write_parameter(char *xpath, TSN_App_Parameter *parameter)
     val_param_value = data_value_to_sysrepo_value(parameter->value, parameter->type);
     ret = sr_set_item(session, xpath_param_value, &val_param_value, 0);
 
+    // Description
+    _create_xpath(xpath, "/param-desc", &xpath_param_desc);
+    ret = sr_set_item_str(session, xpath_param_desc, parameter->description, NULL, 0);
+    if (ret != SR_ERR_OK)
+        goto cleanup;
+
 cleanup:
     free(xpath_param_name);
     free(xpath_param_type);
     free(xpath_param_value);
+    free(xpath_param_desc);
 
     return ret;
 }
 
 static int _write_app(char *xpath, TSN_App *app)
 {
+    char *xpath_parameters_delete = NULL;
     char *xpath_parameters = NULL;
     char *xpath_has_image = NULL;
+    char *xpath_has_mac = NULL;
+    char *xpath_mac = NULL;
     char *xpath_version = NULL;
     char *xpath_image = NULL;
     char *xpath_name = NULL;
     char *xpath_desc = NULL;
     char *xpath_id = NULL;
     sr_val_t has_image;
+    sr_val_t has_mac;
     int ret, i;
 
     // ID
@@ -3869,6 +3881,22 @@ static int _write_app(char *xpath, TSN_App *app)
     if (ret != SR_ERR_OK)
         goto cleanup;
 
+    // Has-mac
+    _create_xpath(xpath, "/has-mac", &xpath_has_mac);
+    has_mac.type = SR_UINT8_T;
+    has_mac.data.uint8_val = app->has_mac;
+    ret = sr_set_item(session, xpath_has_mac, &has_mac, 0);
+    if (ret != SR_ERR_OK)
+        goto cleanup;
+
+    // Image
+    if (app->has_mac) {
+        _create_xpath(xpath, "/mac", &xpath_mac);
+        ret = sr_set_item_str(session, xpath_mac, app->mac, NULL, 0);
+        if (ret != SR_ERR_OK)
+            goto cleanup;
+    }
+
     // Has-Image
     _create_xpath(xpath, "/has-image", &xpath_has_image);
     has_image.type = SR_UINT8_T;
@@ -3885,8 +3913,13 @@ static int _write_app(char *xpath, TSN_App *app)
             goto cleanup;
     }
 
-
     // Parameters
+    // Since this function is also used for updates, all parameters must first be removed before the new ones can be saved.
+    _create_xpath(xpath, "/parameters", &xpath_parameters);
+    rc = sr_delete_item(session, xpath_parameters, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
     _create_xpath(xpath, "/parameters/parameter[param-name='%s']", &xpath_parameters);
     for (i = 0; i < app->count_parameters; ++i) {
         TSN_App_Parameter *par = &app->parameters[i];
@@ -3906,9 +3939,12 @@ cleanup:
     free(xpath_name);
     free(xpath_desc);
     free(xpath_version);
+    free(xpath_has_mac);
+    free(xpath_mac);
     free(xpath_image);
     free(xpath_has_image);
     free(xpath_parameters);
+    free(xpath_parameters_delete);
 
     return ret;
 }
@@ -3974,9 +4010,11 @@ _read_app_parameter(char *xpath, TSN_App_Parameter **parameter)
     sr_val_t *val_param_name = NULL;
     sr_val_t *val_param_type = NULL;
     sr_val_t *val_param_value = NULL;
+    sr_val_t *val_param_desc = NULL;
     char *xpath_param_name = NULL;
     char *xpath_param_type = NULL;
     char *xpath_param_value = NULL;
+    char *xpath_param_desc = NULL;
 
     // Name
     _create_xpath(xpath, "/param-name", &xpath_param_name);
@@ -4003,13 +4041,23 @@ _read_app_parameter(char *xpath, TSN_App_Parameter **parameter)
     (*parameter)->value = sysrepo_value_to_data_value(*val_param_value);
     (*parameter)->type = sysrepo_value_to_data_type(*val_param_value);
 
+    // Description
+    _create_xpath(xpath, "/param-desc", &xpath_param_desc);
+    rc = sr_get_item(session, xpath_param_desc, 0, &val_param_desc);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*parameter)->description = strdup(val_param_desc->data.string_val);
+
 cleanup:
     sr_free_val(val_param_name);
     sr_free_val(val_param_type);
     sr_free_val(val_param_value);
+    sr_free_val(val_param_desc);
     free(xpath_param_name);
     free(xpath_param_type);
     free(xpath_param_value);
+    free(xpath_param_desc);
 
     return rc;
 }
@@ -4061,7 +4109,7 @@ _read_app(char *xpath, TSN_App **app)
     }
     (*app)->description = strdup(val_desc->data.string_val);
 
-    // Virtual MAC
+    // MAC
     _create_xpath(xpath, "/has-mac", &xpath_has_mac);
     rc = sr_get_item(session, xpath_has_mac, 0, &val_has_mac);
     if (rc != SR_ERR_OK) {
