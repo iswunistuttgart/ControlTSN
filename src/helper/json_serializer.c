@@ -1941,7 +1941,6 @@ TSN_App *deserialize_app(json_t *obj)
 err7:
     free(app->parameters);
 err6:
-    free(app->has_image);
     free(app->image_ref);
 err5:
     free(app->description);
