@@ -40,6 +40,10 @@ target_link_libraries(MonitorModule common)
 add_executable(ContainerModule src/modules/container/module_container.c)
 target_link_libraries(ContainerModule common ${ULFIUS_LIBRARIES} json_serializer)
 
+# MODULE CONFIGURATION
+add_executable(ConfigurationModule src/modules/configuration/module_configuration.c)
+target_link_libraries(ConfigurationModule common ${ULFIUS_LIBRARIES} json_serializer)
+
 ##### This is just for Testing purposes #####
 add_executable(CNCPrototype src/CNC/cnc_prototype.c)
 target_link_libraries(CNCPrototype ${ULFIUS_LIBRARIES} json_serializer)
