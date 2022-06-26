@@ -11,6 +11,7 @@ find_package(PkgConfig REQUIRED)
 pkg_search_module(ULFIUS libulfius REQUIRED)
 pkg_search_module(SYSREPO sysrepo REQUIRED)
 pkg_search_module(JANSSON jansson REQUIRED)
+pkg_search_module(OPEN62541 open62541 REQUIRED)
 
 ## The Common lib
 add_library(common SHARED src/common.c src/sysrepo/sysrepo_client.c src/type_definitions.c src/logger.c)
@@ -42,7 +43,7 @@ target_link_libraries(ContainerModule common ${ULFIUS_LIBRARIES} json_serializer
 
 # MODULE CONFIGURATION
 add_executable(ConfigurationModule src/modules/configuration/module_configuration.c)
-target_link_libraries(ConfigurationModule common ${ULFIUS_LIBRARIES} json_serializer)
+target_link_libraries(ConfigurationModule common ${ULFIUS_LIBRARIES} json_serializer ${OPEN62541_LIBRARIES})
 
 ##### This is just for Testing purposes #####
 add_executable(CNCPrototype src/CNC/cnc_prototype.c)
