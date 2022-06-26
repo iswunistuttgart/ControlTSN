@@ -284,6 +284,7 @@ static void container_start_app(const struct application_parameter *parameter)
 {
     struct _u_response response;
     struct _u_request request;
+    struct _u_map req_headers;
     char pod[4096] = { };
     char url[1024] = { };
     int ret, len;
@@ -342,18 +343,7 @@ static void container_start_app(const struct application_parameter *parameter)
     ulfius_init_response(&response);
 
     snprintf(url, sizeof(url) - 1, "%s/%s", kubernetes_url, API_KUBERNETES_PODS);
-    // Requires ulfius Version 267
-    /*
-    ulfius_set_request_properties(&request,
-                                  U_OPT_HTTP_VERB, "POST",
-                                  U_OPT_HTTP_URL, url,
-                                  U_OPT_STRING_BODY, pod,
-                                  U_OPT_HEADER_PARAMETER, "Content-Type", "application/yaml",
-                                  U_OPT_NONE);
-                                    */
-    
-    // Alternative (Stefan)
-    struct _u_map req_headers;
+
     u_map_init(&req_headers);
     u_map_put(&req_headers, "Content-Type", "application/yaml");
     request.http_verb = strdup("POST");
@@ -362,6 +352,8 @@ static void container_start_app(const struct application_parameter *parameter)
     request.binary_body = strdup(pod);
     request.binary_body_length = strlen(pod);
 
+    if (!request.http_verb || !request.http_url || !request.binary_body)
+        goto out;
 
     ret = ulfius_send_http_request(&request, &response);
     if (ret != U_OK) {
@@ -404,17 +396,11 @@ static void container_stop_app(const struct application_parameter *parameter)
     snprintf(url, sizeof(url) - 1, "%s/%s/%s", kubernetes_url,
              API_KUBERNETES_PODS, parameter->name);
 
-    /*
-    ulfius_set_request_properties(&request,
-                                  U_OPT_HTTP_VERB, "DELETE",
-                                  U_OPT_HTTP_URL, url,
-                                  U_OPT_NONE);
-    */
-    // Alternative (Stefan)
-    
     request.http_verb = strdup("DELETE");
     request.http_url = strdup(url);
 
+    if (!request.http_verb || !request.http_url)
+        goto out;
 
     ret = ulfius_send_http_request(&request, &response);
     if (ret != U_OK) {
