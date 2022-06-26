@@ -1947,7 +1947,6 @@ err5:
 err4:
     free(app->version);
 err3_2:
-    free(app->has_mac);
     free(app->mac);
 err3:
     free(app->name);
