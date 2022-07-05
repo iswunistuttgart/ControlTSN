@@ -1418,6 +1418,7 @@ _read_talker(char *xpath, TSN_Talker **talker)
     (*talker)->end_station_interfaces = (IEEE_InterfaceId *) malloc(sizeof(IEEE_InterfaceId) * count_end_station_interfaces);
     for (int i=0; i<count_end_station_interfaces; ++i) {
         IEEE_InterfaceId *iid = malloc(sizeof(IEEE_InterfaceId));
+        iid->index = i;
         rc = _read_interface_id((&val_end_station_interfaces[i])->xpath, &iid);
         if (rc != SR_ERR_OK) {
             goto cleanup;
@@ -1575,6 +1576,7 @@ _read_listener(char *xpath, TSN_Listener **listener)
     (*listener)->end_station_interfaces = (IEEE_InterfaceId *) malloc(sizeof(IEEE_InterfaceId) * count_end_station_interfaces);
     for (int i=0; i<count_end_station_interfaces; ++i) {
         IEEE_InterfaceId *iid = malloc(sizeof(IEEE_InterfaceId));
+        iid->index = i;
         rc = _read_interface_id((&val_end_station_interfaces[i])->xpath, &iid);
         if (rc != SR_ERR_OK) {
             goto cleanup;

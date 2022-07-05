@@ -44,6 +44,11 @@ json_t *serialize_stream_configuration(TSN_Configuration *configuration);
 json_t *serialize_stream(TSN_Stream *stream);
 json_t *serialize_streams(TSN_Streams *streams);
 
+// To get the expected format to send to the openCNC 
+// --> TODO: Which format/data structure is correct? Is this standarized yet?
+json_t *serialize_cnc_request(TSN_Streams *streams);
+
+
 IEEE_StatusInfo *deserialize_status_info(json_t *obj);
 IEEE_InterfaceId *deserialize_interface_id(json_t *obj);
 //IEEE_StatusStream *deserialize_status_stream(json_t *obj);

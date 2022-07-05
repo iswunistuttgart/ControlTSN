@@ -264,6 +264,7 @@ serialize_interface_id(IEEE_InterfaceId *ii)
     json_t *root = NULL;
     root = json_object();
 
+    json_object_set_new(root, "index", json_integer(ii->index));
     json_object_set_new(root, "mac_address", json_string(ii->mac_address));
     json_object_set_new(root, "interface_name", json_string(ii->interface_name));
 
@@ -799,6 +800,49 @@ serialize_streams(TSN_Streams *streams)
     return root;
 }
 
+json_t *
+serialize_cnc_request(TSN_Streams *streams)
+{
+    json_t *root = NULL;
+    root = json_object();
+
+    json_object_set_new(root, "version", json_real(1.0));
+
+    json_t *array_requests = json_array();
+
+    for (int i=0; i<streams->count_streams; ++i) {
+        TSN_Stream *s = &streams->streams[i];
+        json_t *req = serialize_stream_request(&s->request);
+        
+        // Add Stream-id to talker and listeners (because openCNC expecting it that way?!)
+        // --> see TODO function ('serialize_cnc_request') description
+        json_t *add_stream_id = json_object();
+        char *delim = ":";
+        char *token = strtok(s->stream_id, delim);
+        json_object_set_new(add_stream_id, "mac-address", json_string(token));
+        token = strtok(NULL, delim);
+        json_object_set_new(add_stream_id, "unique-id", json_string(token));
+
+        json_t *talker = json_object_get(req, "talker");
+        json_object_set_new(talker, "stream-id", add_stream_id);
+
+        json_t *listener_list = json_object_get(req, "listener_list");
+        json_t *listener;
+        size_t index;
+        json_array_foreach(listener_list, index, listener) {
+            json_object_set_new(listener, "stream-id", add_stream_id);
+        }
+        
+        json_array_append(array_requests, req);
+    }
+    json_object_set_new(root, "requests", array_requests);
+
+
+
+    return root;
+}
+
+
 IEEE_StatusInfo *
 deserialize_status_info(json_t *obj)
 {
@@ -816,6 +860,7 @@ deserialize_interface_id(json_t *obj)
 {
     IEEE_InterfaceId *ii = malloc(sizeof(IEEE_InterfaceId));
 
+    ii->index = json_integer_value(json_object_get(obj, "index"));
     ii->mac_address = strdup(json_string_value(json_object_get(obj, "mac_address")));
     ii->interface_name = strdup(json_string_value(json_object_get(obj, "interface_name")));
 

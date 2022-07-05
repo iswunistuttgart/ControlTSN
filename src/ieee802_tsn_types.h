@@ -14,6 +14,7 @@ typedef struct IEEE_StatusInfo {
 } IEEE_StatusInfo;
 
 typedef struct IEEE_InterfaceId {
+    uint8_t index;
     char *mac_address;
     char *interface_name;
 } IEEE_InterfaceId;
