@@ -108,7 +108,7 @@ serialize_module_data(TSN_Module_Data *module_data)
     json_t *root = NULL;
     root = json_object();
 
-    json_object_set_new(root, "count_entries", json_integer(module_data->count_entries));
+    //json_object_set_new(root, "count-entries", json_integer(module_data->count_entries));
 
     json_t *array_data = NULL;
     array_data = json_array();
@@ -134,12 +134,12 @@ serialize_module(TSN_Module *module)
     root = json_object();
 
     json_object_set_new(root, "id", json_integer(module->id));
-    json_object_set_new(root, "p_id", json_integer(module->p_id));
+    json_object_set_new(root, "p-id", json_integer(module->p_id));
     json_object_set_new(root, "path", json_string(module->path));
     json_object_set_new(root, "name", json_string(module->name));
     json_object_set_new(root, "registered", json_integer(module->registered));
     json_object_set_new(root, "description", json_string(module->description));
-    json_object_set_new(root, "subscribed_events_mask", json_integer(module->subscribed_events_mask));
+    json_object_set_new(root, "subscribed-events-mask", json_integer(module->subscribed_events_mask));
     json_object_set_new(root, "data", serialize_module_data(&module->data));
 
     return root;
@@ -151,8 +151,8 @@ serialize_modules(TSN_Modules *modules)
     /*
     json_t *root = NULL;
     root = json_object();
-    json_object_set_new(root, "count_available_modules", json_integer(modules->count_available_modules));
-    json_object_set_new(root, "count_registered_modules", json_integer(modules->count_registered_modules));
+    json_object_set_new(root, "count-available-modules", json_integer(modules->count_available_modules));
+    json_object_set_new(root, "count-registered-modules", json_integer(modules->count_registered_modules));
 
     json_t *array_available = NULL;
     json_t *array_registered = NULL;
@@ -165,7 +165,7 @@ serialize_modules(TSN_Modules *modules)
         mod = serialize_module(&modules->available_modules[i]);
         json_array_append_new(array_available, mod);
     }
-    json_object_set_new(root, "available_modules", array_available);
+    json_object_set_new(root, "available-modules", array_available);
 
     // Registered modules
     for (int i=0; i<modules->count_registered_modules; ++i) {
@@ -173,14 +173,14 @@ serialize_modules(TSN_Modules *modules)
         mod = serialize_module(&modules->registered_modules[i]);
         json_array_append_new(array_registered, mod);
     }
-    json_object_set_new(root, "registered_modules", array_registered);
+    json_object_set_new(root, "registered-modules", array_registered);
 
     return root;
     */
 
     json_t *root = NULL;
     root = json_object();
-    json_object_set_new(root, "count_modules", json_integer(modules->count_modules));
+    //json_object_set_new(root, "count-modules", json_integer(modules->count_modules));
 
     json_t *array_modules = NULL;
     array_modules = json_array();
@@ -217,10 +217,12 @@ deserialize_module_data(json_t *obj)
 {
     TSN_Module_Data *module_data = malloc(sizeof(TSN_Module_Data));
 
-    uint16_t count_entries = json_number_value(json_object_get(obj, "count_entries"));
-    module_data->count_entries = count_entries;
-    module_data->entries = (TSN_Module_Data_Entry *) malloc(sizeof(TSN_Module_Data_Entry) * count_entries);
     json_t *entries_json = json_object_get(obj, "entries");
+    //uint16_t count_entries = json_number_value(json_object_get(obj, "count-entries"));
+    //module_data->count_entries = count_entries;
+    uint16_t count_entries = json_array_size(entries_json);
+    module_data->entries = (TSN_Module_Data_Entry *) malloc(sizeof(TSN_Module_Data_Entry) * count_entries);
+    
     for (int i=0; i<count_entries; ++i) {
         json_t *entry = json_array_get(entries_json, i);
         TSN_Module_Data_Entry *e = deserialize_module_data_entry(entry);
@@ -240,7 +242,7 @@ serialize_stream_id(char *stream_id)
     json_t *root = NULL;
     root = json_object();
 
-    json_object_set_new(root, "stream_id", json_string(stream_id));
+    json_object_set_new(root, "stream-id", json_string(stream_id));
 
     return root;
 }
@@ -251,9 +253,9 @@ serialize_status_info(IEEE_StatusInfo *si)
     json_t *root = NULL;
     root = json_object();
 
-    json_object_set_new(root, "talker_status", json_string(si->talker_status));
-    json_object_set_new(root, "listener_status", json_string(si->listener_status));
-    json_object_set_new(root, "failure_code", json_integer(si->failure_code));
+    json_object_set_new(root, "talker-status", json_string(si->talker_status));
+    json_object_set_new(root, "listener-status", json_string(si->listener_status));
+    json_object_set_new(root, "failure-code", json_integer(si->failure_code));
 
     return root;
 }
@@ -265,8 +267,8 @@ serialize_interface_id(IEEE_InterfaceId *ii)
     root = json_object();
 
     json_object_set_new(root, "index", json_integer(ii->index));
-    json_object_set_new(root, "mac_address", json_string(ii->mac_address));
-    json_object_set_new(root, "interface_name", json_string(ii->interface_name));
+    json_object_set_new(root, "mac-address", json_string(ii->mac_address));
+    json_object_set_new(root, "interface-name", json_string(ii->interface_name));
 
     return root;
 }
@@ -280,9 +282,9 @@ serialize_status_stream(IEEE_StatusStream *ss)
 
     json_t *status_info = NULL;
     status_info = serialize_status_info(&(ss->status_info));
-    json_object_set_new(root, "status_info", status_info);
+    json_object_set_new(root, "status-info", status_info);
 
-    json_object_set_new(root, "count_failed_interfaces", json_integer(ss->count_failed_interfaces));
+    json_object_set_new(root, "count-failed-interfaces", json_integer(ss->count_failed_interfaces));
     json_t *array_failed_interfaces = NULL;
     array_failed_interfaces = json_array();
     for (int i=0; i<ss->count_failed_interfaces; ++i) {
@@ -290,7 +292,7 @@ serialize_status_stream(IEEE_StatusStream *ss)
         x = serialize_interface_id(&(ss->failed_interfaces[i]));
         json_array_append_new(array_failed_interfaces, x);
     }
-    json_object_set_new(root, "failed_interfaces", array_failed_interfaces);
+    json_object_set_new(root, "failed-interfaces", array_failed_interfaces);
 
     return root;
 }
@@ -302,8 +304,8 @@ serialize_mac_addresses(IEEE_MacAddresses *ma)
     json_t *root = NULL;
     root = json_object();
 
-    json_object_set_new(root, "destination_mac_address", json_string(ma->destination_mac_address));
-    json_object_set_new(root, "source_mac_address", json_string(ma->source_mac_address));
+    json_object_set_new(root, "destination-mac-address", json_string(ma->destination_mac_address));
+    json_object_set_new(root, "source-mac-address", json_string(ma->source_mac_address));
 
     return root;
 }
@@ -314,8 +316,8 @@ serialize_vlan_tag(IEEE_VlanTag *vt)
     json_t *root = NULL;
     root = json_object();
 
-    json_object_set_new(root, "priority_code_point", json_integer(vt->priority_code_point));
-    json_object_set_new(root, "vlan_id", json_integer(vt->vlan_id));
+    json_object_set_new(root, "priority-code-point", json_integer(vt->priority_code_point));
+    json_object_set_new(root, "vlan-id", json_integer(vt->vlan_id));
 
     return root;
 }
@@ -326,12 +328,12 @@ serialize_ipv4_tuple(IEEE_IPv4Tuple *ipv4)
     json_t *root = NULL;
     root = json_object();
 
-    json_object_set_new(root, "source_ip_address", json_string(ipv4->source_ip_address));
-    json_object_set_new(root, "destination_ip_address", json_string(ipv4->destination_ip_address));
+    json_object_set_new(root, "source-ip-address", json_string(ipv4->source_ip_address));
+    json_object_set_new(root, "destination-ip-address", json_string(ipv4->destination_ip_address));
     json_object_set_new(root, "dscp", json_integer(ipv4->dscp));
     json_object_set_new(root, "protocol", json_integer(ipv4->protocol));
-    json_object_set_new(root, "source_port", json_integer(ipv4->source_port));
-    json_object_set_new(root, "destination_port", json_integer(ipv4->destination_port));
+    json_object_set_new(root, "source-port", json_integer(ipv4->source_port));
+    json_object_set_new(root, "destination-port", json_integer(ipv4->destination_port));
 
     return root;
 }
@@ -342,12 +344,12 @@ serialize_ipv6_tuple(IEEE_IPv6Tuple *ipv6)
     json_t *root = NULL;
     root = json_object();
 
-    json_object_set_new(root, "source_ip_address", json_string(ipv6->source_ip_address));
-    json_object_set_new(root, "destination_ip_address", json_string(ipv6->destination_ip_address));
+    json_object_set_new(root, "source-ip-address", json_string(ipv6->source_ip_address));
+    json_object_set_new(root, "destination-ip-address", json_string(ipv6->destination_ip_address));
     json_object_set_new(root, "dscp", json_integer(ipv6->dscp));
     json_object_set_new(root, "protocol", json_integer(ipv6->protocol));
-    json_object_set_new(root, "source_port", json_integer(ipv6->source_port));
-    json_object_set_new(root, "destination_port", json_integer(ipv6->destination_port));
+    json_object_set_new(root, "source-port", json_integer(ipv6->source_port));
+    json_object_set_new(root, "destination-port", json_integer(ipv6->destination_port));
 
     return root;
 }
@@ -360,7 +362,7 @@ serialize_config_list(IEEE_ConfigList *cl)
 
     json_object_set_new(root, "index", json_integer(cl->index));
 
-    json_object_set_new(root, "field_type", json_integer(cl->field_type));
+    json_object_set_new(root, "field-type", json_integer(cl->field_type));
 
     /*
     json_t *field = NULL;
@@ -375,24 +377,24 @@ serialize_config_list(IEEE_ConfigList *cl)
     } else if (cl->field_type == CONFIG_LIST_TIME_AWARE_OFFSET) {
         field = json_integer(cl->config_value.time_aware_offset);
     }
-    json_object_set_new(root, "config_value", field);
+    json_object_set_new(root, "config-value", field);
     */
 
     if (cl->field_type == CONFIG_LIST_MAC_ADDRESSES) {
         json_t *x = serialize_mac_addresses(cl->ieee802_mac_addresses);
-        json_object_set_new(root, "ieee802_mac_addresses", x);
+        json_object_set_new(root, "ieee802-mac-addresses", x);
     } else if (cl->field_type == CONFIG_LIST_VLAN_TAG) {
         json_t *x = serialize_vlan_tag(cl->ieee802_vlan_tag);
-        json_object_set_new(root, "ieee802_vlan_tag", x);
+        json_object_set_new(root, "ieee802-vlan-tag", x);
     } else if (cl->field_type == CONFIG_LIST_IPV4_TUPLE) {
         json_t *x = serialize_ipv4_tuple(cl->ipv4_tuple);
-        json_object_set_new(root, "ipv4_tuple", x);
+        json_object_set_new(root, "ipv4-tuple", x);
     } else if (cl->field_type == CONFIG_LIST_IPV6_TUPLE) {
         json_t *x = serialize_ipv6_tuple(cl->ipv6_tuple);
-        json_object_set_new(root, "ipv6_tuple", x);
+        json_object_set_new(root, "ipv6-tuple", x);
     } else if (cl->field_type == CONFIG_LIST_TIME_AWARE_OFFSET) {
         json_t *x = json_integer(cl->time_aware_offset);
-        json_object_set_new(root, "time_aware_offset", x);
+        json_object_set_new(root, "time-aware-offset", x);
     }
 
     return root;
@@ -406,11 +408,11 @@ serialize_interface_list(IEEE_InterfaceList *il)
 
     //json_t *interface_id = NULL;
     //interface_id = serialize_interface_id(&(il->interface_id));
-    //json_object_set_new(root, "interface_id", interface_id);
-    json_object_set_new(root, "mac_address", json_string(il->mac_address));
-    json_object_set_new(root, "interface_name", json_string(il->interface_name));
+    //json_object_set_new(root, "interface-id", interface_id);
+    json_object_set_new(root, "mac-address", json_string(il->mac_address));
+    json_object_set_new(root, "interface-name", json_string(il->interface_name));
 
-    json_object_set_new(root, "count_config_list_entries", json_integer(il->count_config_list_entries));
+    //json_object_set_new(root, "count-config-list-entries", json_integer(il->count_config_list_entries));
     json_t *array_config_list = NULL;
     array_config_list = json_array();
     for (int i=0; i<il->count_config_list_entries; ++i) {
@@ -418,7 +420,7 @@ serialize_interface_list(IEEE_InterfaceList *il)
         x = serialize_config_list(&(il->config_list[i]));
         json_array_append_new(array_config_list, x);
     }
-    json_object_set_new(root, "config_list", array_config_list);
+    json_object_set_new(root, "config-list", array_config_list);
 
     return root;
 }
@@ -429,7 +431,7 @@ serialize_interface_configuration(IEEE_InterfaceConfiguration *ic)
     json_t *root = NULL;
     root = json_object();
 
-    json_object_set_new(root, "count_interface_list_entries", json_integer(ic->count_interface_list_entries));
+    //json_object_set_new(root, "count-interface-list-entries", json_integer(ic->count_interface_list_entries));
     json_t *array_interface_list_entries = NULL;
     array_interface_list_entries = json_array();
     for (int i=0; i<ic->count_interface_list_entries; ++i) {
@@ -437,7 +439,7 @@ serialize_interface_configuration(IEEE_InterfaceConfiguration *ic)
         x = serialize_interface_list(&(ic->interface_list[i]));
         json_array_append_new(array_interface_list_entries, x);
     }
-    json_object_set_new(root, "interface_list", array_interface_list_entries);
+    json_object_set_new(root, "interface-list", array_interface_list_entries);
 
     return root;
 }
@@ -461,7 +463,7 @@ serialize_data_frame_specification(IEEE_DataFrameSpecification *dfs)
 
     json_object_set_new(root, "index", json_integer(dfs->index));
 
-    json_object_set_new(root, "field_type", json_integer(dfs->field_type));
+    json_object_set_new(root, "field-type", json_integer(dfs->field_type));
     /*
     json_t *field = NULL;
     if (dfs->field_type == DATA_FRAME_SPECIFICATION_MAC_ADDRESSES) {
@@ -478,16 +480,16 @@ serialize_data_frame_specification(IEEE_DataFrameSpecification *dfs)
 
     if (dfs->field_type == DATA_FRAME_SPECIFICATION_MAC_ADDRESSES) {
         json_t *x = serialize_mac_addresses(dfs->ieee802_mac_addresses);
-        json_object_set_new(root, "ieee802_mac_addresses", x);
+        json_object_set_new(root, "ieee802-mac-addresses", x);
     } else if (dfs->field_type == DATA_FRAME_SPECIFICATION_VLAN_TAG) {
         json_t *x = serialize_vlan_tag(dfs->ieee802_vlan_tag);
-        json_object_set_new(root, "ieee802_vlan_tag", x);
+        json_object_set_new(root, "ieee802-vlan-tag", x);
     } else if (dfs->field_type == DATA_FRAME_SPECIFICATION_IPV4_TUPLE) {
         json_t *x = serialize_ipv4_tuple(dfs->ipv4_tuple);
-        json_object_set_new(root, "ipv4_tuple", x);
+        json_object_set_new(root, "ipv4-tuple", x);
     } else if (dfs->field_type == DATA_FRAME_SPECIFICATION_IPV6_TUPLE) {
         json_t *x = serialize_ipv6_tuple(dfs->ipv6_tuple);
-        json_object_set_new(root, "ipv6_tuple", x);
+        json_object_set_new(root, "ipv6-tuple", x);
     }
 
     return root;
@@ -511,8 +513,8 @@ serialize_time_aware(IEEE_TimeAware *ta)
     json_t *root = NULL;
     root = json_object();
 
-    json_object_set_new(root, "earliest_transmit_offset", json_integer(ta->earliest_transmit_offset));
-    json_object_set_new(root, "latest_transmit_offset", json_integer(ta->latest_transmit_offset));
+    json_object_set_new(root, "earliest-transmit-offset", json_integer(ta->earliest_transmit_offset));
+    json_object_set_new(root, "latest-transmit-offset", json_integer(ta->latest_transmit_offset));
     json_object_set_new(root, "jitter", json_integer(ta->jitter));
 
     return root;
@@ -528,13 +530,13 @@ serialize_traffic_specification(IEEE_TrafficSpecification *ts)
     interval = serialize_interval(&(ts->interval));
     json_object_set_new(root, "interval", interval);
 
-    json_object_set_new(root, "max_frames_per_interval", json_integer(ts->max_frames_per_interval));
-    json_object_set_new(root, "max_frame_size", json_integer(ts->max_frame_size));
-    json_object_set_new(root, "transmission_selection", json_integer(ts->transmission_selection));
+    json_object_set_new(root, "max-frames-per-interval", json_integer(ts->max_frames_per_interval));
+    json_object_set_new(root, "max-frame-size", json_integer(ts->max_frame_size));
+    json_object_set_new(root, "transmission-selection", json_integer(ts->transmission_selection));
 
     json_t *time_aware = NULL;
     time_aware = serialize_time_aware(&(ts->time_aware));
-    json_object_set_new(root, "time_aware", time_aware);
+    json_object_set_new(root, "time-aware", time_aware);
 
     return root;
 }
@@ -545,8 +547,8 @@ serialize_user_to_network_requirements(IEEE_UserToNetworkRequirements *utnr)
     json_t *root = NULL;
     root = json_object();
 
-    json_object_set_new(root, "num_seamless_trees", json_integer(utnr->num_seamless_trees));
-    json_object_set_new(root, "max_latency", json_integer(utnr->max_latency));
+    json_object_set_new(root, "num-seamless-trees", json_integer(utnr->num_seamless_trees));
+    json_object_set_new(root, "max-latency", json_integer(utnr->max_latency));
 
     return root;
 }
@@ -557,9 +559,9 @@ serialize_interface_capabilities(IEEE_InterfaceCapabilities *ic)
     json_t *root = NULL;
     root = json_object();
 
-    json_object_set_new(root, "vlan_tag_capable", json_boolean(ic->vlan_tag_capable));
+    json_object_set_new(root, "vlan-tag-capable", json_boolean(ic->vlan_tag_capable));
 
-    json_object_set_new(root, "count_cb_stream_iden_types", json_integer(ic->count_cb_stream_iden_types));
+    //json_object_set_new(root, "count-cb-stream-iden-types", json_integer(ic->count_cb_stream_iden_types));
     json_t *array_cb_stream_iden_type_list = NULL;
     array_cb_stream_iden_type_list = json_array();
     for (int i=0; i<ic->count_cb_stream_iden_types; ++i) {
@@ -567,9 +569,9 @@ serialize_interface_capabilities(IEEE_InterfaceCapabilities *ic)
         c = json_integer(ic->cb_stream_iden_type_list[i]);
         json_array_append_new(array_cb_stream_iden_type_list, c);
     }
-    json_object_set_new(root, "cb_stream_iden_type_list", array_cb_stream_iden_type_list);
+    json_object_set_new(root, "cb-stream-iden-type-list", array_cb_stream_iden_type_list);
 
-    json_object_set_new(root, "count_cb_sequence_types", json_integer(ic->count_cb_sequence_types));
+    //json_object_set_new(root, "count-cb-sequence-types", json_integer(ic->count_cb_sequence_types));
     json_t *array_cb_sequence_type_list = NULL;
     array_cb_sequence_type_list = json_array();
     for (int i=0; i<ic->count_cb_sequence_types; ++i) {
@@ -577,7 +579,7 @@ serialize_interface_capabilities(IEEE_InterfaceCapabilities *ic)
         c = json_integer(ic->cb_sequence_type_list[i]);
         json_array_append_new(array_cb_sequence_type_list, c);
     }
-    json_object_set_new(root, "cb_sequence_type_list", array_cb_sequence_type_list);
+    json_object_set_new(root, "cb-sequence-type-list", array_cb_sequence_type_list);
 
     return root;
 }
@@ -588,12 +590,12 @@ serialize_talker(TSN_Talker *talker)
     json_t *root = NULL;
     root = json_object();
 
-    json_object_set_new(root, "count_end_station_interfaces", json_integer(talker->count_end_station_interfaces));
-    json_object_set_new(root, "count_data_frame_specifications", json_integer(talker->count_data_frame_specifications));
+    //json_object_set_new(root, "count-end-station-interfaces", json_integer(talker->count_end_station_interfaces));
+    //json_object_set_new(root, "count-data-frame-specifications", json_integer(talker->count_data_frame_specifications));
 
     json_t *stream_rank = NULL;
     stream_rank = serialize_stream_rank(&(talker->stream_rank));
-    json_object_set_new(root, "stream_rank", stream_rank);
+    json_object_set_new(root, "stream-rank", stream_rank);
 
     json_t *array_end_station_interfaces = NULL;
     array_end_station_interfaces = json_array();
@@ -602,7 +604,7 @@ serialize_talker(TSN_Talker *talker)
         e = serialize_interface_id(&(talker->end_station_interfaces[i]));
         json_array_append_new(array_end_station_interfaces, e);
     }
-    json_object_set_new(root, "end_station_interfaces", array_end_station_interfaces);
+    json_object_set_new(root, "end-station-interfaces", array_end_station_interfaces);
 
     json_t *array_data_frame_specification = NULL;
     array_data_frame_specification = json_array();
@@ -611,19 +613,19 @@ serialize_talker(TSN_Talker *talker)
         d = serialize_data_frame_specification(&(talker->data_frame_specification[i]));
         json_array_append_new(array_data_frame_specification, d);
     }
-    json_object_set_new(root, "data_frame_specification", array_data_frame_specification);
+    json_object_set_new(root, "data-frame-specification", array_data_frame_specification);
 
     json_t *traffic_specification = NULL;
     traffic_specification = serialize_traffic_specification(&(talker->traffic_specification));
-    json_object_set_new(root, "traffic_specification", traffic_specification);
+    json_object_set_new(root, "traffic-specification", traffic_specification);
 
     json_t *user_to_network_requirements = NULL;
     user_to_network_requirements = serialize_user_to_network_requirements(&(talker->user_to_network_requirements));
-    json_object_set_new(root, "user_to_network_requirements", user_to_network_requirements);
+    json_object_set_new(root, "user-to-network-requirements", user_to_network_requirements);
 
     json_t *interface_capabilities = NULL;
     interface_capabilities = serialize_interface_capabilities(&(talker->interface_capabilities));
-    json_object_set_new(root, "interface_capabilities", interface_capabilities);
+    json_object_set_new(root, "interface-capabilities", interface_capabilities);
 
     return root;
 }
@@ -636,7 +638,7 @@ serialize_listener(TSN_Listener *listener)
 
     json_object_set_new(root, "index", json_integer(listener->index));
 
-    json_object_set_new(root, "count_end_station_interfaces", json_integer(listener->count_end_station_interfaces));
+    //json_object_set_new(root, "count-end-station-interfaces", json_integer(listener->count_end_station_interfaces));
     json_t *array_end_station_interfaces = NULL;
     array_end_station_interfaces = json_array();
     for (int i=0; i<listener->count_end_station_interfaces; ++i) {
@@ -644,15 +646,15 @@ serialize_listener(TSN_Listener *listener)
         x = serialize_interface_id(&(listener->end_station_interfaces[i]));
         json_array_append_new(array_end_station_interfaces, x);
     }
-    json_object_set_new(root, "end_station_interfaces", array_end_station_interfaces);
+    json_object_set_new(root, "end-station-interfaces", array_end_station_interfaces);
 
     json_t *user_to_network_requirements = NULL;
     user_to_network_requirements = serialize_user_to_network_requirements(&(listener->user_to_network_requirements));
-    json_object_set_new(root, "user_to_network_requirements", user_to_network_requirements);
+    json_object_set_new(root, "user-to-network-requirements", user_to_network_requirements);
 
     json_t *interface_capabilities = NULL;
     interface_capabilities = serialize_interface_capabilities(&(listener->interface_capabilities));
-    json_object_set_new(root, "interface_capabilities", interface_capabilities);
+    json_object_set_new(root, "interface-capabilities", interface_capabilities);
 
     return root;
 }
@@ -663,7 +665,7 @@ serialize_stream_request(TSN_Request *request)
     json_t *root = NULL;
     root = json_object();
 
-    json_object_set_new(root, "count_listeners", json_integer(request->count_listeners));
+    //json_object_set_new(root, "count-listeners", json_integer(request->count_listeners));
 
     json_t *talker = NULL;
     talker = serialize_talker(&(request->talker));
@@ -676,7 +678,7 @@ serialize_stream_request(TSN_Request *request)
         l = serialize_listener(&(request->listener_list[i]));
         json_array_append_new(array_listeners, l);
     }
-    json_object_set_new(root, "listener_list", array_listeners);
+    json_object_set_new(root, "listener-list", array_listeners);
 
     return root;
 }
@@ -687,11 +689,11 @@ serialize_status_talker(TSN_StatusTalker *st)
     json_t *root = NULL;
     root = json_object();
 
-    json_object_set_new(root, "accumulated_latency", json_integer(st->accumulated_latency));
+    json_object_set_new(root, "accumulated-latency", json_integer(st->accumulated_latency));
 
     json_t *interface_configuration = NULL;
     interface_configuration = serialize_interface_configuration(&(st->interface_configuration));
-    json_object_set_new(root, "interface_configuration", interface_configuration);
+    json_object_set_new(root, "interface-configuration", interface_configuration);
 
     return root;
 }
@@ -703,11 +705,11 @@ serialize_status_listener(TSN_StatusListener *sl)
     root = json_object();
 
     json_object_set_new(root, "index", json_integer(sl->index));
-    json_object_set_new(root, "accumulated_latency", json_integer(sl->accumulated_latency));
+    json_object_set_new(root, "accumulated-latency", json_integer(sl->accumulated_latency));
 
     json_t *interface_configuration = NULL;
     interface_configuration = serialize_interface_configuration(&(sl->interface_configuration));
-    json_object_set_new(root, "interface_configuration", interface_configuration);
+    json_object_set_new(root, "interface-configuration", interface_configuration);
 
     return root;
 }
@@ -718,7 +720,7 @@ serialize_stream_configuration(TSN_Configuration *configuration)
     json_t *root = NULL;
     root = json_object();
 
-    json_object_set_new(root, "count_listeners", json_integer(configuration->count_listeners));
+    //json_object_set_new(root, "count-listeners", json_integer(configuration->count_listeners));
     json_t *array_listener_list = NULL;
     array_listener_list = json_array();
     for (int i=0; i<configuration->count_listeners; ++i) {
@@ -726,7 +728,7 @@ serialize_stream_configuration(TSN_Configuration *configuration)
         x = serialize_status_listener(&(configuration->listener_list[i]));
         json_array_append_new(array_listener_list, x);
     }
-    json_object_set_new(root, "listener_list", array_listener_list);
+    json_object_set_new(root, "listener-list", array_listener_list);
 
     json_t *talker = NULL;
     talker = serialize_status_talker(&(configuration->talker));
@@ -734,13 +736,13 @@ serialize_stream_configuration(TSN_Configuration *configuration)
 
     //json_t *status_stream = NULL;
     //status_stream = serialize_status_stream(&(configuration->status_stream));
-    //json_object_set_new(root, "status_stream", status_stream);
+    //json_object_set_new(root, "status-stream", status_stream);
 
     json_t *status_info = NULL;
     status_info = serialize_status_info(&(configuration->status_info));
-    json_object_set_new(root, "status_info", status_info);
+    json_object_set_new(root, "status-info", status_info);
 
-    json_object_set_new(root, "count_failed_interfaces", json_integer(configuration->count_failed_interfaces));
+    //json_object_set_new(root, "count-failed-interfaces", json_integer(configuration->count_failed_interfaces));
     json_t *array_failed_interfaces = NULL;
     array_failed_interfaces = json_array();
     for (int i=0; i<configuration->count_failed_interfaces; ++i) {
@@ -748,7 +750,7 @@ serialize_stream_configuration(TSN_Configuration *configuration)
         x = serialize_interface_id(&(configuration->failed_interfaces[i]));
         json_array_append_new(array_failed_interfaces, x);
     }
-    json_object_set_new(root, "failed_interfaces", array_failed_interfaces);
+    json_object_set_new(root, "failed-interfaces", array_failed_interfaces);
 
     return root;
 }
@@ -760,7 +762,7 @@ serialize_stream(TSN_Stream *stream)
     root = json_object();
 
     // Stream ID
-    json_object_set_new(root, "stream_id", json_string(stream->stream_id));
+    json_object_set_new(root, "stream-id", json_string(stream->stream_id));
 
     // Request
     json_t *request = NULL;
@@ -786,7 +788,7 @@ serialize_streams(TSN_Streams *streams)
     json_t *root = NULL;
     root = json_object();
 
-    json_object_set_new(root, "count_streams", json_integer(streams->count_streams));
+    //json_object_set_new(root, "count-streams", json_integer(streams->count_streams));
 
     json_t *array_streams = NULL;
     array_streams = json_array();
@@ -826,7 +828,7 @@ serialize_cnc_request(TSN_Streams *streams)
         json_t *talker = json_object_get(req, "talker");
         json_object_set_new(talker, "stream-id", add_stream_id);
 
-        json_t *listener_list = json_object_get(req, "listener_list");
+        json_t *listener_list = json_object_get(req, "listener-list");
         json_t *listener;
         size_t index;
         json_array_foreach(listener_list, index, listener) {
@@ -848,9 +850,9 @@ deserialize_status_info(json_t *obj)
 {
     IEEE_StatusInfo *si = malloc(sizeof(IEEE_StatusInfo));
 
-    si->talker_status = strdup(json_string_value(json_object_get(obj, "talker_status")));
-    si->listener_status = strdup(json_string_value(json_object_get(obj, "listener_status")));
-    si->failure_code = json_integer_value(json_object_get(obj, "failure_code"));
+    si->talker_status = strdup(json_string_value(json_object_get(obj, "talker-status")));
+    si->listener_status = strdup(json_string_value(json_object_get(obj, "listener-status")));
+    si->failure_code = json_integer_value(json_object_get(obj, "failure-code"));
 
     return si;
 }
@@ -861,8 +863,8 @@ deserialize_interface_id(json_t *obj)
     IEEE_InterfaceId *ii = malloc(sizeof(IEEE_InterfaceId));
 
     ii->index = json_integer_value(json_object_get(obj, "index"));
-    ii->mac_address = strdup(json_string_value(json_object_get(obj, "mac_address")));
-    ii->interface_name = strdup(json_string_value(json_object_get(obj, "interface_name")));
+    ii->mac_address = strdup(json_string_value(json_object_get(obj, "mac-address")));
+    ii->interface_name = strdup(json_string_value(json_object_get(obj, "interface-name")));
 
     return ii;
 }
@@ -873,10 +875,10 @@ deserialize_status_stream(json_t *obj)
 {
     IEEE_StatusStream *x = malloc(sizeof(IEEE_StatusStream));
 
-    x->status_info = *(deserialize_status_info(json_object_get(obj, "status_info")));
+    x->status_info = *(deserialize_status_info(json_object_get(obj, "status-info")));
 
 
-    json_t *failed_interfaces = json_object_get(obj, "failed_interfaces");
+    json_t *failed_interfaces = json_object_get(obj, "failed-interfaces");
     x->count_failed_interfaces = json_array_size(failed_interfaces);
     x->failed_interfaces = (IEEE_InterfaceId *) malloc(sizeof(IEEE_InterfaceId) * x->count_failed_interfaces);
     for (int i=0; i<x->count_failed_interfaces; ++i) {
@@ -893,8 +895,8 @@ deserialize_mac_addresses(json_t *obj)
 {
     IEEE_MacAddresses *x = malloc(sizeof(IEEE_MacAddresses));
 
-    x->destination_mac_address = strdup(json_string_value(json_object_get(obj, "destination_mac_address")));
-    x->source_mac_address = strdup(json_string_value(json_object_get(obj, "source_mac_address")));
+    x->destination_mac_address = strdup(json_string_value(json_object_get(obj, "destination-mac-address")));
+    x->source_mac_address = strdup(json_string_value(json_object_get(obj, "source-mac-address")));
 
     return x;
 }
@@ -904,8 +906,8 @@ deserialize_vlan_tag(json_t *obj)
 {
     IEEE_VlanTag *x = malloc(sizeof(IEEE_VlanTag));
 
-    x->priority_code_point = json_integer_value(json_object_get(obj, "priority_code_point"));
-    x->vlan_id = json_integer_value(json_object_get(obj, "vlan_id"));
+    x->priority_code_point = json_integer_value(json_object_get(obj, "priority-code-point"));
+    x->vlan_id = json_integer_value(json_object_get(obj, "vlan-id"));
 
     return x;
 }
@@ -915,12 +917,12 @@ deserialize_ipv4_tuple(json_t *obj)
 {
     IEEE_IPv4Tuple *x = malloc(sizeof(IEEE_IPv4Tuple));
 
-    x->source_ip_address = strdup(json_string_value(json_object_get(obj, "source_ip_address")));
-    x->destination_ip_address = strdup(json_string_value(json_object_get(obj, "destination_ip_address")));
+    x->source_ip_address = strdup(json_string_value(json_object_get(obj, "source-ip-address")));
+    x->destination_ip_address = strdup(json_string_value(json_object_get(obj, "destination-ip-address")));
     x->dscp = json_integer_value(json_object_get(obj, "dscp"));
     x->protocol = json_integer_value(json_object_get(obj, "protocol"));
-    x->source_port = json_integer_value(json_object_get(obj, "source_port"));
-    x->destination_port = json_integer_value(json_object_get(obj, "destination_port"));
+    x->source_port = json_integer_value(json_object_get(obj, "source-port"));
+    x->destination_port = json_integer_value(json_object_get(obj, "destination-port"));
 
     return x;
 }
@@ -930,12 +932,12 @@ deserialize_ipv6_tuple(json_t *obj)
 {
     IEEE_IPv6Tuple *x = malloc(sizeof(IEEE_IPv6Tuple));
 
-    x->source_ip_address = strdup(json_string_value(json_object_get(obj, "source_ip_address")));
-    x->destination_ip_address = strdup(json_string_value(json_object_get(obj, "destination_ip_address")));
+    x->source_ip_address = strdup(json_string_value(json_object_get(obj, "source-ip-address")));
+    x->destination_ip_address = strdup(json_string_value(json_object_get(obj, "destination-ip-address")));
     x->dscp = json_integer_value(json_object_get(obj, "dscp"));
     x->protocol = json_integer_value(json_object_get(obj, "protocol"));
-    x->source_port = json_integer_value(json_object_get(obj, "source_port"));
-    x->destination_port = json_integer_value(json_object_get(obj, "destination_port"));
+    x->source_port = json_integer_value(json_object_get(obj, "source-port"));
+    x->destination_port = json_integer_value(json_object_get(obj, "destination-port"));
 
     return x;
 }
@@ -946,35 +948,35 @@ deserialize_config_list(json_t *obj)
     IEEE_ConfigList *x = malloc(sizeof(IEEE_ConfigList));
 
     x->index = json_integer_value(json_object_get(obj, "index"));
-    x->field_type = json_integer_value(json_object_get(obj, "field_type"));
+    x->field_type = json_integer_value(json_object_get(obj, "field-type"));
 
     /*
     json_t *config_value = NULL;
-    config_value = json_object_get(obj, "config_value");
+    config_value = json_object_get(obj, "config-value");
 
     if (x->field_type == CONFIG_LIST_MAC_ADDRESSES) {
-        x->config_value.ieee802_mac_addresses = *(deserialize_mac_addresses(json_object_get(config_value, "ieee802_mac_addresses")));
+        x->config_value.ieee802_mac_addresses = *(deserialize_mac_addresses(json_object_get(config_value, "ieee802-mac-addresses")));
     } else if (x->field_type == CONFIG_LIST_VLAN_TAG) {
-        x->config_value.ieee802_vlan_tag = *(deserialize_vlan_tag(json_object_get(config_value, "ieee802_vlan_tag")));
+        x->config_value.ieee802_vlan_tag = *(deserialize_vlan_tag(json_object_get(config_value, "ieee802-vlan-tag")));
     } else if (x->field_type == CONFIG_LIST_IPV4_TUPLE) {
-        x->config_value.ipv4_tuple = *(deserialize_ipv4_tuple(json_object_get(config_value, "ipv4_tuple")));
+        x->config_value.ipv4_tuple = *(deserialize_ipv4_tuple(json_object_get(config_value, "ipv4-tuple")));
     } else if (x->field_type == CONFIG_LIST_IPV6_TUPLE) {
-        x->config_value.ipv6_tuple = *(deserialize_ipv6_tuple(json_object_get(config_value, "ipv6_tuple")));
+        x->config_value.ipv6_tuple = *(deserialize_ipv6_tuple(json_object_get(config_value, "ipv6-tuple")));
     } else if (x->field_type == CONFIG_LIST_TIME_AWARE_OFFSET) {
-        x->config_value.time_aware_offset = json_integer_value(json_object_get(config_value, "time_aware_offset"));
+        x->config_value.time_aware_offset = json_integer_value(json_object_get(config_value, "time-aware-offset"));
     }
     */
 
     if (x->field_type == CONFIG_LIST_MAC_ADDRESSES) {
-        x->ieee802_mac_addresses = deserialize_mac_addresses(json_object_get(obj, "ieee802_mac_addresses"));
+        x->ieee802_mac_addresses = deserialize_mac_addresses(json_object_get(obj, "ieee802-mac-addresses"));
     } else if (x->field_type == CONFIG_LIST_VLAN_TAG) {
-        x->ieee802_vlan_tag = deserialize_vlan_tag(json_object_get(obj, "ieee802_vlan_tag"));
+        x->ieee802_vlan_tag = deserialize_vlan_tag(json_object_get(obj, "ieee802-vlan-tag"));
     } else if (x->field_type == CONFIG_LIST_IPV4_TUPLE) {
-        x->ipv4_tuple = deserialize_ipv4_tuple(json_object_get(obj, "ipv4_tuple"));
+        x->ipv4_tuple = deserialize_ipv4_tuple(json_object_get(obj, "ipv4-tuple"));
     } else if (x->field_type == CONFIG_LIST_IPV6_TUPLE) {
-        x->ipv6_tuple = deserialize_ipv6_tuple(json_object_get(obj, "ipv6_tuple"));
+        x->ipv6_tuple = deserialize_ipv6_tuple(json_object_get(obj, "ipv6-tuple"));
     } else if (x->field_type == CONFIG_LIST_TIME_AWARE_OFFSET) {
-        x->time_aware_offset = json_integer_value(json_object_get(obj, "time_aware_offset"));
+        x->time_aware_offset = json_integer_value(json_object_get(obj, "time-aware-offset"));
     }
 
     return x;
@@ -985,11 +987,11 @@ deserialize_interface_list(json_t *obj)
 {
     IEEE_InterfaceList *x = malloc(sizeof(IEEE_InterfaceList));
 
-    //x->interface_id = *(deserialize_interface_id(json_object_get(obj, "interface_id")));
-    x->mac_address = strdup(json_string_value(json_object_get(obj, "mac_address")));
-    x->interface_name = strdup(json_string_value(json_object_get(obj, "interface_name")));
+    //x->interface_id = *(deserialize_interface_id(json_object_get(obj, "interface-id")));
+    x->mac_address = strdup(json_string_value(json_object_get(obj, "mac-address")));
+    x->interface_name = strdup(json_string_value(json_object_get(obj, "interface-name")));
 
-    json_t *config_list = json_object_get(obj, "config_list");
+    json_t *config_list = json_object_get(obj, "config-list");
     x->count_config_list_entries = json_array_size(config_list);
     x->config_list = (IEEE_ConfigList *) malloc(sizeof(IEEE_ConfigList) * x->count_config_list_entries);
     for (int i=0; i<x->count_config_list_entries; ++i) {
@@ -1005,7 +1007,7 @@ deserialize_interface_configuration(json_t *obj)
 {
     IEEE_InterfaceConfiguration *x = malloc(sizeof(IEEE_InterfaceConfiguration));
 
-    json_t *interface_list = json_object_get(obj, "interface_list");
+    json_t *interface_list = json_object_get(obj, "interface-list");
     x->count_interface_list_entries = json_array_size(interface_list);
     x->interface_list = (IEEE_InterfaceList *) malloc(sizeof(IEEE_InterfaceList) * x->count_interface_list_entries);
     for (int i=0; i<x->count_interface_list_entries; ++i) {
@@ -1032,31 +1034,31 @@ deserialize_data_frame_specification(json_t *obj)
     IEEE_DataFrameSpecification *x = malloc(sizeof(IEEE_DataFrameSpecification));
 
     x->index = json_integer_value(json_object_get(obj, "index"));
-    x->field_type = json_integer_value(json_object_get(obj, "field_type"));
+    x->field_type = json_integer_value(json_object_get(obj, "field-type"));
 
     /*
     json_t *field = NULL;
     field = json_object_get(obj, "field");
 
     if (x->field_type == DATA_FRAME_SPECIFICATION_MAC_ADDRESSES) {
-        x->field.ieee802_mac_addresses = *(deserialize_mac_addresses(json_object_get(field, "ieee802_mac_addresses")));
+        x->field.ieee802_mac_addresses = *(deserialize_mac_addresses(json_object_get(field, "ieee802-mac-addresses")));
     } else if (x->field_type == DATA_FRAME_SPECIFICATION_VLAN_TAG) {
-        x->field.ieee802_vlan_tag = *(deserialize_vlan_tag(json_object_get(field, "ieee802_vlan_tag")));
+        x->field.ieee802_vlan_tag = *(deserialize_vlan_tag(json_object_get(field, "ieee802-vlan-tag")));
     } else if (x->field_type == DATA_FRAME_SPECIFICATION_IPV4_TUPLE) {
-        x->field.ipv4_tuple = *(deserialize_ipv4_tuple(json_object_get(field, "ipv4_tuple")));
+        x->field.ipv4_tuple = *(deserialize_ipv4_tuple(json_object_get(field, "ipv4-tuple")));
     } else if (x->field_type == DATA_FRAME_SPECIFICATION_IPV6_TUPLE) {
-        x->field.ipv6_tuple = *(deserialize_ipv6_tuple(json_object_get(field, "ipv6_tuple")));
+        x->field.ipv6_tuple = *(deserialize_ipv6_tuple(json_object_get(field, "ipv6-tuple")));
     }
     */
 
     if (x->field_type == DATA_FRAME_SPECIFICATION_MAC_ADDRESSES) {
-        x->ieee802_mac_addresses = (deserialize_mac_addresses(json_object_get(obj, "ieee802_mac_addresses")));
+        x->ieee802_mac_addresses = (deserialize_mac_addresses(json_object_get(obj, "ieee802-mac-addresses")));
     } else if (x->field_type == DATA_FRAME_SPECIFICATION_VLAN_TAG) {
-        x->ieee802_vlan_tag = (deserialize_vlan_tag(json_object_get(obj, "ieee802_vlan_tag")));
+        x->ieee802_vlan_tag = (deserialize_vlan_tag(json_object_get(obj, "ieee802-vlan-tag")));
     } else if (x->field_type == DATA_FRAME_SPECIFICATION_IPV4_TUPLE) {
-        x->ipv4_tuple = (deserialize_ipv4_tuple(json_object_get(obj, "ipv4_tuple")));
+        x->ipv4_tuple = (deserialize_ipv4_tuple(json_object_get(obj, "ipv4-tuple")));
     } else if (x->field_type == DATA_FRAME_SPECIFICATION_IPV6_TUPLE) {
-        x->ipv6_tuple = (deserialize_ipv6_tuple(json_object_get(obj, "ipv6_tuple")));
+        x->ipv6_tuple = (deserialize_ipv6_tuple(json_object_get(obj, "ipv6-tuple")));
     }
 
     return x;
@@ -1078,8 +1080,8 @@ deserialize_time_aware(json_t *obj)
 {
     IEEE_TimeAware *x = malloc(sizeof(IEEE_TimeAware));
 
-    x->earliest_transmit_offset = json_integer_value(json_object_get(obj, "earliest_transmit_offset"));
-    x->latest_transmit_offset = json_integer_value(json_object_get(obj, "latest_transmit_offset"));
+    x->earliest_transmit_offset = json_integer_value(json_object_get(obj, "earliest-transmit-offset"));
+    x->latest_transmit_offset = json_integer_value(json_object_get(obj, "latest-transmit-offset"));
     x->jitter = json_integer_value(json_object_get(obj, "jitter"));
 
     return x;
@@ -1091,10 +1093,10 @@ deserialize_traffic_specification(json_t *obj)
     IEEE_TrafficSpecification *x = malloc(sizeof(IEEE_TrafficSpecification));
 
     x->interval = *(deserialize_interval(json_object_get(obj, "interval")));
-    x->max_frames_per_interval = json_integer_value(json_object_get(obj, "max_frames_per_interval"));
-    x->max_frame_size = json_integer_value(json_object_get(obj, "max_frame_size"));
-    x->transmission_selection = json_integer_value(json_object_get(obj, "transmission_selection"));
-    x->time_aware = *(deserialize_time_aware(json_object_get(obj, "time_aware")));
+    x->max_frames_per_interval = json_integer_value(json_object_get(obj, "max-frames-per-interval"));
+    x->max_frame_size = json_integer_value(json_object_get(obj, "max-frame-size"));
+    x->transmission_selection = json_integer_value(json_object_get(obj, "transmission-selection"));
+    x->time_aware = *(deserialize_time_aware(json_object_get(obj, "time-aware")));
 
     return x;
 }
@@ -1104,8 +1106,8 @@ deserialize_user_to_network_requirements(json_t *obj)
 {
     IEEE_UserToNetworkRequirements *x = malloc(sizeof(IEEE_UserToNetworkRequirements));
 
-    x->num_seamless_trees = json_integer_value(json_object_get(obj, "num_seamless_trees"));
-    x->max_latency = json_integer_value(json_object_get(obj, "max_latency"));
+    x->num_seamless_trees = json_integer_value(json_object_get(obj, "num-seamless-trees"));
+    x->max_latency = json_integer_value(json_object_get(obj, "max-latency"));
 
     return x;
 }
@@ -1115,9 +1117,9 @@ deserialize_interface_capabilities(json_t *obj)
 {
     IEEE_InterfaceCapabilities *x = malloc(sizeof(IEEE_InterfaceCapabilities));
 
-    x->vlan_tag_capable = json_boolean_value(json_object_get(obj, "vlan_tag_capable"));
+    x->vlan_tag_capable = json_boolean_value(json_object_get(obj, "vlan-tag-capable"));
 
-    json_t *cb_stream_iden_type_list = json_object_get(obj, "cb_stream_iden_type_list");
+    json_t *cb_stream_iden_type_list = json_object_get(obj, "cb-stream-iden-type-list");
     x->count_cb_stream_iden_types = json_array_size(cb_stream_iden_type_list);
     x->cb_stream_iden_type_list = (uint32_t *) malloc(sizeof(uint32_t) * x->count_cb_stream_iden_types);
     for (int i=0; i<x->count_cb_stream_iden_types; ++i) {
@@ -1125,7 +1127,7 @@ deserialize_interface_capabilities(json_t *obj)
         x->cb_stream_iden_type_list[i] = json_integer_value(e);
     }
 
-    json_t *cb_sequence_type_list = json_object_get(obj, "cb_sequence_type_list");
+    json_t *cb_sequence_type_list = json_object_get(obj, "cb-sequence-type-list");
     x->count_cb_sequence_types = json_array_size(cb_sequence_type_list);
     x->cb_sequence_type_list = (uint32_t *) malloc(sizeof(uint32_t) * x->count_cb_sequence_types);
     for (int i=0; i<x->count_cb_sequence_types; ++i) {
@@ -1141,8 +1143,8 @@ deserialize_talker(json_t *obj)
 {
     TSN_Talker *x = malloc(sizeof(TSN_Talker));
 
-    x->stream_rank = *(deserialize_stream_rank(json_object_get(obj, "stream_rank")));
-    json_t *end_station_interfaces = json_object_get(obj, "end_station_interfaces");
+    x->stream_rank = *(deserialize_stream_rank(json_object_get(obj, "stream-rank")));
+    json_t *end_station_interfaces = json_object_get(obj, "end-station-interfaces");
     x->count_end_station_interfaces = json_array_size(end_station_interfaces);
     x->end_station_interfaces = (IEEE_InterfaceId *) malloc(sizeof(IEEE_InterfaceId) * x->count_end_station_interfaces);
     for (int i=0; i<x->count_end_station_interfaces; ++i) {
@@ -1150,7 +1152,7 @@ deserialize_talker(json_t *obj)
         x->end_station_interfaces[i] = *(deserialize_interface_id(e));
     }
 
-    json_t *data_frame_specification = json_object_get(obj, "data_frame_specification");
+    json_t *data_frame_specification = json_object_get(obj, "data-frame-specification");
     x->count_data_frame_specifications = json_array_size(data_frame_specification);
     x->data_frame_specification = (IEEE_DataFrameSpecification *) malloc(sizeof(IEEE_DataFrameSpecification) * x->count_data_frame_specifications);
     for (int i=0; i<x->count_data_frame_specifications; ++i) {
@@ -1158,9 +1160,9 @@ deserialize_talker(json_t *obj)
         x->data_frame_specification[i] = *(deserialize_data_frame_specification(e));
     }
 
-    x->traffic_specification = *(deserialize_traffic_specification(json_object_get(obj, "traffic_specification")));
-    x->user_to_network_requirements = *(deserialize_user_to_network_requirements(json_object_get(obj, "user_to_network_requirements")));
-    x->interface_capabilities = *(deserialize_interface_capabilities(json_object_get(obj, "interface_capabilities")));
+    x->traffic_specification = *(deserialize_traffic_specification(json_object_get(obj, "traffic-specification")));
+    x->user_to_network_requirements = *(deserialize_user_to_network_requirements(json_object_get(obj, "user-to-network-requirements")));
+    x->interface_capabilities = *(deserialize_interface_capabilities(json_object_get(obj, "interface-capabilities")));
 
     return x;
 }
@@ -1170,7 +1172,7 @@ deserialize_listener(json_t *obj)
 {
     TSN_Listener *x = malloc(sizeof(TSN_Listener));
     x->index = json_integer_value(json_object_get(obj, "index"));
-    json_t *end_station_interfaces = json_object_get(obj, "end_station_interfaces");
+    json_t *end_station_interfaces = json_object_get(obj, "end-station-interfaces");
     x->count_end_station_interfaces = json_array_size(end_station_interfaces);
     x->end_station_interfaces = (IEEE_InterfaceId *) malloc(sizeof(IEEE_InterfaceId) * x->count_end_station_interfaces);
     for (int i=0; i<x->count_end_station_interfaces; ++i) {
@@ -1178,8 +1180,8 @@ deserialize_listener(json_t *obj)
         x->end_station_interfaces[i] = *(deserialize_interface_id(e));
     }
 
-    x->user_to_network_requirements = *(deserialize_user_to_network_requirements(json_object_get(obj, "user_to_network_requirements")));
-    x->interface_capabilities = *(deserialize_interface_capabilities(json_object_get(obj, "interface_capabilities")));
+    x->user_to_network_requirements = *(deserialize_user_to_network_requirements(json_object_get(obj, "user-to-network-requirements")));
+    x->interface_capabilities = *(deserialize_interface_capabilities(json_object_get(obj, "interface-capabilities")));
 
     return x;
 }
@@ -1189,8 +1191,8 @@ deserialize_status_talker(json_t *obj)
 {
     TSN_StatusTalker *x = malloc(sizeof(TSN_StatusTalker));
 
-    x->accumulated_latency = json_integer_value(json_object_get(obj, "accumulated_latency"));
-    x->interface_configuration = *(deserialize_interface_configuration(json_object_get(obj, "interface_configuration")));
+    x->accumulated_latency = json_integer_value(json_object_get(obj, "accumulated-latency"));
+    x->interface_configuration = *(deserialize_interface_configuration(json_object_get(obj, "interface-configuration")));
 
     return x;
 }
@@ -1201,8 +1203,8 @@ deserialize_status_listener(json_t *obj)
     TSN_StatusListener *x = malloc(sizeof(TSN_StatusListener));
 
     x->index = json_integer_value(json_object_get(obj, "index"));
-    x->accumulated_latency = json_integer_value(json_object_get(obj, "accumulated_latency"));
-    x->interface_configuration = *(deserialize_interface_configuration(json_object_get(obj, "interface_configuration")));
+    x->accumulated_latency = json_integer_value(json_object_get(obj, "accumulated-latency"));
+    x->interface_configuration = *(deserialize_interface_configuration(json_object_get(obj, "interface-configuration")));
 
     return x;
 }
@@ -1212,7 +1214,7 @@ deserialize_stream_request(json_t *obj)
 {
     TSN_Request *x = malloc(sizeof(TSN_Request));
     x->talker = *(deserialize_talker(json_object_get(obj, "talker")));
-    json_t *listener_list = json_object_get(obj, "listener_list");
+    json_t *listener_list = json_object_get(obj, "listener-list");
     x->count_listeners = json_array_size(listener_list);
     x->listener_list = (TSN_Listener *) malloc(sizeof(TSN_Listener) * x->count_listeners);
     for (int i=0; i<x->count_listeners; ++i) {
@@ -1230,7 +1232,7 @@ deserialize_stream_configuration(json_t *obj)
 
     x->talker = *(deserialize_status_talker(json_object_get(obj, "talker")));
 
-    json_t *listener_list = json_object_get(obj, "listener_list");
+    json_t *listener_list = json_object_get(obj, "listener-list");
     x->count_listeners = json_array_size(listener_list);
     x->listener_list = (TSN_StatusListener *) malloc(sizeof(TSN_StatusListener) * x->count_listeners);
     for (int i=0; i<x->count_listeners; ++i) {
@@ -1238,9 +1240,9 @@ deserialize_stream_configuration(json_t *obj)
         x->listener_list[i] = *(deserialize_status_listener(e));
     }
 
-    //x->status_stream = *(deserialize_status_stream(json_object_get(obj, "status_stream")));
-    x->status_info = *(deserialize_status_info(json_object_get(obj, "status_info")));
-    json_t *failed_interfaces = json_object_get(obj, "failed_interfaces");
+    //x->status_stream = *(deserialize_status_stream(json_object_get(obj, "status-stream")));
+    x->status_info = *(deserialize_status_info(json_object_get(obj, "status-info")));
+    json_t *failed_interfaces = json_object_get(obj, "failed-interfaces");
     x->count_failed_interfaces = json_array_size(failed_interfaces);
     x->failed_interfaces = (IEEE_InterfaceId *) malloc(sizeof(IEEE_InterfaceId) * x->count_failed_interfaces);
     for (int i=0; i<x->count_failed_interfaces; ++i) {
@@ -1256,7 +1258,7 @@ deserialize_stream(json_t *obj)
 {
     TSN_Stream *stream = malloc(sizeof(TSN_Stream));
 
-    const json_t *stream_id = json_object_get(obj, "stream_id");
+    const json_t *stream_id = json_object_get(obj, "stream-id");
     stream->stream_id = strdup(json_string_value(stream_id));
 
     // Request
@@ -1280,10 +1282,12 @@ deserialize_streams(json_t *obj)
 {
     TSN_Streams *streams = malloc(sizeof(TSN_Streams));
 
-    uint16_t count_streams = json_number_value(json_object_get(obj, "count_streams"));
+    json_t *streams_json = json_object_get(obj, "streams");
+    //uint16_t count_streams = json_number_value(json_object_get(obj, "count-streams"));
+    uint16_t count_streams = json_array_size(streams_json);
     streams->count_streams = count_streams;
     streams->streams = (TSN_Stream *) malloc(sizeof(TSN_Stream) * count_streams);
-    json_t *streams_json = json_object_get(obj, "streams");
+    
     for (int i=0; i<count_streams; ++i) {
         json_t *stream = json_array_get(streams_json, i);
         TSN_Stream *s = deserialize_stream(stream);
@@ -1303,7 +1307,7 @@ serialize_enddevice_app_ref(TSN_Enddevice_AppRef *app_ref)
     json_t *root = NULL;
     root = json_object();
 
-    json_object_set_new(root, "app_ref", json_string(app_ref->app_ref));
+    json_object_set_new(root, "app-ref", json_string(app_ref->app_ref));
 
     return root;
 }
@@ -1315,9 +1319,9 @@ serialize_enddevice(TSN_Enddevice *enddevice)
     root = json_object();
 
     json_object_set_new(root, "mac", json_string(enddevice->mac));
-    json_object_set_new(root, "has_app", json_integer(enddevice->has_app));
+    json_object_set_new(root, "has-app", json_integer(enddevice->has_app));
     if (enddevice->has_app) {
-        //json_object_set_new(root, "app_ref", json_string(enddevice->app_ref));
+        //json_object_set_new(root, "app-ref", json_string(enddevice->app_ref));
         json_t *array_apps = NULL;
         array_apps = json_array();
         for (int i=0; i<enddevice->count_apps; ++i) {
@@ -1338,7 +1342,7 @@ serialize_switch(TSN_Switch *sw)
     root = json_object();
 
     json_object_set_new(root, "mac", json_string(sw->mac));
-    json_object_set_new(root, "ports_count", json_integer(sw->ports_count));
+    json_object_set_new(root, "ports-count", json_integer(sw->ports_count));
 
     return root;
 }
@@ -1349,8 +1353,8 @@ serialize_devices(TSN_Devices *devices)
     json_t *root = NULL;
     root = json_object();
 
-    json_object_set_new(root, "count_enddevices", json_integer(devices->count_enddevices));
-    json_object_set_new(root, "count_switches", json_integer(devices->count_switches));
+    //json_object_set_new(root, "count-enddevices", json_integer(devices->count_enddevices));
+    //json_object_set_new(root, "count-switches", json_integer(devices->count_switches));
 
     // Enddevices
     json_t *array_enddevices = NULL;
@@ -1382,10 +1386,10 @@ serialize_connection(TSN_Connection *connection)
     root = json_object();
 
     json_object_set_new(root, "id", json_integer(connection->id));
-    json_object_set_new(root, "from_mac", json_string(connection->from_mac));
-    json_object_set_new(root, "from_port", json_integer(connection->from_port));
-    json_object_set_new(root, "to_mac", json_string(connection->to_mac));
-    json_object_set_new(root, "to_port", json_integer(connection->to_port));
+    json_object_set_new(root, "from-mac", json_string(connection->from_mac));
+    json_object_set_new(root, "from-port", json_integer(connection->from_port));
+    json_object_set_new(root, "to-mac", json_string(connection->to_mac));
+    json_object_set_new(root, "to-port", json_integer(connection->to_port));
 
     return root;
 }
@@ -1396,7 +1400,7 @@ serialize_graph(TSN_Graph *graph)
     json_t *root = NULL;
     root = json_object();
 
-    json_object_set_new(root, "count_connections", json_integer(graph->count_connections));
+    //json_object_set_new(root, "count-connections", json_integer(graph->count_connections));
 
     // Connections
     json_t *array_connections = NULL;
@@ -1436,7 +1440,7 @@ deserialize_enddevice_app_ref(json_t *obj)
     TSN_Enddevice_AppRef *app_ref = malloc(sizeof(TSN_Enddevice_AppRef));
     json_t *ref;
 
-    ref = json_object_get(obj, "app_ref");
+    ref = json_object_get(obj, "app-ref");
     app_ref->app_ref = strdup(json_string_value(ref));
 
     return app_ref;
@@ -1452,11 +1456,11 @@ deserialize_enddevice(json_t *obj)
     mac = json_object_get(obj, "mac");
     enddevice->mac = strdup(json_string_value(mac));
 
-    has_app = json_object_get(obj, "has_app");
+    has_app = json_object_get(obj, "has-app");
     enddevice->has_app = json_integer_value(has_app);
 
     if (enddevice->has_app) {
-        //app_ref = json_object_get(obj, "app_ref");
+        //app_ref = json_object_get(obj, "app-ref");
         //enddevice->app_ref = strdup(json_string_value(app_ref));
         json_t *apps =json_object_get(obj, "apps");
         enddevice->count_apps = json_array_size(apps);
@@ -1481,7 +1485,7 @@ TSN_Switch
     mac = json_object_get(obj, "mac");
     sw->mac = strdup(json_string_value(mac));
 
-    ports_count = json_object_get(obj, "ports_count");
+    ports_count = json_object_get(obj, "ports-count");
     sw->ports_count = json_integer_value(ports_count);
 
     return sw;
@@ -1528,16 +1532,16 @@ TSN_Connection
     id = json_object_get(obj, "id");
     connection->id = json_integer_value(id);
 
-    from_mac = json_object_get(obj, "from_mac");
+    from_mac = json_object_get(obj, "from-mac");
     connection->from_mac = strdup(json_string_value(from_mac));
 
-    from_port = json_object_get(obj, "from_port");
+    from_port = json_object_get(obj, "from-port");
     connection->from_port = json_integer_value(from_port);
 
-    to_mac = json_object_get(obj, "to_mac");
+    to_mac = json_object_get(obj, "to-mac");
     connection->to_mac = strdup(json_string_value(to_mac));
 
-    to_port = json_object_get(obj, "to_port");
+    to_port = json_object_get(obj, "to-port");
     connection->to_port = json_integer_value(to_port);
 
     return connection;
@@ -1602,13 +1606,13 @@ serialize_app(TSN_App *app)
     json_object_set_new(root, "id", json_string(app->id));
     json_object_set_new(root, "name", json_string(app->name));
     json_object_set_new(root, "description", json_string(app->description));
-    json_object_set_new(root, "has_mac", json_integer(app->has_mac));
+    json_object_set_new(root, "has-mac", json_integer(app->has_mac));
     json_object_set_new(root, "mac", json_string(app->mac));
     json_object_set_new(root, "version", json_string(app->version));
-    json_object_set_new(root, "has_image", json_integer(app->has_image));
-    json_object_set_new(root, "image_ref", json_string(app->image_ref));
+    json_object_set_new(root, "has-image", json_integer(app->has_image));
+    json_object_set_new(root, "image-ref", json_string(app->image_ref));
 
-    json_object_set_new(root, "count_parameters", json_integer(app->count_parameters));
+    //json_object_set_new(root, "count-parameters", json_integer(app->count_parameters));
     // Parameters
     json_t *array_parameters = NULL;
     array_parameters = json_array();
@@ -1628,7 +1632,7 @@ serialize_apps(TSN_Apps *apps)
     json_t *root = NULL;
     root = json_object();
 
-    json_object_set_new(root, "count_apps", json_integer(apps->count_apps));
+    //json_object_set_new(root, "count-apps", json_integer(apps->count_apps));
 
     // Apps
     json_t *array_apps = NULL;
@@ -1663,7 +1667,7 @@ serialize_images(TSN_Images *images)
     json_t *root = NULL;
     root = json_object();
 
-    json_object_set_new(root, "count_images", json_integer(images->count_images));
+    //json_object_set_new(root, "count-images", json_integer(images->count_images));
 
     // Images
     json_t *array_images = NULL;
@@ -1819,11 +1823,11 @@ TSN_App *deserialize_app(json_t *obj)
     json_t *existing_id = json_object_get(obj, "id");
     json_t *name = json_object_get(obj, "name");
     json_t *desc = json_object_get(obj, "description");
-    json_t *has_mac = json_object_get(obj, "has_mac");
+    json_t *has_mac = json_object_get(obj, "has-mac");
     json_t *mac = json_object_get(obj, "mac");
     json_t *version = json_object_get(obj, "version");
-    json_t *has_image = json_object_get(obj, "has_image");
-    json_t *image = json_object_get(obj, "image_ref");
+    json_t *has_image = json_object_get(obj, "has-image");
+    json_t *image = json_object_get(obj, "image-ref");
     json_t *params = json_object_get(obj, "parameters");
     const char *key;
     json_t *value;
@@ -1985,10 +1989,10 @@ serialize_event_cb_data(TSN_Event_CB_Data *data)
     root = json_object();
 
     // Event ID
-    json_object_set_new(root, "event_id", json_integer(data->event_id));
+    json_object_set_new(root, "event-id", json_integer(data->event_id));
 
     // Entry ID
-    json_object_set_new(root, "entry_id", json_string(data->entry_id));
+    json_object_set_new(root, "entry-id", json_string(data->entry_id));
 
     // Message
     json_object_set_new(root, "msg", json_string(data->msg));

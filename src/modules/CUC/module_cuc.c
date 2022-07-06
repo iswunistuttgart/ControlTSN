@@ -95,15 +95,16 @@ cnc_compute_requests(TSN_Streams *streams)
     body = serialize_cnc_request(streams);
 #endif
 
-    printf("---------------- REQUEST BODY -------------\n%s\n\n", json_dumps(body, JSON_INDENT(4)));
+    //printf("---------------- REQUEST BODY -------------\n%s\n\n", json_dumps(body, JSON_INDENT(4)));
 
     ulfius_set_json_body_request(&request, body);
 
     int res = ulfius_send_http_request(&request, &response);
     if (res == U_OK) {
+        printf("[CUC] Successfully sent request to CNC at '%s'\n", cnc_url);
         // get JSON body containing the computed configuration
         json_t *json_body = ulfius_get_json_body_response(&response, NULL);
-
+        
         printf("---------------- RESPONSE BODY -------------\n%s\n\n", json_dumps(json_body, JSON_INDENT(4)));
         printf("-------------------------- CANCELPOINT (TODO: Remove after testing) ------------");
         return;
