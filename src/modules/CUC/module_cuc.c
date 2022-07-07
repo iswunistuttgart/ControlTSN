@@ -83,7 +83,8 @@ cnc_compute_requests(TSN_Streams *streams)
     ulfius_init_request(&request);
     ulfius_init_response(&response);
 
-    request.http_url = _concat_strings(cnc_url, CNC_INTERFACE_COMPUTE_REQUESTS);
+    //request.http_url = _concat_strings(cnc_url, CNC_INTERFACE_COMPUTE_REQUESTS);
+    request.http_url = strdup(cnc_url);
     request.http_verb = strdup("POST");
 
     json_t *body = NULL;
@@ -95,13 +96,13 @@ cnc_compute_requests(TSN_Streams *streams)
     body = serialize_cnc_request(streams);
 #endif
 
-    //printf("---------------- REQUEST BODY -------------\n%s\n\n", json_dumps(body, JSON_INDENT(4)));
+    printf("---------------- REQUEST BODY -------------\n%s\n\n", json_dumps(body, JSON_INDENT(4)));
 
     ulfius_set_json_body_request(&request, body);
 
     int res = ulfius_send_http_request(&request, &response);
     if (res == U_OK) {
-        printf("[CUC] Successfully sent request to CNC at '%s'\n", cnc_url);
+        printf("[CUC] Successfully sent request to CNC at '%s'\n", request.http_url);
         // get JSON body containing the computed configuration
         json_t *json_body = ulfius_get_json_body_response(&response, NULL);
         
@@ -120,7 +121,7 @@ cnc_compute_requests(TSN_Streams *streams)
             }
         }
     } else {
-        printf("[CUC] Failure sending request to CNC at '%s'\n", cnc_url);
+        printf("[CUC] Failure sending request to CNC at '%s'\n", request.http_url);
     }
 
     ulfius_clean_response(&response);
