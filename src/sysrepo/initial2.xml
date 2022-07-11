@@ -70,8 +70,8 @@
           This module performs the application configuration (parameters,
           network settings, ...) on the enddevices.
         </desc>
-        <executable-path>./ConfgurationModule</executable-path>
-        <subscribed-events-mask>251658240</subscribed-events-mask>
+        <executable-path>./ConfigurationModule</executable-path>
+        <subscribed-events-mask>805306368</subscribed-events-mask>
         <registered>1</registered>
         <pid>0</pid>
       </mod>

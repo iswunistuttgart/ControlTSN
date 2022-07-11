@@ -55,6 +55,11 @@ static void _cb_event(TSN_Event_CB_Data data)
 {
     const char *event_name = NULL;
 
+    if (data.event_id & EVENT_CONFIGURATION_DEPLOY)
+        event_name = "EVENT_CONFIGURATION_DEPLOY";
+    if (data.event_id & EVENT_CONFIGURATION_CHANGED)
+        event_name = "EVENT_CONFIGURATION_CHANGED";
+
     log("Event '%s' (%s, %s)", event_name, data.entry_id, data.msg);
 }
 
@@ -72,12 +77,9 @@ int main(void)
     signal(SIGTERM, signal_handler);
 
     // Init this module
-    // FIXME: Add correct list of subscribed events
     rc = module_init("Configuration", &this_module,
-                     (EVENT_APPLICATION_LIST_OF_IMAGES_REQUESTED |
-                      EVENT_APPLICATION_LIST_OF_APPS_REQUESTED |
-                      EVENT_APPLICATION_APP_START_REQUESTED |
-                      EVENT_APPLICATION_APP_STOP_REQUESTED),
+                     EVENT_CONFIGURATION_DEPLOY |
+                     EVENT_CONFIGURATION_CHANGED,
                      _cb_event);
     if (rc == EXIT_FAILURE) {
         log("Error initializing module!");
