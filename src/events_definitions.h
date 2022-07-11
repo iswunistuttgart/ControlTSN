@@ -40,8 +40,11 @@
 #define EVENT_APPLICATION_LIST_OF_APPS_REQUESTED	0x02000000
 #define EVENT_APPLICATION_APP_START_REQUESTED		0x04000000
 #define EVENT_APPLICATION_APP_STOP_REQUESTED		0x08000000
-//#define ...                                       0x10000000
-//#define ...                                       0x20000000
+
+// Configuration related
+#define EVENT_CONFIGURATION_DEPLOY	0x10000000
+#define EVENT_CONFIGURATION_CHANGED	0x20000000
+
 //#define ...                                       0x40000000
 //#define ...                                       0x80000000
 
