@@ -112,6 +112,9 @@ _api_index_get(const struct _u_request *request, struct _u_response *response, v
                        "<tr><td><a href='/application/apps/:id/delete'>/application/apps/:id/delete</a></td><td>POST</td><td>Delete a specific app</td></tr>" \
                        "<tr><td><a href='/application/apps/:id/start'>/application/apps/:id/start</a></td><td>POST</td><td>Start a specific app</td></tr>" \
                        "<tr><td><a href='/application/apps/:id/stop'>/application/apps/:id/stop</a></td><td>POST</td><td>Stop a specific app</td></tr>" \
+                       // Configuration
+                       "<tr><td><a href='/configuration/apps/:id/deploy'>/configuration/apps/:id/stop</a></td><td>POST</td><td>Deploy initial parameters to specific app</td></tr>"
+                       "<tr><td><a href='/configuration/apps/:id/update'>/configuration/apps/:id/stop</a></td><td>POST</td><td>Update parameters of specific app</td></tr>"
                        // TEST
                        "<tr><th>JUST TESTING</th></tr>" \
                        "<tr><td><a href='/testing/set_topology'>/testing/set_topology</a></td><td>GET</td><td>TESTING: Set the topology</td></tr>" \
@@ -838,7 +841,7 @@ _api_application_app_update(const struct _u_request *request, struct _u_response
 
     if (!app_id)
         return U_CALLBACK_ERROR;
-        
+
     json_post_body = ulfius_get_json_body_request(request, NULL);
     if (!json_post_body)
         return U_CALLBACK_ERROR;
@@ -862,6 +865,43 @@ out:
     return ret;
 }
 
+// ------------------------------------
+// Configuration
+// ------------------------------------
+
+static int
+_api_configuration_app_deploy(const struct _u_request *request, struct _u_response *response, void *user_data)
+{
+    const char *app_id = u_map_get(request->map_url, "id");
+    int ret;
+
+    if (!app_id)
+        return U_CALLBACK_ERROR;
+
+    // Notify configuration module to deploy the initial paramers to the app
+    ret = sysrepo_send_notification(EVENT_CONFIGURATION_DEPLOY, NULL, (char *)app_id);
+    if (ret == EXIT_FAILURE)
+        return U_CALLBACK_ERROR;
+
+    return U_CALLBACK_COMPLETE;
+}
+
+static int
+_api_configuration_app_update(const struct _u_request *request, struct _u_response *response, void *user_data)
+{
+    const char *app_id = u_map_get(request->map_url, "id");
+    int ret;
+
+    if (!app_id)
+        return U_CALLBACK_ERROR;
+
+    // Notify configuration module to update the parameters of the app
+    ret = sysrepo_send_notification(EVENT_CONFIGURATION_CHANGED, NULL, (char *)app_id);
+    if (ret == EXIT_FAILURE)
+        return U_CALLBACK_ERROR;
+
+    return U_CALLBACK_COMPLETE;
+}
 
 // ------------------------------------
 // TESTING
@@ -1094,6 +1134,9 @@ _init_server()
     ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_APPLICATION_APPS_START,  0, &_api_application_app_start,     NULL);
     ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_APPLICATION_APPS_STOP, 	 0, &_api_application_app_stop,      NULL);
     ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_APPLICATION_APPS_UPDATE, 0, &_api_application_app_update,    NULL);
+    // Configuration
+    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_CONFIGURATION_DEPLOY, 0, &_api_configuration_app_deploy,    NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_CONFIGURATION_UPDATE, 0, &_api_configuration_app_update,    NULL);
 
     // JUST TESTING
     ulfius_add_endpoint_by_val(&server_instance, "GET", API_PREFIX, "/testing/set_topology",    0, &_api_testing_set_topology,    NULL);
