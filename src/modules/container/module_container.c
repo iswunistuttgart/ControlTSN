@@ -135,25 +135,18 @@ static void container_fill_app_param(struct application_parameter *parameter,
 static void container_find_app_node(struct application_parameter *parameter,
                                     TSN_App *app, TSN_Devices *devices)
 {
-    int i;
+    int i, j;
 
     for (i = 0; i < devices->count_enddevices; ++i) {
         TSN_Enddevice *device = &devices->enddevices[i];
 
         if (device->has_app) {
-            /*
-            if (!strcmp(app->id, device->app_ref)) {
-                parameter->node_selector = device->mac;
-                break;
+            for (j = 0; j < device->count_apps; ++j) {
+                if (!strcmp(app->id, device->apps[j].app_ref)) {
+                    parameter->node_selector = device->mac;
+                    break;
+                }
             }
-            */
-           int j;
-           for (j = 0; j < device->count_apps; ++j) {
-               if (!strcmp(app->id, device->apps[j].app_ref)) {
-                   parameter->node_selector = device->mac;
-                   break;
-               }
-           }
         }
     }
 }
