@@ -11,7 +11,9 @@
 #include <stdarg.h>
 #include <errno.h>
 
-#include <ulfius.h>
+#include <open62541/client_config_default.h>
+#include <open62541/client_highlevel.h>
+#include <open62541/plugin/log_stdout.h>
 
 #include "../../common.h"
 #include "../../events_definitions.h"
@@ -158,6 +160,116 @@ static void configuration_free_app_param(struct configuration_parameter *paramet
 }
 
 // ------------------------------------
+// Deploy initial configuration
+// ------------------------------------
+static void configuration_deploy_app_par(const struct configuration_parameter *parameter)
+{
+    UA_Variant *my_variant;
+    UA_StatusCode retval;
+    UA_Client *client;
+
+    /* If no URI provided, nothing works */
+    if (!parameter || !parameter->opcua_configuration_uri)
+        return;
+
+    /* Connect to Application Configuration Endpoint */
+    client = UA_Client_new();
+    UA_ClientConfig_setDefault(UA_Client_getConfig(client));
+    retval = UA_Client_connect(client, parameter->opcua_configuration_uri);
+    if (retval != UA_STATUSCODE_GOOD) {
+        UA_Client_delete(client);
+        return;
+    }
+
+    /* Write vPLC parameters */
+    UA_Int32 int_value = parameter->vplc.axes;
+    my_variant = UA_Variant_new();
+    UA_Variant_setScalarCopy(my_variant, &int_value, &UA_TYPES[UA_TYPES_INT32]);
+    retval = UA_Client_writeValueAttribute(client, UA_NODEID_STRING(1, "axes"), my_variant);
+    if (retval != UA_STATUSCODE_GOOD) {
+        log("Failed to write %d to %s!", int_value, "vPLC.axes");
+        goto out;
+    }
+
+    UA_Double double_value = parameter->vplc.length;
+    UA_Variant_setScalarCopy(my_variant, &double_value, &UA_TYPES[UA_TYPES_DOUBLE]);
+    retval = UA_Client_writeValueAttribute(client, UA_NODEID_STRING(1, "length"), my_variant);
+    if (retval != UA_STATUSCODE_GOOD) {
+        log("Failed to write %lf to %s!", double_value, "vPLC.length");
+        goto out;
+    }
+
+    double_value = parameter->vplc.speed;
+    UA_Variant_setScalarCopy(my_variant, &double_value, &UA_TYPES[UA_TYPES_DOUBLE]);
+    retval = UA_Client_writeValueAttribute(client, UA_NODEID_STRING(1, "speed"), my_variant);
+    if (retval != UA_STATUSCODE_GOOD) {
+        log("Failed to write %lf to %s!", double_value, "vPLC.speed");
+        goto out;
+    }
+
+    UA_String string_value = UA_STRING((char *)parameter->vplc.current_status);
+    UA_Variant_setScalarCopy(my_variant, &string_value, &UA_TYPES[UA_TYPES_STRING]);
+    retval = UA_Client_writeValueAttribute(client, UA_NODEID_STRING(1, "currentstatus"), my_variant);
+    if (retval != UA_STATUSCODE_GOOD) {
+        log("Failed to write %s to %s!", "INIT", "vPLC.currentstatus");
+        goto out;
+    }
+
+    string_value = UA_STRING((char *)parameter->vplc.commanded_status);
+    UA_Variant_setScalarCopy(my_variant, &string_value, &UA_TYPES[UA_TYPES_STRING]);
+    retval = UA_Client_writeValueAttribute(client, UA_NODEID_STRING(1, "commandedstatus"), my_variant);
+    if (retval != UA_STATUSCODE_GOOD) {
+        log("Failed to write %s to %s!", "INIT", "vPLC.commandedstatus");
+        goto out;
+    }
+
+    /* Write Execution parameters */
+    UA_UInt64 uint_value = parameter->exec.cycle_time;
+    UA_Variant_setScalarCopy(my_variant, &uint_value, &UA_TYPES[UA_TYPES_UINT64]);
+    retval = UA_Client_writeValueAttribute(client, UA_NODEID_STRING(1, "cycletime"), my_variant);
+    if (retval != UA_STATUSCODE_GOOD) {
+        log("Failed to write %lu to %s!", uint_value, "Execution.cycletime");
+        goto out;
+    }
+
+    uint_value = parameter->exec.base_time;
+    UA_Variant_setScalarCopy(my_variant, &uint_value, &UA_TYPES[UA_TYPES_UINT64]);
+    retval = UA_Client_writeValueAttribute(client, UA_NODEID_STRING(1, "basetime"), my_variant);
+    if (retval != UA_STATUSCODE_GOOD) {
+        log("Failed to write %lu to %s!", uint_value, "Execution.basetime");
+        goto out;
+    }
+
+    uint_value = parameter->exec.wakeup_latency;
+    UA_Variant_setScalarCopy(my_variant, &uint_value, &UA_TYPES[UA_TYPES_UINT64]);
+    retval = UA_Client_writeValueAttribute(client, UA_NODEID_STRING(1, "wakeuplatency"), my_variant);
+    if (retval != UA_STATUSCODE_GOOD) {
+        log("Failed to write %lu to %s!", uint_value, "Execution.wakeuplatency");
+        goto out;
+    }
+
+    int_value = parameter->exec.scheduling_priority;
+    UA_Variant_setScalarCopy(my_variant, &int_value, &UA_TYPES[UA_TYPES_INT32]);
+    retval = UA_Client_writeValueAttribute(client, UA_NODEID_STRING(1, "schedulingpriority"), my_variant);
+    if (retval != UA_STATUSCODE_GOOD) {
+        log("Failed to write %lu to %s!", uint_value, "Execution.schedulingpriority");
+        goto out;
+    }
+
+    int_value = parameter->exec.socket_priority;
+    UA_Variant_setScalarCopy(my_variant, &int_value, &UA_TYPES[UA_TYPES_INT32]);
+    retval = UA_Client_writeValueAttribute(client, UA_NODEID_STRING(1, "socketpriority"), my_variant);
+    if (retval != UA_STATUSCODE_GOOD) {
+        log("Failed to write %lu to %s!", uint_value, "Execution.socketpriority");
+        goto out;
+    }
+
+out:
+    UA_Variant_delete(my_variant);
+    UA_Client_delete(client);
+}
+
+// ------------------------------------
 // Callback handler
 // ------------------------------------
 static void _cb_event(TSN_Event_CB_Data data)
@@ -179,7 +291,8 @@ static void _cb_event(TSN_Event_CB_Data data)
         // Enrich app configuration parameters from sysrepo data
         configuration_fill_app_param(&param, app);
 
-        // FIXME: Configure parameters via OPC/UA!
+        // Configure parameters via OPC/UA!
+        configuration_deploy_app_par(&param);
     }
 
     // Update run time parameters
@@ -194,7 +307,8 @@ static void _cb_event(TSN_Event_CB_Data data)
         // Enrich app configuration parameters from sysrepo data
         configuration_fill_app_param(&param, app);
 
-        // FIXME: Configure parameters via OPC/UA!
+        // Configure parameters via OPC/UA!
+        configuration_deploy_app_par(&param);
     }
 
 out:
