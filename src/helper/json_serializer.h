@@ -44,8 +44,11 @@ json_t *serialize_stream_configuration(TSN_Configuration *configuration);
 json_t *serialize_stream(TSN_Stream *stream);
 json_t *serialize_streams(TSN_Streams *streams);
 
-// To get the expected format to send to the openCNC 
-// --> TODO: Which format/data structure is correct? Is this standarized yet?
+
+/**
+ * This function generates the correct output the CNC from the OpenCNC projects expects.
+ * TODO: Whicht format/data structure is correct? Is this one in the standard yet?
+ */
 json_t *serialize_cnc_request(TSN_Streams *streams);
 
 

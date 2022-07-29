@@ -178,6 +178,14 @@ int sysrepo_get_all_devices(TSN_Devices **devices);
  * @param graph The struct to write on
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
+/**
+ * @brief Gets a specific enddevice from the list of enddevices.
+ * @param mac The MAC of the enddevice
+ * @param enddevice The struct to write on
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+ */
+int sysrepo_get_enddevice(char *mac, TSN_Enddevice **enddevice);
+
 int sysrepo_get_topology_graph(TSN_Graph **graph);
 /**
  * @brief Triggers the discovery of the topology by setting the corresponding flag in the datastore.

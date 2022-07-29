@@ -22,8 +22,8 @@ void cnc_compute_requests(TSN_Streams *streams);
 // ------------------------------------
 // Endpoints Interface
 // ------------------------------------
-//const char *ENDPOINT_INTERFACE_DEPLOY_CONIFUGRATION = "/deploy_configuration";
 
+/*
 const char *APP_PARAMETER_IDENTIFIER_OPCUA_ENDPOINT = "opcua_endpoint";
 /**
  * @brief Deploys the calculated stream configuration to a specific application.\n.
@@ -36,6 +36,26 @@ const char *APP_PARAMETER_IDENTIFIER_OPCUA_ENDPOINT = "opcua_endpoint";
  * @param stream_configuration The calculated stream configuration from the CNC.
  * 
  */
-void deploy_configuration(TSN_App *app, TSN_Configuration *stream_configuration);
+//void deploy_configuration(TSN_App *app, TSN_Configuration *stream_configuration);
+
+
+/**
+ * @brief Deploys the calculated stream configuration to the endpoint where the corresponding application is deployed.
+ * 
+ * We assume that the end device has an interface (OPC UA Server) to receive the stream configurations. 
+ * From this interface, the data is written to a sysrepo and the end device is configured accordingly. 
+ * The applications can retrieve the desired information via an interface to the data storage.
+ * 
+ * Note: The same interface (OPC UA Server) is also used for transmitting the 
+ * execution parameters (cycle_time, wcet, priorities, etc.) as well as for 
+ * the application-specific parameters (e.g. axes count for a vPLC) running on the end device.
+ * 
+ * @param enddevice The enddevice the configuration will be deployed to
+ * @param stream_configuration The calculated stream configuration from the CNC
+ * @param app_id The ID of the corresponding app to distinguish them in the datastore of the enddevice.
+ * @return Success (0) or failure (1)
+ */
+int deploy_configuration(TSN_Enddevice *enddevice, TSN_Configuration *stream_configuration, char *app_id);
+
 
 #endif // __MODULE_CUC_H__

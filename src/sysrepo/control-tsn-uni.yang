@@ -163,6 +163,11 @@ module control-tsn-uni {
                 pattern '[0-9a-fA-F]{2}(-[0-9a-fA-F]{2}){5}';
             }
         }
+
+        leaf interface-uri {
+            type string;
+        }
+
         leaf has-app {
             type uint8;
             default 0;

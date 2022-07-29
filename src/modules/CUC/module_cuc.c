@@ -4,6 +4,10 @@
 
 #include <ulfius.h>
 
+#include <open62541/client_config_default.h>
+#include <open62541/client_highlevel.h>
+#include <open62541/plugin/log_stdout.h>
+
 #include "../../logger.h"
 #include "../../events_definitions.h"
 #include "module_cuc.h"
@@ -11,7 +15,7 @@
 #include "../../helper/json_serializer.h"
 
 
-#define DO_OPENCNC_REQUEST
+//#define DO_OPENCNC_REQUEST
 
 
 static int rc;
@@ -107,8 +111,10 @@ cnc_compute_requests(TSN_Streams *streams)
         json_t *json_body = ulfius_get_json_body_response(&response, NULL);
         
         printf("---------------- RESPONSE BODY -------------\n%s\n\n", json_dumps(json_body, JSON_INDENT(4)));
-        printf("-------------------------- CANCELPOINT (TODO: Remove after testing) ------------");
-        return;
+        
+
+        //printf("-------------------------- CANCELPOINT (TODO: Remove after testing) ------------");
+        //return;
 
         // Write Configurations back to sysrepo
         if (json_body != NULL) {
@@ -156,6 +162,7 @@ _find_app_parameter(TSN_App *app, const char *parameter_name)
     return NULL;
 }
 
+/*
 void 
 deploy_configuration(TSN_App *app, TSN_Configuration *stream_configuration)
 {
@@ -172,6 +179,52 @@ deploy_configuration(TSN_App *app, TSN_Configuration *stream_configuration)
     // ...
     
 }
+*/
+
+int 
+deploy_configuration(TSN_Enddevice *enddevice, TSN_Configuration *stream_configuration, char *app_id)
+{
+    printf("--- Deploying configuration to: \n");
+    print_enddevice(*enddevice);
+    
+
+    UA_Variant *my_variant;
+    UA_StatusCode retval;
+    UA_Client *client;
+
+    // Check if the enddevice has a interface URI
+    if (!enddevice || !enddevice->interface_uri) {
+        printf("[CUC][ERROR] Could not deploy stream configuration to enddevice (%s) because of missing interface URI!\n", enddevice->mac);
+    }
+
+    // Connect to the server
+    client = UA_Client_new();
+    UA_ClientConfig_setDefault(UA_Client_getConfig(client));
+    retval = UA_Client_connect(client, enddevice->interface_uri);
+    if (retval != UA_STATUSCODE_GOOD) {
+        printf("[CUC][ERROR] Could not connect to OPC UA Server '%s'", enddevice->interface_uri);
+        UA_Client_delete(client);
+        return EXIT_FAILURE;
+    }
+
+    // Write configuration to the OPC UA Server of the enddevice
+    
+    // (currently just a test)
+    UA_String string_value = UA_STRING((char *) stream_configuration->talker.interface_configuration.interface_list[0].mac_address);
+    UA_Variant_setScalarCopy(my_variant, &string_value, &UA_TYPES[UA_TYPES_STRING]);
+    retval = UA_Client_writeValueAttribute(client, UA_NODEID_STRING(1, "talkermac"), my_variant);
+    if (retval != UA_STATUSCODE_GOOD) {
+        printf("[CUC][OPCUA][ERROR] Failed to write %s to %s!", stream_configuration->talker.interface_configuration.interface_list[0].mac_address, "talkermac");
+        goto cleanup;
+    }
+
+
+cleanup:
+    UA_Variant_delete(my_variant);
+    UA_Client_delete(client);
+
+    return EXIT_SUCCESS;
+}
 
 
 // ------------------------------------
@@ -181,7 +234,7 @@ static void
 _cb_event(TSN_Event_CB_Data data)
 {
     if (data.event_id == EVENT_ERROR) {
-        printf("[REST][CB] ERROR (%s): %s\n", data.entry_id, data.msg);
+        printf("[CUC][CB] ERROR (%s): %s\n", data.entry_id, data.msg);
     }
 
     // --- TOPOLOGY ----------------------
@@ -210,6 +263,7 @@ _cb_event(TSN_Event_CB_Data data)
         free(streams);
     }
 
+    /*
     else if (data.event_id == EVENT_STREAM_CONFIGURED) {
         printf("[CUC][CB] Stream '%s' configured!\n", data.entry_id);
         // Read Stream configuration and deploy it to the corresponding enddevices
@@ -254,6 +308,51 @@ _cb_event(TSN_Event_CB_Data data)
             printf("ERROR READING STREAM... \n");
         }
         
+        free(configured_stream);
+    }
+    */
+
+    else if (data.event_id == EVENT_STREAM_CONFIGURED) {
+        printf("[CUC][CB] Stream '%s' configured! Deploying the configuration to the enddevices...\n", data.entry_id);
+    
+    
+        TSN_Stream *configured_stream = malloc(sizeof(TSN_Stream));
+        rc = sysrepo_get_stream(data.entry_id, &configured_stream);
+        if (rc == EXIT_SUCCESS) {
+
+            // Deploy the configuration to the enddevices
+            // Talker
+            TSN_Enddevice *talker = malloc(sizeof(TSN_Enddevice));
+            rc = sysrepo_get_enddevice(configured_stream->configuration->talker.interface_configuration.interface_list[0].mac_address, &talker);
+            if (rc != EXIT_SUCCESS) {
+                printf("[CUC][CB][ERROR] Could not read enddevice (talker) with MAC '%s' from the datastore!\n", configured_stream->configuration->talker.interface_configuration.interface_list[0].mac_address);
+            }
+
+            rc = deploy_configuration(talker, configured_stream->configuration, "N/A");
+            if (rc != EXIT_SUCCESS) {
+                printf("[CUC][CB][ERROR] Could not deploy stream configuration to enddevice (talker, %s)!\n", configured_stream->configuration->talker.interface_configuration.interface_list[0].mac_address);
+            }
+            free(talker);
+
+            // Listeners
+            for (uint16_t i=0; i<configured_stream->configuration->count_listeners; ++i) {
+                TSN_Enddevice *listener = malloc(sizeof(TSN_Enddevice));
+                rc = sysrepo_get_enddevice(configured_stream->configuration->listener_list[i].interface_configuration.interface_list[0].mac_address, &listener);
+                if (rc != EXIT_SUCCESS) {
+                    printf("[CUC][CB][ERROR] Could not read enddevice (listener #%d) with MAC '%s' from the datastore!\n", i, configured_stream->configuration->listener_list[i].interface_configuration.interface_list[0].mac_address);
+                }
+
+                rc = deploy_configuration(listener, configured_stream->configuration, "N/A");
+                if (rc != EXIT_SUCCESS) {
+                    printf("[CUC][CB][ERROR] Could not deploy stream configuration to enddevice (listener #%d, %s)!\n", i, configured_stream->configuration->listener_list[i].interface_configuration.interface_list[0].mac_address);
+                }
+                free(listener);
+            }
+
+        } else {
+            printf("[CUC][CB][ERROR] Could not read applications from the datastore!\n");
+        }
+
         free(configured_stream);
     }
 

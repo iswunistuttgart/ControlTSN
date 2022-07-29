@@ -3,10 +3,11 @@
 // ----------------------------------------------
 //      Helper
 // ----------------------------------------------
-static void
-_print_enddevice(TSN_Enddevice enddevice)
+void
+print_enddevice(TSN_Enddevice enddevice)
 {
-    printf("MAC:     %s\n", enddevice.mac);
+    printf("MAC:           %s\n", enddevice.mac);
+    printf("Interface URI: %s\n", enddevice.interface_uri);
     //printf("App-Ref: %s\n", enddevice.app_ref);
     printf("Apps:\n");
     for (int i=0; i<enddevice.count_apps; ++i) {
@@ -66,7 +67,7 @@ print_topology(TSN_Topology topology)
     printf("Devices:\n");
     printf("Enddevices (%d):\n", topology.devices.count_enddevices);
     for (int i=0; i<topology.devices.count_enddevices; ++i) {
-        _print_enddevice(topology.devices.enddevices[i]);
+        print_enddevice(topology.devices.enddevices[i]);
     }
     printf("Switches (%d):\n", topology.devices.count_switches);
     for (int i=0; i<topology.devices.count_switches; ++i) {

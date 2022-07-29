@@ -3141,10 +3141,12 @@ _read_enddevice(char *xpath, TSN_Enddevice **enddevice)
 {
     int rc = SR_ERR_OK;
     sr_val_t *val_mac = NULL;
+    sr_val_t *val_interface_uri = NULL;
     sr_val_t *val_apps = NULL;
     sr_val_t *val_has_app = NULL;
     //sr_val_t *val_app_ref = NULL;
     char *xpath_mac = NULL;
+    char *xpath_interface_uri = NULL;
     char *xpath_apps = NULL;
     char *xpath_has_app = NULL;
     //char *xpath_app_ref = NULL;
@@ -3157,6 +3159,13 @@ _read_enddevice(char *xpath, TSN_Enddevice **enddevice)
     }
     (*enddevice)->mac = strdup(val_mac->data.string_val);
 
+    // Interface URI
+    _create_xpath(xpath, "/interface-uri", &xpath_interface_uri);
+    rc = sr_get_item(session, xpath_interface_uri, 0, &val_interface_uri);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*enddevice)->interface_uri = strdup(val_interface_uri->data.string_val);
     
     // Has App
     _create_xpath(xpath, "/has-app", &xpath_has_app);
@@ -3198,10 +3207,12 @@ _read_enddevice(char *xpath, TSN_Enddevice **enddevice)
 
 cleanup:
     sr_free_val(val_mac);
+    sr_free_val(val_interface_uri);
     sr_free_val(val_has_app);
     //sr_free_val(val_app_ref);
     sr_free_val(val_apps);
     free(xpath_mac);
+    free(xpath_interface_uri);
     free(xpath_has_app);
     //free(xpath_app_ref);
     free(xpath_apps);
@@ -5097,6 +5108,24 @@ sysrepo_set_topology(TSN_Topology *topology)
     }
 
 cleanup:
+    return rc ? EXIT_FAILURE : EXIT_SUCCESS;
+}
+
+int 
+sysrepo_get_enddevice(char *mac, TSN_Enddevice **enddevice)
+{
+    char *xpath_enddevice = NULL;
+
+    _create_xpath_key("/control-tsn-uni:tsn-uni/topology/devices/enddevices/enddevice[mac='%s']", mac, &xpath_enddevice);
+    rc = _read_enddevice(xpath_enddevice, enddevice);
+
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+cleanup:
+    free(xpath_enddevice);
+
     return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 

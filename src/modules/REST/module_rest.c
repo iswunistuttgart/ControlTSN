@@ -1083,6 +1083,37 @@ _api_testing_websocket(const struct _u_request *request, struct _u_response *res
     }
 }
 
+static int
+_api_testing_trigger_event(const struct _u_request *request, struct _u_response *response, void *user_data)
+{
+    json_t *json_post_body;
+    int ret;
+
+    json_post_body = ulfius_get_json_body_request(request, NULL);
+    if (!json_post_body) {
+        return U_CALLBACK_ERROR;
+    }
+
+    uint32_t event_id = json_integer_value(json_object_get(json_post_body, "event_id"));
+    json_t *entry_id_key = json_string_value(json_object_get(json_post_body, "entry_id"));
+    char *entry_id = NULL;
+    if (entry_id_key) {
+        entry_id = strdup(entry_id_key);
+    }
+
+    ret = sysrepo_send_notification(event_id, entry_id, "Manual triggered event");
+    if (ret == EXIT_FAILURE) {
+        goto cleanup;
+    }
+
+    printf("[REST] Manual triggered event '%d' with entry id '%s'!\n", event_id, entry_id);
+
+cleanup:
+    json_decref(json_post_body);
+
+    return ret ? U_CALLBACK_ERROR : U_CALLBACK_COMPLETE;
+}
+
 
 // ------------------------------------
 // Server initialization
@@ -1139,9 +1170,10 @@ _init_server()
     ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_CONFIGURATION_UPDATE, 0, &_api_configuration_app_update,    NULL);
 
     // JUST TESTING
-    ulfius_add_endpoint_by_val(&server_instance, "GET", API_PREFIX, "/testing/set_topology",    0, &_api_testing_set_topology,    NULL);
-    ulfius_add_endpoint_by_val(&server_instance, "GET", API_PREFIX, "/testing/remove_topology", 0, &_api_testing_remove_topology, NULL);
-    ulfius_add_endpoint_by_val(&server_instance, "GET", API_PREFIX, "/testing/websocket",       0, &_api_testing_websocket,       NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "GET",  API_PREFIX, "/testing/set_topology",    0, &_api_testing_set_topology,    NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "GET",  API_PREFIX, "/testing/remove_topology", 0, &_api_testing_remove_topology, NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "GET",  API_PREFIX, "/testing/websocket",       0, &_api_testing_websocket,       NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "POST", API_PREFIX, "/testing/trigger-event",   0, &_api_testing_trigger_event,   NULL);
 
     // Default
     ulfius_set_default_endpoint(&server_instance, &_api_index_get, NULL);

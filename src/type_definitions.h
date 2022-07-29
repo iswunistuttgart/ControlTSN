@@ -221,6 +221,7 @@ typedef struct TSN_Enddevice_AppRef {
 
 typedef struct TSN_Enddevice {
     char *mac;
+    char *interface_uri;
     uint8_t has_app;
     //char *app_ref;
     TSN_Enddevice_AppRef *apps;

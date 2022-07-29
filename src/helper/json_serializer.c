@@ -1319,6 +1319,7 @@ serialize_enddevice(TSN_Enddevice *enddevice)
     root = json_object();
 
     json_object_set_new(root, "mac", json_string(enddevice->mac));
+    json_object_set_new(root, "interface-uri", json_string(enddevice->interface_uri));
     json_object_set_new(root, "has-app", json_integer(enddevice->has_app));
     if (enddevice->has_app) {
         //json_object_set_new(root, "app-ref", json_string(enddevice->app_ref));
@@ -1451,10 +1452,14 @@ deserialize_enddevice(json_t *obj)
 {
     TSN_Enddevice *enddevice = malloc(sizeof(TSN_Enddevice));
     json_t *mac;
+    json_t *interface_uri;
     json_t *has_app;
 
     mac = json_object_get(obj, "mac");
     enddevice->mac = strdup(json_string_value(mac));
+
+    interface_uri = json_object_get(obj, "interface-uri");
+    enddevice->interface_uri = strdup(json_string_value(interface_uri));
 
     has_app = json_object_get(obj, "has-app");
     enddevice->has_app = json_integer_value(has_app);
