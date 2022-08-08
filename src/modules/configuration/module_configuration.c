@@ -52,6 +52,17 @@ static void configuration_log(const char * restrict func, const char * restrict 
     va_end(args);
 }
 
+static char *x_strdup(const char *str)
+{
+    char *p = strdup(str);
+    if (!p) {
+        log("Error allocating memory!\n");
+        exit(EXIT_FAILURE);
+    }
+
+    return p;
+}
+
 static TSN_Enddevice *
 _find_enddevice_of_app( char *app_id, TSN_Enddevice *enddevices, uint16_t count_enddevices)
 {
@@ -69,17 +80,41 @@ _find_enddevice_of_app( char *app_id, TSN_Enddevice *enddevices, uint16_t count_
     return NULL;
 }
 
+
+static void configuration_find_interface_uri(struct configuration_parameter *parameter,
+                                             const TSN_App *app, const TSN_Devices *devices)
+{
+    int i, j;
+
+    for (i = 0; i < devices->count_enddevices; ++i) {
+        TSN_Enddevice *device = &devices->enddevices[i];
+
+        if (device->has_app) {
+            for (j = 0; j < device->count_apps; ++j) {
+                if (!strcmp(app->id, device->apps[j].app_ref)) {
+                    if (!device->interface_uri)
+                        continue;
+                    parameter->opcua_configuration_uri = x_strdup(device->interface_uri);
+                    break;
+                }
+            }
+        }
+    }
+}
+
 static void configuration_fill_app_param(struct configuration_parameter *parameter,
-                                         const TSN_App *app)
+                                         const TSN_App *app, const TSN_Devices *devices)
 {
     int i;
 
+    /*
+     * Find corresponding configuration interface URI. There is only one
+     * configuration instance per enddevice.
+     */
+    configuration_find_interface_uri(parameter, app, devices);
+
     for (i = 0; i < app->count_parameters; ++i) {
         TSN_App_Parameter *par = &app->parameters[i];
-
-        /* OPC/UA Configuation URI */
-        if (!strcmp(par->name, "opcua_configuration_uri"))
-            parameter->opcua_configuration_uri = parameter_data_value_to_string(par);
 
         /* vPLC parameter */
         if (!strcmp(par->name, "vplc_current_status"))
@@ -397,7 +432,7 @@ static void _cb_event(TSN_Event_CB_Data data)
         }
 
         // Enrich app configuration parameters from sysrepo data
-        configuration_fill_app_param(&param, app);
+        configuration_fill_app_param(&param, app, devices);
 
         // Configure parameters via OPC/UA!
         configuration_deploy_app_par(&param, enddev);
@@ -420,7 +455,7 @@ static void _cb_event(TSN_Event_CB_Data data)
         }
 
         // Enrich app configuration parameters from sysrepo data
-        configuration_fill_app_param(&param, app);
+        configuration_fill_app_param(&param, app, devices);
 
         // Configure parameters via OPC/UA!
         configuration_deploy_app_par(&param, enddev);
