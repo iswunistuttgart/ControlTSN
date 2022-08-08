@@ -113,6 +113,8 @@ static void configuration_fill_app_param(struct configuration_parameter *paramet
      */
     configuration_find_interface_uri(parameter, app, devices);
 
+    parameter->app_id = x_strdup(app->id);
+
     for (i = 0; i < app->count_parameters; ++i) {
         TSN_App_Parameter *par = &app->parameters[i];
 
@@ -208,6 +210,7 @@ static void configuration_free_app_param(struct configuration_parameter *paramet
         return;
 
     free((void *)parameter->opcua_configuration_uri);
+    free((void *)parameter->app_id);
     free((void *)parameter->vplc.current_status);
     free((void *)parameter->vplc.commanded_status);
 }
@@ -218,14 +221,15 @@ static void configuration_free_app_param(struct configuration_parameter *paramet
 static void configuration_deploy_app_par(const struct configuration_parameter *parameter, TSN_Enddevice *enddevice)
 {
     UA_Variant *my_variant;
+    char par[1024] = { };
     UA_StatusCode retval;
     UA_Client *client;
 
     /* If no URI provided, nothing works */
-    //if (!parameter || !parameter->opcua_configuration_uri)
-    //    return;
-    if (!parameter || !enddevice->interface_uri)
+    if (!parameter || !enddevice->interface_uri || !parameter->app_id) {
+        log("Missing parameters for deploying configuration to Application!");
         return;
+    }
 
     /* Connect to Application Configuration Endpoint */
     client = UA_Client_new();
@@ -241,7 +245,8 @@ static void configuration_deploy_app_par(const struct configuration_parameter *p
     UA_Int32 int_value = parameter->vplc.axes;
     my_variant = UA_Variant_new();
     UA_Variant_setScalarCopy(my_variant, &int_value, &UA_TYPES[UA_TYPES_INT32]);
-    retval = UA_Client_writeValueAttribute(client, UA_NODEID_STRING(1, "axes"), my_variant);
+    snprintf(par, sizeof(par) - 1, "%s.%s", parameter->app_id, "axes");
+    retval = UA_Client_writeValueAttribute(client, UA_NODEID_STRING(1, par), my_variant);
     if (retval != UA_STATUSCODE_GOOD) {
         log("Failed to write %d to %s!", int_value, "vPLC.axes");
         goto out;
@@ -249,7 +254,8 @@ static void configuration_deploy_app_par(const struct configuration_parameter *p
 
     UA_Double double_value = parameter->vplc.length;
     UA_Variant_setScalarCopy(my_variant, &double_value, &UA_TYPES[UA_TYPES_DOUBLE]);
-    retval = UA_Client_writeValueAttribute(client, UA_NODEID_STRING(1, "length"), my_variant);
+    snprintf(par, sizeof(par) - 1, "%s.%s", parameter->app_id, "length");
+    retval = UA_Client_writeValueAttribute(client, UA_NODEID_STRING(1, par), my_variant);
     if (retval != UA_STATUSCODE_GOOD) {
         log("Failed to write %lf to %s!", double_value, "vPLC.length");
         goto out;
@@ -257,7 +263,8 @@ static void configuration_deploy_app_par(const struct configuration_parameter *p
 
     double_value = parameter->vplc.speed;
     UA_Variant_setScalarCopy(my_variant, &double_value, &UA_TYPES[UA_TYPES_DOUBLE]);
-    retval = UA_Client_writeValueAttribute(client, UA_NODEID_STRING(1, "speed"), my_variant);
+    snprintf(par, sizeof(par) - 1, "%s.%s", parameter->app_id, "speed");
+    retval = UA_Client_writeValueAttribute(client, UA_NODEID_STRING(1, par), my_variant);
     if (retval != UA_STATUSCODE_GOOD) {
         log("Failed to write %lf to %s!", double_value, "vPLC.speed");
         goto out;
@@ -265,7 +272,8 @@ static void configuration_deploy_app_par(const struct configuration_parameter *p
 
     UA_String string_value = UA_STRING((char *)parameter->vplc.current_status);
     UA_Variant_setScalarCopy(my_variant, &string_value, &UA_TYPES[UA_TYPES_STRING]);
-    retval = UA_Client_writeValueAttribute(client, UA_NODEID_STRING(1, "currentstatus"), my_variant);
+    snprintf(par, sizeof(par) - 1, "%s.%s", parameter->app_id, "currentstatus");
+    retval = UA_Client_writeValueAttribute(client, UA_NODEID_STRING(1, par), my_variant);
     if (retval != UA_STATUSCODE_GOOD) {
         log("Failed to write %s to %s!", "INIT", "vPLC.currentstatus");
         goto out;
@@ -273,7 +281,8 @@ static void configuration_deploy_app_par(const struct configuration_parameter *p
 
     string_value = UA_STRING((char *)parameter->vplc.commanded_status);
     UA_Variant_setScalarCopy(my_variant, &string_value, &UA_TYPES[UA_TYPES_STRING]);
-    retval = UA_Client_writeValueAttribute(client, UA_NODEID_STRING(1, "commandedstatus"), my_variant);
+    snprintf(par, sizeof(par) - 1, "%s.%s", parameter->app_id, "commandedstatus");
+    retval = UA_Client_writeValueAttribute(client, UA_NODEID_STRING(1, par), my_variant);
     if (retval != UA_STATUSCODE_GOOD) {
         log("Failed to write %s to %s!", "INIT", "vPLC.commandedstatus");
         goto out;
@@ -282,7 +291,8 @@ static void configuration_deploy_app_par(const struct configuration_parameter *p
     /* Write Execution parameters */
     UA_UInt64 uint_value = parameter->exec.cycle_time;
     UA_Variant_setScalarCopy(my_variant, &uint_value, &UA_TYPES[UA_TYPES_UINT64]);
-    retval = UA_Client_writeValueAttribute(client, UA_NODEID_STRING(1, "cycletime"), my_variant);
+    snprintf(par, sizeof(par) - 1, "%s.%s", parameter->app_id, "cycletime");
+    retval = UA_Client_writeValueAttribute(client, UA_NODEID_STRING(1, par), my_variant);
     if (retval != UA_STATUSCODE_GOOD) {
         log("Failed to write %lu to %s!", uint_value, "Execution.cycletime");
         goto out;
@@ -290,7 +300,8 @@ static void configuration_deploy_app_par(const struct configuration_parameter *p
 
     uint_value = parameter->exec.base_time;
     UA_Variant_setScalarCopy(my_variant, &uint_value, &UA_TYPES[UA_TYPES_UINT64]);
-    retval = UA_Client_writeValueAttribute(client, UA_NODEID_STRING(1, "basetime"), my_variant);
+    snprintf(par, sizeof(par) - 1, "%s.%s", parameter->app_id, "basetime");
+    retval = UA_Client_writeValueAttribute(client, UA_NODEID_STRING(1, par), my_variant);
     if (retval != UA_STATUSCODE_GOOD) {
         log("Failed to write %lu to %s!", uint_value, "Execution.basetime");
         goto out;
@@ -298,7 +309,8 @@ static void configuration_deploy_app_par(const struct configuration_parameter *p
 
     uint_value = parameter->exec.wakeup_latency;
     UA_Variant_setScalarCopy(my_variant, &uint_value, &UA_TYPES[UA_TYPES_UINT64]);
-    retval = UA_Client_writeValueAttribute(client, UA_NODEID_STRING(1, "wakeuplatency"), my_variant);
+    snprintf(par, sizeof(par) - 1, "%s.%s", parameter->app_id, "wakeuplatency");
+    retval = UA_Client_writeValueAttribute(client, UA_NODEID_STRING(1, par), my_variant);
     if (retval != UA_STATUSCODE_GOOD) {
         log("Failed to write %lu to %s!", uint_value, "Execution.wakeuplatency");
         goto out;
@@ -306,7 +318,8 @@ static void configuration_deploy_app_par(const struct configuration_parameter *p
 
     int_value = parameter->exec.scheduling_priority;
     UA_Variant_setScalarCopy(my_variant, &int_value, &UA_TYPES[UA_TYPES_INT32]);
-    retval = UA_Client_writeValueAttribute(client, UA_NODEID_STRING(1, "schedulingpriority"), my_variant);
+    snprintf(par, sizeof(par) - 1, "%s.%s", parameter->app_id, "schedulingpriority");
+    retval = UA_Client_writeValueAttribute(client, UA_NODEID_STRING(1, par), my_variant);
     if (retval != UA_STATUSCODE_GOOD) {
         log("Failed to write %lu to %s!", uint_value, "Execution.schedulingpriority");
         goto out;
@@ -314,7 +327,8 @@ static void configuration_deploy_app_par(const struct configuration_parameter *p
 
     int_value = parameter->exec.socket_priority;
     UA_Variant_setScalarCopy(my_variant, &int_value, &UA_TYPES[UA_TYPES_INT32]);
-    retval = UA_Client_writeValueAttribute(client, UA_NODEID_STRING(1, "socketpriority"), my_variant);
+    snprintf(par, sizeof(par) - 1, "%s.%s", parameter->app_id, "socketpriority");
+    retval = UA_Client_writeValueAttribute(client, UA_NODEID_STRING(1, par), my_variant);
     if (retval != UA_STATUSCODE_GOOD) {
         log("Failed to write %lu to %s!", uint_value, "Execution.socketpriority");
         goto out;

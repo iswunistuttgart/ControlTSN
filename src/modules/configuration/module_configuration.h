@@ -27,6 +27,7 @@ struct execution_parameter {
 
 struct configuration_parameter {
     const char *opcua_configuration_uri;
+    const char *app_id;
     struct execution_parameter exec;
     struct vplc_parameter vplc;
 };
