@@ -133,7 +133,7 @@ static void container_fill_app_param(struct application_parameter *parameter,
 }
 
 static void container_find_app_node(struct application_parameter *parameter,
-                                    TSN_App *app, TSN_Devices *devices)
+                                    const TSN_App *app, const TSN_Devices *devices)
 {
     int i, j;
 
