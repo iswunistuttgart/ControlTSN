@@ -56,7 +56,20 @@ static char *x_strdup(const char *str)
 {
     char *p = strdup(str);
     if (!p) {
-        log("Error allocating memory!\n");
+        log("Error allocating memory!");
+        exit(EXIT_FAILURE);
+    }
+
+    return p;
+}
+
+static void *x_calloc(size_t nmemb, size_t size)
+{
+    void *p;
+
+    p = calloc(nmemb, size);
+    if (!p) {
+        log("Error allocating memory!");
         exit(EXIT_FAILURE);
     }
 
@@ -105,7 +118,8 @@ static void configuration_find_interface_uri(struct configuration_parameter *par
 static void configuration_fill_app_param(struct configuration_parameter *parameter,
                                          const TSN_App *app, const TSN_Devices *devices)
 {
-    int i;
+    int num_app_parameters = app->count_parameters;
+    int i, j;
 
     /*
      * Find corresponding configuration interface URI. There is only one
@@ -115,44 +129,23 @@ static void configuration_fill_app_param(struct configuration_parameter *paramet
 
     parameter->app_id = x_strdup(app->id);
 
+    /* Fetch and store execution parameters. */
     for (i = 0; i < app->count_parameters; ++i) {
         TSN_App_Parameter *par = &app->parameters[i];
 
         /* vPLC parameter */
-        if (!strcmp(par->name, "vplc_current_status"))
-            parameter->vplc.current_status = parameter_data_value_to_string(par);
-
-        if (!strcmp(par->name, "vplc_commanded_status"))
-            parameter->vplc.commanded_status = parameter_data_value_to_string(par);
-
-        if (!strcmp(par->name, "vplc_axes")) {
-            char *axes;
-
-            axes = parameter_data_value_to_string(par);
-            parameter->vplc.axes = atoi(axes);
-            if (parameter->vplc.axes < 0)
-                parameter->vplc.axes = 0;
-            free(axes);
+        if (!strcmp(par->name, "current_status")) {
+            parameter->exec.current_status = parameter_data_value_to_string(par);
+            num_app_parameters--;
         }
 
-        if (!strcmp(par->name, "vplc_speed")) {
-            char *speed;
-
-            speed = parameter_data_value_to_string(par);
-            parameter->vplc.speed = atof(speed);
-            free(speed);
-        }
-
-        if (!strcmp(par->name, "vplc_length")) {
-            char *length;
-
-            length = parameter_data_value_to_string(par);
-            parameter->vplc.length = atof(length);
-            free(length);
+        if (!strcmp(par->name, "commanded_status")) {
+            parameter->exec.commanded_status = parameter_data_value_to_string(par);
+            num_app_parameters--;
         }
 
         /* Execution parameter */
-        if (!strcmp(par->name, "exec_cycle_time")) {
+        if (!strcmp(par->name, "cycle_time")) {
             char *time, *endptr;
 
             time = parameter_data_value_to_string(par);
@@ -160,9 +153,10 @@ static void configuration_fill_app_param(struct configuration_parameter *paramet
             if (errno != 0 || endptr == time || *endptr != '\0')
                 parameter->exec.cycle_time = CONFIGURATION_DEFAULT_CYCLE_TIME_NS;
             free(time);
+            num_app_parameters--;
         }
 
-        if (!strcmp(par->name, "exec_base_time")) {
+        if (!strcmp(par->name, "base_time")) {
             char *time, *endptr;
 
             time = parameter_data_value_to_string(par);
@@ -170,9 +164,10 @@ static void configuration_fill_app_param(struct configuration_parameter *paramet
             if (errno != 0 || endptr == time || *endptr != '\0')
                 parameter->exec.base_time = CONFIGURATION_DEFAULT_BASE_TIME_NS;
             free(time);
+            num_app_parameters--;
         }
 
-        if (!strcmp(par->name, "exec_wakeup_latency")) {
+        if (!strcmp(par->name, "wakeup_latency")) {
             char *time, *endptr;
 
             time = parameter_data_value_to_string(par);
@@ -180,9 +175,10 @@ static void configuration_fill_app_param(struct configuration_parameter *paramet
             if (errno != 0 || endptr == time || *endptr != '\0')
                 parameter->exec.wakeup_latency = CONFIGURATION_DEFAULT_WAKEUP_LATENCY_NS;
             free(time);
+            num_app_parameters--;
         }
 
-        if (!strcmp(par->name, "exec_scheduling_priority")) {
+        if (!strcmp(par->name, "scheduling_priority")) {
             char *prio;
 
             prio = parameter_data_value_to_string(par);
@@ -190,9 +186,10 @@ static void configuration_fill_app_param(struct configuration_parameter *paramet
             if (parameter->exec.scheduling_priority <= 0)
                 parameter->exec.scheduling_priority = CONFIGURATION_DEFAULT_SCHEDULING_PRIORITY;
             free(prio);
+            num_app_parameters--;
         }
 
-        if (!strcmp(par->name, "exec_socket_priority")) {
+        if (!strcmp(par->name, "socket_priority")) {
             char *prio;
 
             prio = parameter_data_value_to_string(par);
@@ -200,19 +197,193 @@ static void configuration_fill_app_param(struct configuration_parameter *paramet
             if (parameter->exec.socket_priority < 0)
                 parameter->exec.scheduling_priority = CONFIGURATION_DEFAULT_SOCKET_PRIORITY;
             free(prio);
+            num_app_parameters--;
         }
+    }
+
+    parameter->app.num_parameters = num_app_parameters;
+    parameter->app.names = x_calloc(num_app_parameters, sizeof(char *));
+    parameter->app.values = x_calloc(num_app_parameters, sizeof(char *));
+
+    for (i = 0, j = 0; i < app->count_parameters; ++i) {
+        TSN_App_Parameter *par = &app->parameters[i];
+
+        if (!strcmp(par->name, "current_status") || !strcmp(par->name, "commanded_status") ||
+            !strcmp(par->name, "cycle_time") || !strcmp(par->name, "base_time") ||
+            !strcmp(par->name, "wakeup_latency") || !strcmp(par->name, "scheduling_priority") ||
+            !strcmp(par->name, "socket_priority"))
+            continue;
+
+        parameter->app.names[j] = x_strdup(par->name);
+        parameter->app.values[j] = parameter_data_value_to_string(par);
+        j++;
     }
 }
 
 static void configuration_free_app_param(struct configuration_parameter *parameter)
 {
+    size_t i;
+
     if (!parameter)
         return;
 
     free((void *)parameter->opcua_configuration_uri);
     free((void *)parameter->app_id);
-    free((void *)parameter->vplc.current_status);
-    free((void *)parameter->vplc.commanded_status);
+    free((void *)parameter->exec.current_status);
+    free((void *)parameter->exec.commanded_status);
+
+    for (i = 0; i < parameter->app.num_parameters; ++i) {
+        free((void *)parameter->app.names[i]);
+        free((void *)parameter->app.values[i]);
+    }
+
+    free(parameter->app.names);
+    free(parameter->app.values);
+}
+
+static bool
+configuration_find_app_node(UA_Client *client,
+                            const struct configuration_parameter *parameter,
+                            UA_NodeId *app_node_id)
+{
+    UA_BrowseRequest browse_request;
+    bool found = false;
+
+    UA_BrowseRequest_init(&browse_request);
+
+    browse_request.requestedMaxReferencesPerNode = 0;
+    browse_request.nodesToBrowse = UA_BrowseDescription_new();
+    browse_request.nodesToBrowseSize = 1;
+    browse_request.nodesToBrowse[0].nodeId = UA_NODEID_NUMERIC(0, UA_NS0ID_OBJECTSFOLDER);
+    browse_request.nodesToBrowse[0].resultMask = UA_BROWSERESULTMASK_ALL;
+
+    UA_BrowseResponse browse_response = UA_Client_Service_browse(client, browse_request);
+    for (size_t i = 0; i < browse_response.resultsSize; ++i) {
+        for (size_t j = 0; j < browse_response.results[i].referencesSize; ++j) {
+            UA_ReferenceDescription *ref = &browse_response.results[i].references[j];
+            char browse_name[1024] = { 0 };
+
+            if (ref->nodeId.nodeId.identifierType == UA_NODEIDTYPE_NUMERIC ||
+                ref->nodeId.nodeId.identifierType == UA_NODEIDTYPE_STRING) {
+                size_t len = ref->browseName.name.length >= sizeof(browse_name) ? sizeof(browse_name) - 1 :
+                    ref->browseName.name.length;
+
+                memcpy(browse_name, ref->browseName.name.data, len);
+            }
+
+            if (!strcmp(browse_name, parameter->app_id)) {
+                found = true;
+                *app_node_id = ref->nodeId.nodeId;
+                break;
+            }
+        }
+    }
+    UA_BrowseRequest_clear(&browse_request);
+    UA_BrowseResponse_clear(&browse_response);
+
+    return found;
+}
+
+static UA_StatusCode
+configuration_set_app_parameter(UA_Client *client,
+                                const struct configuration_parameter *parameter,
+                                UA_NodeId parameter_node_id)
+{
+    UA_StatusCode ret = UA_STATUSCODE_GOOD;
+    UA_BrowseRequest browse_request;
+
+    UA_BrowseRequest_init(&browse_request);
+
+    browse_request.requestedMaxReferencesPerNode = 0;
+    browse_request.nodesToBrowse = UA_BrowseDescription_new();
+    browse_request.nodesToBrowseSize = 1;
+    browse_request.nodesToBrowse[0].nodeId = parameter_node_id;
+    browse_request.nodesToBrowse[0].resultMask = UA_BROWSERESULTMASK_ALL;
+
+    UA_BrowseResponse browse_response = UA_Client_Service_browse(client, browse_request);
+    for (size_t i = 0; i < browse_response.resultsSize; ++i) {
+        for (size_t j = 0; j < browse_response.results[i].referencesSize; ++j) {
+            UA_ReferenceDescription *ref = &browse_response.results[i].references[j];
+            char browse_name[1024] = { 0 };
+
+            if (ref->nodeId.nodeId.identifierType == UA_NODEIDTYPE_NUMERIC ||
+                ref->nodeId.nodeId.identifierType == UA_NODEIDTYPE_STRING) {
+                size_t len = ref->browseName.name.length >= sizeof(browse_name) ? sizeof(browse_name) - 1 :
+                    ref->browseName.name.length;
+
+                memcpy(browse_name, ref->browseName.name.data, len);
+            }
+
+            /* ParameterType::Names */
+            if (!strcmp(browse_name, "Names")) {
+                UA_String names[parameter->app.num_parameters];
+                UA_UInt32 array_dims = 0;
+                UA_Variant array;
+
+                for (size_t i = 0; i < parameter->app.num_parameters; ++i)
+                    names[i] = UA_STRING((char *)parameter->app.names[i]);
+
+                UA_Variant_setArrayCopy(&array, names, parameter->app.num_parameters, &UA_TYPES[UA_TYPES_STRING]);
+                array.arrayDimensions = &array_dims;
+                array.arrayDimensionsSize = 1;
+                array.arrayDimensions[0] = parameter->app.num_parameters;
+
+                ret = UA_Client_writeValueAttribute(client, ref->nodeId.nodeId, &array);
+                if (ret != UA_STATUSCODE_GOOD) {
+                    log("Failed to write ParameterType::Names!");
+                    continue;
+                }
+            }
+
+            /* ParameterType::Values */
+            if (!strcmp(browse_name, "Values")) {
+                UA_String values[parameter->app.num_parameters];
+                UA_UInt32 array_dims = 0;
+                UA_Variant array;
+
+                for (size_t i = 0; i < parameter->app.num_parameters; ++i)
+                    values[i] = UA_STRING((char *)parameter->app.values[i]);
+
+                UA_Variant_setArrayCopy(&array, values, parameter->app.num_parameters, &UA_TYPES[UA_TYPES_STRING]);
+                array.arrayDimensions = &array_dims;
+                array.arrayDimensionsSize = 1;
+                array.arrayDimensions[0] = parameter->app.num_parameters;
+
+                ret = UA_Client_writeValueAttribute(client, ref->nodeId.nodeId, &array);
+                if (ret != UA_STATUSCODE_GOOD) {
+                    log("Failed to write ParameterType::Values!");
+                    continue;
+                }
+            }
+        }
+    }
+
+    UA_BrowseRequest_clear(&browse_request);
+    UA_BrowseResponse_clear(&browse_response);
+
+    return ret;
+}
+
+/* Keep in sync with [endpoint]src/app_config/app_model.c */
+static UA_NodeId app_create_node_id = {1, UA_NODEIDTYPE_NUMERIC, {1010}};
+
+static UA_StatusCode
+configuration_create_app_node(UA_Client *client,
+                              const struct configuration_parameter *parameter)
+{
+    UA_Variant input, *output;
+    size_t output_size;
+    UA_StatusCode ret;
+
+    UA_Variant_init(&input);
+    UA_String app_id = UA_String_fromChars(parameter->app_id);
+    UA_Variant_setScalar(&input, &app_id, &UA_TYPES[UA_TYPES_STRING]);
+
+    ret = UA_Client_call(client, UA_NODEID_NUMERIC(0, UA_NS0ID_OBJECTSFOLDER),
+                         app_create_node_id, 1, &input, &output_size, &output);
+    UA_String_clear(&app_id);
+
+    return ret;
 }
 
 // ------------------------------------
@@ -220,9 +391,11 @@ static void configuration_free_app_param(struct configuration_parameter *paramet
 // ------------------------------------
 static void configuration_deploy_app_par(const struct configuration_parameter *parameter, TSN_Enddevice *enddevice)
 {
+    UA_BrowseResponse browse_response;
+    UA_BrowseRequest browse_request;
     UA_Variant *my_variant;
-    char par[1024] = { };
-    UA_StatusCode retval;
+    UA_NodeId app_node_id;
+    UA_StatusCode ret;
     UA_Client *client;
 
     /* If no URI provided, nothing works */
@@ -234,105 +407,145 @@ static void configuration_deploy_app_par(const struct configuration_parameter *p
     /* Connect to Application Configuration Endpoint */
     client = UA_Client_new();
     UA_ClientConfig_setDefault(UA_Client_getConfig(client));
-    //retval = UA_Client_connect(client, parameter->opcua_configuration_uri);
-    retval = UA_Client_connect(client, enddevice->interface_uri);
-    if (retval != UA_STATUSCODE_GOOD) {
+    ret = UA_Client_connect(client, enddevice->interface_uri);
+    if (ret != UA_STATUSCODE_GOOD) {
         UA_Client_delete(client);
         return;
     }
 
-    /* Write vPLC parameters */
-    UA_Int32 int_value = parameter->vplc.axes;
     my_variant = UA_Variant_new();
-    UA_Variant_setScalarCopy(my_variant, &int_value, &UA_TYPES[UA_TYPES_INT32]);
-    snprintf(par, sizeof(par) - 1, "%s.%s", parameter->app_id, "axes");
-    retval = UA_Client_writeValueAttribute(client, UA_NODEID_STRING(1, par), my_variant);
-    if (retval != UA_STATUSCODE_GOOD) {
-        log("Failed to write %d to %s!", int_value, "vPLC.axes");
-        goto out;
+
+    /*
+     * Check for application node: The exported UPC/UA data model should contain
+     * a node for the application to configure all parameters. If it's not
+     * there, a new application instance has to be created.
+     */
+    if (!configuration_find_app_node(client, parameter, &app_node_id)) {
+        ret = configuration_create_app_node(client, parameter);
+        if (ret != UA_STATUSCODE_GOOD) {
+            log("Failed to create Application instance on Endpoint Service!");
+            goto out;
+        }
+
+        /* Find app node again. */
+        if (!configuration_find_app_node(client, parameter, &app_node_id)) {
+            log("Failed to find Application instance on Endpoint Service!");
+            goto out;
+        }
     }
 
-    UA_Double double_value = parameter->vplc.length;
-    UA_Variant_setScalarCopy(my_variant, &double_value, &UA_TYPES[UA_TYPES_DOUBLE]);
-    snprintf(par, sizeof(par) - 1, "%s.%s", parameter->app_id, "length");
-    retval = UA_Client_writeValueAttribute(client, UA_NODEID_STRING(1, par), my_variant);
-    if (retval != UA_STATUSCODE_GOOD) {
-        log("Failed to write %lf to %s!", double_value, "vPLC.length");
-        goto out;
+    /* Application instance found. Configure parameter.*/
+    browse_request.requestedMaxReferencesPerNode = 0;
+    browse_request.nodesToBrowse = UA_BrowseDescription_new();
+    browse_request.nodesToBrowseSize = 1;
+    browse_request.nodesToBrowse[0].nodeId = app_node_id;
+    browse_request.nodesToBrowse[0].resultMask = UA_BROWSERESULTMASK_ALL;
+
+    browse_response = UA_Client_Service_browse(client, browse_request);
+
+    for (size_t i = 0; i < browse_response.resultsSize; ++i) {
+        for (size_t j = 0; j < browse_response.results[i].referencesSize; ++j) {
+            UA_ReferenceDescription *ref = &browse_response.results[i].references[j];
+            char browse_name[1024] = { 0 };
+
+            if (ref->nodeId.nodeId.identifierType == UA_NODEIDTYPE_NUMERIC ||
+                ref->nodeId.nodeId.identifierType == UA_NODEIDTYPE_STRING) {
+                size_t len = ref->browseName.name.length >= sizeof(browse_name) ? sizeof(browse_name) - 1 :
+                    ref->browseName.name.length;
+
+                memcpy(browse_name, ref->browseName.name.data, len);
+            }
+
+            /* AppType::CurrentStatus */
+            if (!strcmp(browse_name, "CurrentStatus")) {
+                UA_String string_value = UA_STRING((char *)parameter->exec.current_status);
+                UA_Variant_setScalarCopy(my_variant, &string_value, &UA_TYPES[UA_TYPES_STRING]);
+                ret = UA_Client_writeValueAttribute(client, ref->nodeId.nodeId, my_variant);
+                if (ret != UA_STATUSCODE_GOOD) {
+                    log("Failed to write %s to %s!", parameter->exec.current_status, "AppType::CurrentStatus");
+                    continue;
+                }
+            }
+
+            /* AppType::CommandedStatus */
+            if (!strcmp(browse_name, "CommandedStatus")) {
+                UA_String string_value = UA_STRING((char *)parameter->exec.commanded_status);
+                UA_Variant_setScalarCopy(my_variant, &string_value, &UA_TYPES[UA_TYPES_STRING]);
+                ret = UA_Client_writeValueAttribute(client, ref->nodeId.nodeId, my_variant);
+                if (ret != UA_STATUSCODE_GOOD) {
+                    log("Failed to write %s to %s!", parameter->exec.commanded_status, "AppType::CommandedStatus");
+                    continue;
+                }
+            }
+
+            /* AppType::CycleTime */
+            if (!strcmp(browse_name, "CycleTime")) {
+                UA_UInt64 uint_value = parameter->exec.cycle_time;
+                UA_Variant_setScalarCopy(my_variant, &uint_value, &UA_TYPES[UA_TYPES_UINT64]);
+                ret = UA_Client_writeValueAttribute(client, ref->nodeId.nodeId, my_variant);
+                if (ret != UA_STATUSCODE_GOOD) {
+                    log("Failed to write %lu to %s!", parameter->exec.cycle_time, "AppType::CycleTime");
+                    continue;
+                }
+            }
+
+            /* AppType::BaseTime */
+            if (!strcmp(browse_name, "BaseTime")) {
+                UA_UInt64 uint_value = parameter->exec.base_time;
+                UA_Variant_setScalarCopy(my_variant, &uint_value, &UA_TYPES[UA_TYPES_UINT64]);
+                ret = UA_Client_writeValueAttribute(client, ref->nodeId.nodeId, my_variant);
+                if (ret != UA_STATUSCODE_GOOD) {
+                    log("Failed to write %lu to %s!", parameter->exec.base_time, "AppType::BaseTime");
+                    continue;
+                }
+            }
+
+            /* AppType::WakeupLatency */
+            if (!strcmp(browse_name, "WakeupLatency")) {
+                UA_UInt64 uint_value = parameter->exec.wakeup_latency;
+                UA_Variant_setScalarCopy(my_variant, &uint_value, &UA_TYPES[UA_TYPES_UINT64]);
+                ret = UA_Client_writeValueAttribute(client, ref->nodeId.nodeId, my_variant);
+                if (ret != UA_STATUSCODE_GOOD) {
+                    log("Failed to write %lu to %s!", parameter->exec.wakeup_latency, "AppType::WakeupLatency");
+                    continue;
+                }
+            }
+
+            /* AppType::SchedulingPriority */
+            if (!strcmp(browse_name, "SchedulingPriority")) {
+                UA_Int32 int_value = parameter->exec.scheduling_priority;
+                UA_Variant_setScalarCopy(my_variant, &int_value, &UA_TYPES[UA_TYPES_INT32]);
+                ret = UA_Client_writeValueAttribute(client, ref->nodeId.nodeId, my_variant);
+                if (ret != UA_STATUSCODE_GOOD) {
+                    log("Failed to write %d to %s!", parameter->exec.socket_priority, "AppType::SchedulingPriority");
+                    continue;
+                }
+            }
+
+            /* AppType::SocketPriority */
+            if (!strcmp(browse_name, "SocketPriority")) {
+                UA_Int32 int_value = parameter->exec.socket_priority;
+                UA_Variant_setScalarCopy(my_variant, &int_value, &UA_TYPES[UA_TYPES_INT32]);
+                ret = UA_Client_writeValueAttribute(client, ref->nodeId.nodeId, my_variant);
+                if (ret != UA_STATUSCODE_GOOD) {
+                    log("Failed to write %d to %s!", parameter->exec.socket_priority, "AppType::SocketPriority");
+                    continue;
+                }
+            }
+
+            /* AppType::ApplicationParameter */
+            if (!strcmp(browse_name, "ApplicationParameter")) {
+                ret = configuration_set_app_parameter(client, parameter, ref->nodeId.nodeId);
+                if (ret != UA_STATUSCODE_GOOD) {
+                    log("Failed to write %d to %s!", parameter->exec.socket_priority, "AppType::SocketPriority");
+                    continue;
+                }
+            }
+        }
     }
 
-    double_value = parameter->vplc.speed;
-    UA_Variant_setScalarCopy(my_variant, &double_value, &UA_TYPES[UA_TYPES_DOUBLE]);
-    snprintf(par, sizeof(par) - 1, "%s.%s", parameter->app_id, "speed");
-    retval = UA_Client_writeValueAttribute(client, UA_NODEID_STRING(1, par), my_variant);
-    if (retval != UA_STATUSCODE_GOOD) {
-        log("Failed to write %lf to %s!", double_value, "vPLC.speed");
-        goto out;
-    }
-
-    UA_String string_value = UA_STRING((char *)parameter->vplc.current_status);
-    UA_Variant_setScalarCopy(my_variant, &string_value, &UA_TYPES[UA_TYPES_STRING]);
-    snprintf(par, sizeof(par) - 1, "%s.%s", parameter->app_id, "currentstatus");
-    retval = UA_Client_writeValueAttribute(client, UA_NODEID_STRING(1, par), my_variant);
-    if (retval != UA_STATUSCODE_GOOD) {
-        log("Failed to write %s to %s!", "INIT", "vPLC.currentstatus");
-        goto out;
-    }
-
-    string_value = UA_STRING((char *)parameter->vplc.commanded_status);
-    UA_Variant_setScalarCopy(my_variant, &string_value, &UA_TYPES[UA_TYPES_STRING]);
-    snprintf(par, sizeof(par) - 1, "%s.%s", parameter->app_id, "commandedstatus");
-    retval = UA_Client_writeValueAttribute(client, UA_NODEID_STRING(1, par), my_variant);
-    if (retval != UA_STATUSCODE_GOOD) {
-        log("Failed to write %s to %s!", "INIT", "vPLC.commandedstatus");
-        goto out;
-    }
-
-    /* Write Execution parameters */
-    UA_UInt64 uint_value = parameter->exec.cycle_time;
-    UA_Variant_setScalarCopy(my_variant, &uint_value, &UA_TYPES[UA_TYPES_UINT64]);
-    snprintf(par, sizeof(par) - 1, "%s.%s", parameter->app_id, "cycletime");
-    retval = UA_Client_writeValueAttribute(client, UA_NODEID_STRING(1, par), my_variant);
-    if (retval != UA_STATUSCODE_GOOD) {
-        log("Failed to write %lu to %s!", uint_value, "Execution.cycletime");
-        goto out;
-    }
-
-    uint_value = parameter->exec.base_time;
-    UA_Variant_setScalarCopy(my_variant, &uint_value, &UA_TYPES[UA_TYPES_UINT64]);
-    snprintf(par, sizeof(par) - 1, "%s.%s", parameter->app_id, "basetime");
-    retval = UA_Client_writeValueAttribute(client, UA_NODEID_STRING(1, par), my_variant);
-    if (retval != UA_STATUSCODE_GOOD) {
-        log("Failed to write %lu to %s!", uint_value, "Execution.basetime");
-        goto out;
-    }
-
-    uint_value = parameter->exec.wakeup_latency;
-    UA_Variant_setScalarCopy(my_variant, &uint_value, &UA_TYPES[UA_TYPES_UINT64]);
-    snprintf(par, sizeof(par) - 1, "%s.%s", parameter->app_id, "wakeuplatency");
-    retval = UA_Client_writeValueAttribute(client, UA_NODEID_STRING(1, par), my_variant);
-    if (retval != UA_STATUSCODE_GOOD) {
-        log("Failed to write %lu to %s!", uint_value, "Execution.wakeuplatency");
-        goto out;
-    }
-
-    int_value = parameter->exec.scheduling_priority;
-    UA_Variant_setScalarCopy(my_variant, &int_value, &UA_TYPES[UA_TYPES_INT32]);
-    snprintf(par, sizeof(par) - 1, "%s.%s", parameter->app_id, "schedulingpriority");
-    retval = UA_Client_writeValueAttribute(client, UA_NODEID_STRING(1, par), my_variant);
-    if (retval != UA_STATUSCODE_GOOD) {
-        log("Failed to write %lu to %s!", uint_value, "Execution.schedulingpriority");
-        goto out;
-    }
-
-    int_value = parameter->exec.socket_priority;
-    UA_Variant_setScalarCopy(my_variant, &int_value, &UA_TYPES[UA_TYPES_INT32]);
-    snprintf(par, sizeof(par) - 1, "%s.%s", parameter->app_id, "socketpriority");
-    retval = UA_Client_writeValueAttribute(client, UA_NODEID_STRING(1, par), my_variant);
-    if (retval != UA_STATUSCODE_GOOD) {
-        log("Failed to write %lu to %s!", uint_value, "Execution.socketpriority");
-        goto out;
-    }
+    UA_BrowseRequest_clear(&browse_request);
+    UA_BrowseResponse_clear(&browse_response);
 
 out:
     UA_Variant_delete(my_variant);
