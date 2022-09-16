@@ -1297,6 +1297,35 @@ deserialize_streams(json_t *obj)
     return streams;
 }
 
+TSN_Streams *
+deserialize_cnc_request(json_t *obj) {
+    TSN_Streams *streams = malloc(sizeof(TSN_Streams));
+
+    json_t *requests_array = json_object_get(obj, "requests");
+    uint16_t count_requests = json_array_size(requests_array);
+    
+    streams->count_streams = count_requests;
+    streams->streams = (TSN_Stream *) malloc(sizeof(TSN_Stream) * count_requests);
+
+    for (int i=0; i<count_requests; ++i) {
+        json_t *request = json_array_get(requests_array, i);
+        TSN_Request *req = deserialize_stream_request(request);
+        streams->streams[i].request = *req;      
+
+        json_t *talker = json_object_get(request, "talker");
+        json_t *streamId = json_object_get(talker, "stream-id");
+        char *mac = json_string_value(json_object_get(streamId, "mac-address"));
+        char *uid = json_string_value(json_object_get(streamId, "unique-id"));
+        char streamIDstr[24];
+        strcpy(streamIDstr, mac);
+        strcat(streamIDstr, ":");
+        strcat(streamIDstr, uid);
+        streams->streams[i].stream_id = streamIDstr;
+    }
+
+    return streams;
+}
+
 
 // ------------------------------------
 // Topology

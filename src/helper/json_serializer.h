@@ -48,6 +48,8 @@ json_t *serialize_streams(TSN_Streams *streams);
 /**
  * This function generates the correct output the CNC from the OpenCNC projects expects.
  * TODO: Whicht format/data structure is correct? Is this one in the standard yet?
+ * The structure should follow ieee802-dot1q-tsn-config-uni.yang --> therefore the request & response structure of the openCNC is not correct
+ * (at least as i understand it).
  */
 json_t *serialize_cnc_request(TSN_Streams *streams);
 
@@ -77,6 +79,15 @@ TSN_Request *deserialize_stream_request(json_t *obj);
 TSN_Configuration *deserialize_stream_configuration(json_t *obj);
 TSN_Stream *deserialize_stream(json_t *obj);
 TSN_Streams *deserialize_streams(json_t *obj);
+
+/**
+ * This function deserializes the input sent to the OpenCNC.
+ * TODO: Whicht format/data structure is correct? Is this one in the standard yet?
+ * The structure should follow ieee802-dot1q-tsn-config-uni.yang --> therefore the request & response structure of the openCNC is not correct
+ * (at least as i understand it).
+ */
+TSN_Streams *deserialize_cnc_request(json_t *obj);
+
 
 // ------------------------------------
 // Topology

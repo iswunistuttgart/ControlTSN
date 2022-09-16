@@ -7,6 +7,11 @@
 
 #include "../helper/json_serializer.h" // Just for the emulated topology discovering
 
+
+#define EMULATE_OPENCNC      false
+
+
+
 int rc;
 volatile sig_atomic_t is_running = 1;
 struct _u_instance server_instance;
@@ -115,7 +120,7 @@ _test_emulate_stream_computation(TSN_Streams *streams)
         config_list_2->index = 1;
         config_list_2->field_type = CONFIG_LIST_VLAN_TAG;
         config_list_2->ieee802_vlan_tag = malloc(sizeof(IEEE_VlanTag));
-        config_list_2->ieee802_vlan_tag->priority_code_point = 5;
+        config_list_2->ieee802_vlan_tag->priority_code_point = 6;
         config_list_2->ieee802_vlan_tag->vlan_id = 3000;
         interface_list->config_list[1] = *config_list_2;
         IEEE_ConfigList *config_list_3 = malloc(sizeof(IEEE_ConfigList));
@@ -154,7 +159,7 @@ _test_emulate_stream_computation(TSN_Streams *streams)
         config_list_2_2->index = 1;
         config_list_2_2->field_type = CONFIG_LIST_VLAN_TAG;
         config_list_2_2->ieee802_vlan_tag = malloc(sizeof(IEEE_VlanTag));
-        config_list_2_2->ieee802_vlan_tag->priority_code_point = 5;
+        config_list_2_2->ieee802_vlan_tag->priority_code_point = 6;
         config_list_2_2->ieee802_vlan_tag->vlan_id = 3000;
         interface_list_2->config_list[1] = *config_list_2_2;
 
@@ -171,6 +176,13 @@ _test_emulate_stream_computation(TSN_Streams *streams)
     return serialize_streams(streams);
 }
 
+static json_t *
+_test_emulate_stream_computation_opencnc(TSN_Request *request) {
+    
+    // ...
+
+    return NULL;
+}
 
 static int
 _api_index(const struct _u_request *request, struct _u_response *response, void *user_data)
@@ -227,8 +239,19 @@ _api_streams_compute_requests(const struct _u_request *request, struct _u_respon
         return U_CALLBACK_ERROR;
     }
 
+#if EMULATE_OPENCNC
+    TSN_Streams *streams = deserialize_cnc_request(json_post_body);
+    // Compute the configuration for the requests
+    printf("[CNC] Computing stream requests ... \n");
+    // TODO this is just a placeholder and should be replaced by the real cnc functionality 
+    //sleep(1);
+    printf("[CNC] Finished! Sending back stream configurations\n");
+
+    json_t *body = _test_emulate_stream_computation_opencnc(streams);
+    ulfius_set_json_body_response(response, 200, body);
+
+#else
     TSN_Streams *streams = deserialize_streams(json_post_body);
-    
     // Compute the configuration for the requests
     printf("[CNC] Computing stream requests ... \n");
     // TODO this is just a placeholder and should be replaced by the real cnc functionality 
@@ -237,6 +260,8 @@ _api_streams_compute_requests(const struct _u_request *request, struct _u_respon
 
     json_t *body = _test_emulate_stream_computation(streams);
     ulfius_set_json_body_response(response, 200, body);
+#endif
+    
 
     json_decref(json_post_body);
     json_decref(body);

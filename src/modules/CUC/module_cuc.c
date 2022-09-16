@@ -15,7 +15,7 @@
 #include "../../helper/json_serializer.h"
 
 
-//#define DO_OPENCNC_REQUEST
+#define EMULATE_OPENCNC      false
 
 
 static int rc;
@@ -94,13 +94,13 @@ cnc_compute_requests(TSN_Streams *streams)
     json_t *body = NULL;
     
 
-#ifndef DO_OPENCNC_REQUEST    
-    body = serialize_streams(streams);
-#else
+#if EMULATE_OPENCNC    
     body = serialize_cnc_request(streams);
+#else
+    body = serialize_streams(streams);
 #endif
 
-    printf("---------------- REQUEST BODY -------------\n%s\n\n", json_dumps(body, JSON_INDENT(4)));
+    //printf("---------------- REQUEST BODY -------------\n%s\n\n", json_dumps(body, JSON_INDENT(4)));
 
     ulfius_set_json_body_request(&request, body);
 
@@ -110,7 +110,7 @@ cnc_compute_requests(TSN_Streams *streams)
         // get JSON body containing the computed configuration
         json_t *json_body = ulfius_get_json_body_response(&response, NULL);
         
-        printf("---------------- RESPONSE BODY -------------\n%s\n\n", json_dumps(json_body, JSON_INDENT(4)));
+        //printf("---------------- RESPONSE BODY -------------\n%s\n\n", json_dumps(json_body, JSON_INDENT(4)));
         
 
         //printf("-------------------------- CANCELPOINT (TODO: Remove after testing) ------------");
@@ -189,6 +189,7 @@ deploy_configuration(TSN_Enddevice *enddevice, TSN_Configuration *stream_configu
     
 
     UA_Variant *my_variant;
+    UA_NodeId nodeID;
     UA_StatusCode retval;
     UA_Client *client;
 
@@ -202,21 +203,25 @@ deploy_configuration(TSN_Enddevice *enddevice, TSN_Configuration *stream_configu
     UA_ClientConfig_setDefault(UA_Client_getConfig(client));
     retval = UA_Client_connect(client, enddevice->interface_uri);
     if (retval != UA_STATUSCODE_GOOD) {
-        printf("[CUC][ERROR] Could not connect to OPC UA Server '%s'", enddevice->interface_uri);
+        printf("[CUC][ERROR] Could not connect to OPC UA Server '%s'\n", enddevice->interface_uri);
         UA_Client_delete(client);
         return EXIT_FAILURE;
     }
 
     // Write configuration to the OPC UA Server of the enddevice
-    
+    my_variant = UA_Variant_new();
     // (currently just a test)
-    UA_String string_value = UA_STRING((char *) stream_configuration->talker.interface_configuration.interface_list[0].mac_address);
-    UA_Variant_setScalarCopy(my_variant, &string_value, &UA_TYPES[UA_TYPES_STRING]);
-    retval = UA_Client_writeValueAttribute(client, UA_NODEID_STRING(1, "talkermac"), my_variant);
+    //UA_String string_value = UA_STRING((char *) stream_configuration->talker.interface_configuration.interface_list[0].mac_address);
+    nodeID = UA_NODEID_STRING(1, "Qbv Offset");
+    UA_Int32 qbvOffset = (UA_Int32) stream_configuration->talker.interface_configuration.interface_list[0].config_list[2].time_aware_offset;
+    UA_Variant_setScalarCopy(my_variant, &qbvOffset, &UA_TYPES[UA_TYPES_INT32]);
+    retval = UA_Client_writeValueAttribute(client, nodeID, my_variant);
     if (retval != UA_STATUSCODE_GOOD) {
-        printf("[CUC][OPCUA][ERROR] Failed to write %s to %s!", stream_configuration->talker.interface_configuration.interface_list[0].mac_address, "talkermac");
+        printf("[CUC][OPCUA][ERROR] Failed to write 'Qbv Offset' to %s!\n", enddevice->interface_uri);
         goto cleanup;
     }
+
+    printf("[CUC][OPCUA] Successfully written the stream configuration to enddevice %s!\n", enddevice->interface_uri);
 
 
 cleanup:
@@ -328,6 +333,8 @@ _cb_event(TSN_Event_CB_Data data)
                 printf("[CUC][CB][ERROR] Could not read enddevice (talker) with MAC '%s' from the datastore!\n", configured_stream->configuration->talker.interface_configuration.interface_list[0].mac_address);
             }
 
+            // TODO: When requesting a stream, the associated app should already be linked using the AppID. 
+            // Otherwise, the assignment of stream and app is awkward afterwards (via the Talker/Listener MACs).
             rc = deploy_configuration(talker, configured_stream->configuration, "N/A");
             if (rc != EXIT_SUCCESS) {
                 printf("[CUC][CB][ERROR] Could not deploy stream configuration to enddevice (talker, %s)!\n", configured_stream->configuration->talker.interface_configuration.interface_list[0].mac_address);
@@ -405,7 +412,7 @@ main(void)
     */
 
     this_module = malloc(sizeof(TSN_Module));
-    rc = module_init("CUC", &this_module, (EVENT_ERROR | EVENT_TOPOLOGY_DISCOVERY_REQUESTED | EVENT_TOPOLOGY_DISCOVERED), _cb_event);
+    rc = module_init("CUC", &this_module, -1, _cb_event);
     if (rc != EXIT_SUCCESS) {
         goto cleanup;
     }

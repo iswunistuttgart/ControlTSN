@@ -120,6 +120,7 @@ _api_index_get(const struct _u_request *request, struct _u_response *response, v
                        "<tr><td><a href='/testing/set_topology'>/testing/set_topology</a></td><td>GET</td><td>TESTING: Set the topology</td></tr>" \
                        "<tr><td><a href='/testing/remove_topology'>/testing/remove_topology</a></td><td>GET</td><td>TESTING: Remove the topology</td></tr>" \
                        "<tr><td><a href='/testing/websocket'>/testing/websocket</a></td><td>GET</td><td>TESTING: Open WebSocket</td></tr>" \
+                       "<tr><td><a href='/testing/trigger-event'>/testing/trigger-event</a></td><td>POST</td><td>TESTING: Manual trigger an event</td><td>event_id (int), entry_id (string, optional)</td></tr>" \
                        "</table></html>";
     ulfius_set_string_body_response(response, 200, resp);
 
