@@ -3,6 +3,12 @@
 // ----------------------------------------------
 //      Helper
 // ----------------------------------------------
+
+
+
+// ----------------------------------------------
+//      Printing
+// ----------------------------------------------
 void
 print_enddevice(TSN_Enddevice enddevice)
 {
@@ -32,10 +38,6 @@ _print_connection(TSN_Connection connection)
     printf("To Port:   %d\n", connection.to_port);
 }
 
-
-// ----------------------------------------------
-//      Printing
-// ----------------------------------------------
 void
 print_module_data(TSN_Module_Data data)
 {

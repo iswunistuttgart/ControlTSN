@@ -207,3 +207,7 @@ The `RESTModule` starts a webserver which can be used to interact with the frame
 The following list only serves to store all open items and does not include any prioritization.
 - The [sysrepo plugin](src/sysrepo/plugin/controltsn_plugin.c) must be adapted to the new events and data models.
 - The [common interface](src/common.c) implements many functions that simply call another function of the [sysrepo client](src/sysrepo/sysrepo_client.c) . There could be removed for the sake of clarity.
+
+
+## Engineering Overview 
+<img src="images/EngineeringOverview.svg">

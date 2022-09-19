@@ -322,6 +322,20 @@ typedef struct TSN_Uni {
 } TSN_Uni;
 
 
+
+// ----------------------------------------------
+// Endpoint App Definitions
+// ----------------------------------------------
+typedef enum TSN_APPSTATE {
+    INIT = 0,
+    CONFIG = 1,
+    RUNNING = 2,
+    CLOSING = 3,
+    ERROR = 4,
+    __APP_STATE_FORCE32BIT = 0x7fffffff
+} TSN_APPSTATE;
+
+
 // ----------------------------------------------
 // Other
 // ----------------------------------------------
@@ -329,6 +343,8 @@ typedef struct Websocket_Message {
     time_t timestamp;
     char *msg;
 } Websocket_Message;
+
+
 
 
 #endif // __TYPE_DEFINITIONS_H__

@@ -18,6 +18,7 @@
 #include "../../common.h"
 #include "../../events_definitions.h"
 #include "../../helper/json_serializer.h"
+#include "../../logger.h"
 
 #include "module_configuration.h"
 
@@ -49,6 +50,23 @@ static void configuration_log(const char * restrict func, const char * restrict 
     fflush(out);
 
     va_end(args);
+}
+
+static TSN_Enddevice *
+_find_enddevice_of_app( char *app_id, TSN_Enddevice *enddevices, uint16_t count_enddevices)
+{
+    // Search through the enddevices and find the one where the given app is running on
+    for (int i=0; i<count_enddevices; ++i) {
+        if (enddevices[i].has_app) {
+            for (int j=0; j<enddevices[i].count_apps; j++) {
+                if (strcmp(enddevices[i].apps[j].app_ref, app_id) == 0) {
+                    return &enddevices[i];
+                }
+            }
+        }
+    }
+
+    return NULL;
 }
 
 static void configuration_fill_app_param(struct configuration_parameter *parameter,
@@ -162,20 +180,23 @@ static void configuration_free_app_param(struct configuration_parameter *paramet
 // ------------------------------------
 // Deploy initial configuration
 // ------------------------------------
-static void configuration_deploy_app_par(const struct configuration_parameter *parameter)
+static void configuration_deploy_app_par(const struct configuration_parameter *parameter, TSN_Enddevice *enddevice)
 {
     UA_Variant *my_variant;
     UA_StatusCode retval;
     UA_Client *client;
 
     /* If no URI provided, nothing works */
-    if (!parameter || !parameter->opcua_configuration_uri)
+    //if (!parameter || !parameter->opcua_configuration_uri)
+    //    return;
+    if (!parameter || !enddevice->interface_uri)
         return;
 
     /* Connect to Application Configuration Endpoint */
     client = UA_Client_new();
     UA_ClientConfig_setDefault(UA_Client_getConfig(client));
-    retval = UA_Client_connect(client, parameter->opcua_configuration_uri);
+    //retval = UA_Client_connect(client, parameter->opcua_configuration_uri);
+    retval = UA_Client_connect(client, enddevice->interface_uri);
     if (retval != UA_STATUSCODE_GOOD) {
         UA_Client_delete(client);
         return;
@@ -269,6 +290,85 @@ out:
     UA_Client_delete(client);
 }
 
+static void configuration_request_app_run_state(const char *app_id, TSN_Enddevice *enddevice) {
+    UA_Variant *my_variant;
+    UA_NodeId nodeID;
+    UA_StatusCode retval;
+    UA_Client *client;
+
+    if (!enddevice || !enddevice->interface_uri) {
+        return;
+    }
+
+    client = UA_Client_new();
+    UA_ClientConfig_setDefault(UA_Client_getConfig(client));
+    retval = UA_Client_connect(client, enddevice->interface_uri);
+    if (retval != UA_STATUSCODE_GOOD) {
+        UA_Client_delete(client);
+        return;
+    }
+
+    // Set AppState to "CONFIG" 
+    // --> On the endpoint side, this will trigger the app to apply the saved parameters 
+    // and use the communication ocnfiguration (socket prio, qbv offset, basetime, etc.) to create a PubSub connection
+    TSN_APPSTATE state;
+    state = CONFIG;
+    my_variant = UA_Variant_new();
+    UA_NodeId appStateNodeID = UA_NODEID_STRING(1, "AppState");
+    UA_Variant_setScalarCopy(my_variant, &state, &UA_TYPES[UA_TYPES_INT32]);
+    retval = UA_Client_writeValueAttribute(client, appStateNodeID, my_variant);
+    if (retval != UA_STATUSCODE_GOOD) {
+        log("Failed to write AppState 'CONFIG' to NodeID %s on OPC UA Server %s!", appStateNodeID.identifier.string, enddevice->interface_uri);
+        goto out;
+    }
+
+out:
+    UA_Variant_delete(my_variant);
+    UA_Client_delete(client);
+}
+
+static void configuration_toggle_app_send_receive(const char *app_id, TSN_Enddevice *enddevice) {
+     UA_Variant *my_variant;
+    UA_NodeId nodeID;
+    UA_StatusCode retval;
+    UA_Client *client;
+
+    if (!enddevice || !enddevice->interface_uri) {
+        return;
+    }
+
+    client = UA_Client_new();
+    UA_ClientConfig_setDefault(UA_Client_getConfig(client));
+    retval = UA_Client_connect(client, enddevice->interface_uri);
+    if (retval != UA_STATUSCODE_GOOD) {
+        UA_Client_delete(client);
+        return;
+    }
+
+    // Read current send & receive enabled flag ('PubsubEnabled')
+    my_variant = UA_Variant_new();
+    nodeID = UA_NODEID_STRING(1, "PubSubEnabled");
+    retval = UA_Client_readValueAttribute(client, nodeID, my_variant);
+    if (retval != UA_STATUSCODE_GOOD) {
+        log("Failed to read App send & receive flag from NodeID %s on OPC UA Server %s!", nodeID.identifier.string, enddevice->interface_uri);
+        goto out;
+    }
+    UA_Boolean sendReceiveEnabledFlag = *(UA_Boolean *) my_variant->data;
+    sendReceiveEnabledFlag = !sendReceiveEnabledFlag;
+    
+    UA_Variant_setScalarCopy(my_variant, &sendReceiveEnabledFlag, &UA_TYPES[UA_TYPES_BOOLEAN]);
+    retval = UA_Client_writeValueAttribute(client, nodeID, my_variant);
+    if (retval != UA_STATUSCODE_GOOD) {
+        log("Failed to write App send & receive flag to NodeID %s on OPC UA Server %s!", nodeID.identifier.string, enddevice->interface_uri);
+        goto out;
+    }
+
+out:
+    UA_Variant_delete(my_variant);
+    UA_Client_delete(client);
+}
+
+
 // ------------------------------------
 // Callback handler
 // ------------------------------------
@@ -278,21 +378,29 @@ static void _cb_event(TSN_Event_CB_Data data)
     const char *event_name = NULL;
     TSN_App *app = NULL;
     int ret;
+    TSN_Devices *devices = malloc(sizeof(TSN_Devices));
 
     // Initial parameter deployment
     if (data.event_id & EVENT_CONFIGURATION_DEPLOY) {
         event_name = "EVENT_CONFIGURATION_DEPLOY";
 
         // Get app from sysrepo
-        ret = sysrepo_get_application_app(data.msg, &app);
+        ret = sysrepo_get_application_app(data.entry_id, &app);
         if (ret != EXIT_SUCCESS)
             goto out;
+
+        // Get the corresponding enddevice this app is deployed to
+        ret = sysrepo_get_all_devices(&devices);
+        TSN_Enddevice *enddev = _find_enddevice_of_app(app->id, devices->enddevices, devices->count_enddevices);
+        if (enddev == NULL) {
+            goto out;
+        }
 
         // Enrich app configuration parameters from sysrepo data
         configuration_fill_app_param(&param, app);
 
         // Configure parameters via OPC/UA!
-        configuration_deploy_app_par(&param);
+        configuration_deploy_app_par(&param, enddev);
     }
 
     // Update run time parameters
@@ -300,21 +408,69 @@ static void _cb_event(TSN_Event_CB_Data data)
         event_name = "EVENT_CONFIGURATION_CHANGED";
 
         // Get app from sysrepo
-        ret = sysrepo_get_application_app(data.msg, &app);
+        ret = sysrepo_get_application_app(data.entry_id, &app);
         if (ret != EXIT_SUCCESS)
             goto out;
+
+        // Get the corresponding enddevice this app is deployed to
+        ret = sysrepo_get_all_devices(&devices);
+        TSN_Enddevice *enddev = _find_enddevice_of_app(app->id, devices->enddevices, devices->count_enddevices);
+        if (enddev == NULL) {
+            goto out;
+        }
 
         // Enrich app configuration parameters from sysrepo data
         configuration_fill_app_param(&param, app);
 
         // Configure parameters via OPC/UA!
-        configuration_deploy_app_par(&param);
+        configuration_deploy_app_par(&param, enddev);
+    }
+
+    // Request App Run mode
+    if (data.event_id & EVENT_CONFIGURATION_REQUEST_RUN_STATE) {
+        event_name = "EVENT_CONFIGURATION_REQUEST_RUN_STATE";
+
+        // Get app from sysrepo
+        ret = sysrepo_get_application_app(data.entry_id, &app);
+        if (ret != EXIT_SUCCESS)
+            goto out;
+
+        // Get the corresponding enddevice this app is deployed to
+        ret = sysrepo_get_all_devices(&devices);
+        TSN_Enddevice *enddev = _find_enddevice_of_app(app->id, devices->enddevices, devices->count_enddevices);
+        if (enddev == NULL) {
+            goto out;
+        }
+
+        // Set app state to Config in order to trigger tghe app to apply the configuration and create the PubSub connection
+        configuration_request_app_run_state(data.entry_id, enddev);
+    }
+
+    // Toggle app send & receive flag
+    if (data.event_id & EVENT_CONFIGURATION_TOGGLE_APP_SEND_RECEIVE) {
+        event_name = "EVENT_CONFIGURATION_TOGGLE_APP_SEND_RECEIVE";
+
+        // Get app from sysrepo
+        ret = sysrepo_get_application_app(data.entry_id, &app);
+        if (ret != EXIT_SUCCESS)
+            goto out;
+
+        // Get the corresponding enddevice this app is deployed to
+        ret = sysrepo_get_all_devices(&devices);
+        TSN_Enddevice *enddev = _find_enddevice_of_app(app->id, devices->enddevices, devices->count_enddevices);
+        if (enddev == NULL) {
+            goto out;
+        }
+
+        // Toggle the flag
+        configuration_toggle_app_send_receive(data.entry_id, enddev);
     }
 
 out:
     log("Event '%s' (%s, %s)", event_name, data.entry_id, data.msg);
     configuration_free_app_param(&param);
     application_app_put(app);
+    free(devices);
 }
 
 // ------------------------------------
@@ -331,9 +487,8 @@ int main(void)
     signal(SIGTERM, signal_handler);
 
     // Init this module
-    rc = module_init("Configuration", &this_module,
-                     EVENT_CONFIGURATION_DEPLOY |
-                     EVENT_CONFIGURATION_CHANGED,
+    rc = module_init("AppConfiguration", &this_module,
+                     -1,
                      _cb_event);
     if (rc == EXIT_FAILURE) {
         log("Error initializing module!");

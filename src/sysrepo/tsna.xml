@@ -63,6 +63,15 @@
           </entry>
         </data>
       </mod>
+      <mod>
+        <id>5</id>
+        <name>AppConfiguration</name>
+        <desc>Configures the distributed applications and writes their parameterization</desc>
+        <executable-path>./ConfigurationModule</executable-path>
+        <subscribed-events-mask>4026531840</subscribed-events-mask>
+        <registered>1</registered>
+        <pid>0</pid>
+      </mod>
   </modules>
   <application>
     <apps>
