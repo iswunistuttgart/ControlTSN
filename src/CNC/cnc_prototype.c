@@ -8,7 +8,7 @@
 #include "../helper/json_serializer.h" // Just for the emulated topology discovering
 
 
-#define EMULATE_OPENCNC      false
+#define EMULATE_OPENCNC      true
 
 
 
@@ -93,8 +93,8 @@ _test_emulate_stream_computation(TSN_Streams *streams)
 
         TSN_Configuration *conf = malloc(sizeof(TSN_Configuration));
 
-        conf->status_info.talker_status = strdup("ready");
-        conf->status_info.listener_status = strdup("ready");
+        conf->status_info.talker_status = 1;
+        conf->status_info.listener_status = 1;
         conf->status_info.failure_code = 0;
         conf->count_failed_interfaces = 0;
         conf->failed_interfaces = NULL;
@@ -177,11 +177,13 @@ _test_emulate_stream_computation(TSN_Streams *streams)
 }
 
 static json_t *
-_test_emulate_stream_computation_opencnc(TSN_Request *request) {
-    
-    // ...
+_test_emulate_stream_computation_opencnc() {
+    //const char *openCNC_response_test = "{\"streams\":[{\"stream-id\":\"00-00-00-00-00-01:00-01\",\"configuration\":{\"status-info\":{\"talker-status\":1,\"listener-status\":1,\"failure-code\":0},\"failed-interfaces\":[],\"status-talker-listener\":[{\"index\":0,\"accumulated-latency\":50000,\"interface-configuration\":{\"interface-list\":[{\"interface-id\":{\"mac-address\":\"00-00-00-00-00-01\",\"interface-name\":\"\"},\"config-list\":[{\"index\":0,\"ieee802-mac-addresses\":{\"destination-mac-address\":\"00-00-00-0F-00-00\",\"source-mac-address\":\"00-00-00-00-00-01\"}},{\"index\":1,\"ieee802-vlan-tag\":{\"priority-code-point\":6,\"vlan-id\":0}},{\"index\":2,\"time-aware-offset\":100}]}]}},{\"index\":1,\"accumulated-latency\":50000,\"interface-configuration\":{\"interface-list\":[{\"interface-id\":{\"mac-address\":\"00-00-00-0F-00-00\",\"interface-name\":\"\"},\"config-list\":[{\"index\":0,\"ieee802-mac-addresses\":{\"destination-mac-address\":\"00-00-00-0F-00-00\",\"source-mac-address\":\"00-00-00-00-00-01\"}},{\"index\":1,\"ieee802-vlan-tag\":{\"priority-code-point\":6,\"vlan-id\":0}}]}]}}]}},{\"stream-id\":\"00-00-00-00-00-02:00-01\",\"configuration\":{\"status-info\":{\"talker-status\":1,\"listener-status\":1,\"failure-code\":0},\"failed-interfaces\":[],\"status-talker-listener\":[{\"index\":0,\"accumulated-latency\":50000,\"interface-configuration\":{\"interface-list\":[{\"interface-id\":{\"mac-address\":\"00-00-00-00-00-02\",\"interface-name\":\"\"},\"config-list\":[{\"index\":0,\"ieee802-mac-addresses\":{\"destination-mac-address\":\"00-00-00-0F-00-00\",\"source-mac-address\":\"00-00-00-00-00-02\"}},{\"index\":1,\"ieee802-vlan-tag\":{\"priority-code-point\":6,\"vlan-id\":0}},{\"index\":2,\"time-aware-offset\":120}]}]}},{\"index\":1,\"accumulated-latency\":50000,\"interface-configuration\":{\"interface-list\":[{\"interface-id\":{\"mac-address\":\"00-00-00-0F-00-00\",\"interface-name\":\"\"},\"config-list\":[{\"index\":0,\"ieee802-mac-addresses\":{\"destination-mac-address\":\"00-00-00-0F-00-00\",\"source-mac-address\":\"00-00-00-00-00-02\"}},{\"index\":1,\"ieee802-vlan-tag\":{\"priority-code-point\":6,\"vlan-id\":0}}]}]}}]}},{\"stream-id\":\"00-00-00-00-0A-00:00-01\",\"configuration\":{\"status-info\":{\"talker-status\":1,\"listener-status\":1,\"failure-code\":0},\"failed-interfaces\":[],\"status-talker-listener\":[{\"index\":0,\"accumulated-latency\":50000,\"interface-configuration\":{\"interface-list\":[{\"interface-id\":{\"mac-address\":\"00-00-00-00-0A-00\",\"interface-name\":\"\"},\"config-list\":[{\"index\":0,\"ieee802-mac-addresses\":{\"destination-mac-address\":\"00-00-00-0F-00-00\",\"source-mac-address\":\"00-00-00-00-0A-00\"}},{\"index\":1,\"ieee802-vlan-tag\":{\"priority-code-point\":6,\"vlan-id\":0}},{\"index\":2,\"time-aware-offset\":140}]}]}},{\"index\":1,\"accumulated-latency\":50000,\"interface-configuration\":{\"interface-list\":[{\"interface-id\":{\"mac-address\":\"00-00-00-0F-00-00\",\"interface-name\":\"\"},\"config-list\":[{\"index\":0,\"ieee802-mac-addresses\":{\"destination-mac-address\":\"00-00-00-0F-00-00\",\"source-mac-address\":\"00-00-00-00-0A-00\"}},{\"index\":1,\"ieee802-vlan-tag\":{\"priority-code-point\":6,\"vlan-id\":0}}]}]}}]}},{\"stream-id\":\"00-00-00-0F-00-00:00-01\",\"configuration\":{\"status-info\":{\"talker-status\":1,\"listener-status\":1,\"failure-code\":0},\"failed-interfaces\":[],\"status-talker-listener\":[{\"index\":0,\"accumulated-latency\":50000,\"interface-configuration\":{\"interface-list\":[{\"interface-id\":{\"mac-address\":\"00-00-00-0F-00-00\",\"interface-name\":\"\"},\"config-list\":[{\"index\":0,\"ieee802-mac-addresses\":{\"destination-mac-address\":\"00-00-00-00-0A-00\",\"source-mac-address\":\"00-00-00-0F-00-00\"}},{\"index\":1,\"ieee802-vlan-tag\":{\"priority-code-point\":6,\"vlan-id\":0}},{\"index\":2,\"time-aware-offset\":180}]}]}},{\"index\":1,\"accumulated-latency\":50000,\"interface-configuration\":{\"interface-list\":[{\"interface-id\":{\"mac-address\":\"00-00-00-00-0A-00\",\"interface-name\":\"\"},\"config-list\":[{\"index\":0,\"ieee802-mac-addresses\":{\"destination-mac-address\":\"00-00-00-00-0A-00\",\"source-mac-address\":\"00-00-00-0F-00-00\"}},{\"index\":1,\"ieee802-vlan-tag\":{\"priority-code-point\":6,\"vlan-id\":0}}]}]}}]}},{\"stream-id\":\"00-00-00-0F-00-00:00-02\",\"configuration\":{\"status-info\":{\"talker-status\":1,\"listener-status\":1,\"failure-code\":0},\"failed-interfaces\":[],\"status-talker-listener\":[{\"index\":0,\"accumulated-latency\":50000,\"interface-configuration\":{\"interface-list\":[{\"interface-id\":{\"mac-address\":\"00-00-00-0F-00-00\",\"interface-name\":\"\"},\"config-list\":[{\"index\":0,\"ieee802-mac-addresses\":{\"destination-mac-address\":\"00-00-0D-00-00-00\",\"source-mac-address\":\"00-00-00-0F-00-00\"}},{\"index\":1,\"ieee802-vlan-tag\":{\"priority-code-point\":6,\"vlan-id\":0}},{\"index\":2,\"time-aware-offset\":220}]}]}},{\"index\":1,\"accumulated-latency\":50000,\"interface-configuration\":{\"interface-list\":[{\"interface-id\":{\"mac-address\":\"00-00-0D-00-00-00\",\"interface-name\":\"\"},\"config-list\":[{\"index\":0,\"ieee802-mac-addresses\":{\"destination-mac-address\":\"00-00-0D-00-00-00\",\"source-mac-address\":\"00-00-00-0F-00-00\"}},{\"index\":1,\"ieee802-vlan-tag\":{\"priority-code-point\":6,\"vlan-id\":0}}]}]}}]}}]}";
+    const char *openCNC_response_test = "{\"streams\":[{\"stream-id\":\"48-21-0b-26-3d-8a:00-01\",\"configuration\":{\"status-info\":{\"talker-status\":1,\"listener-status\":1,\"failure-code\":0},\"failed-interfaces\":[],\"status-talker-listener\":[{\"index\":0,\"accumulated-latency\":50000,\"interface-configuration\":{\"interface-list\":[{\"interface-id\":{\"mac-address\":\"48-21-0b-26-3d-8a\",\"interface-name\":\"\"},\"config-list\":[{\"index\":0,\"ieee802-mac-addresses\":{\"destination-mac-address\":\"48-21-0b-26-3f-ed\",\"source-mac-address\":\"48-21-0b-26-3d-8a\"}},{\"index\":1,\"ieee802-vlan-tag\":{\"priority-code-point\":6,\"vlan-id\":0}},{\"index\":2,\"time-aware-offset\":0}]}]}},{\"index\":1,\"accumulated-latency\":50000,\"interface-configuration\":{\"interface-list\":[{\"interface-id\":{\"mac-address\":\"48-21-0b-26-3f-ed\",\"interface-name\":\"\"},\"config-list\":[{\"index\":0,\"ieee802-mac-addresses\":{\"destination-mac-address\":\"48-21-0b-26-3f-ed\",\"source-mac-address\":\"48-21-0b-26-3d-8a\"}},{\"index\":1,\"ieee802-vlan-tag\":{\"priority-code-point\":6,\"vlan-id\":0}}]}]}}]}},{\"stream-id\":\"48-21-0b-26-3f-ed:00-01\",\"configuration\":{\"status-info\":{\"talker-status\":1,\"listener-status\":1,\"failure-code\":0},\"failed-interfaces\":[],\"status-talker-listener\":[{\"index\":0,\"accumulated-latency\":50000,\"interface-configuration\":{\"interface-list\":[{\"interface-id\":{\"mac-address\":\"48-21-0b-26-3f-ed\",\"interface-name\":\"\"},\"config-list\":[{\"index\":0,\"ieee802-mac-addresses\":{\"destination-mac-address\":\"48-21-0b-26-3f-42\",\"source-mac-address\":\"48-21-0b-26-3f-ed\"}},{\"index\":1,\"ieee802-vlan-tag\":{\"priority-code-point\":6,\"vlan-id\":0}},{\"index\":2,\"time-aware-offset\":100}]}]}},{\"index\":1,\"accumulated-latency\":50000,\"interface-configuration\":{\"interface-list\":[{\"interface-id\":{\"mac-address\":\"48-21-0b-26-3f-42\",\"interface-name\":\"\"},\"config-list\":[{\"index\":0,\"ieee802-mac-addresses\":{\"destination-mac-address\":\"48-21-0b-26-3f-42\",\"source-mac-address\":\"48-21-0b-26-3f-ed\"}},{\"index\":1,\"ieee802-vlan-tag\":{\"priority-code-point\":6,\"vlan-id\":0}}]}]}}]}}]}";
 
-    return NULL;
+    json_error_t error;
+    json_t *conf = json_loads(openCNC_response_test, 0, &error);
+    return conf;
 }
 
 static int
@@ -240,14 +242,13 @@ _api_streams_compute_requests(const struct _u_request *request, struct _u_respon
     }
 
 #if EMULATE_OPENCNC
-    TSN_Streams *streams = deserialize_cnc_request(json_post_body);
     // Compute the configuration for the requests
-    printf("[CNC] Computing stream requests ... \n");
+    printf("[CNC] Computing stream requests (openCNC) ... \n");
     // TODO this is just a placeholder and should be replaced by the real cnc functionality 
-    //sleep(1);
+    json_t *body = _test_emulate_stream_computation_opencnc();
+    sleep(1);
     printf("[CNC] Finished! Sending back stream configurations\n");
-
-    json_t *body = _test_emulate_stream_computation_opencnc(streams);
+    
     ulfius_set_json_body_response(response, 200, body);
 
 #else
@@ -255,7 +256,7 @@ _api_streams_compute_requests(const struct _u_request *request, struct _u_respon
     // Compute the configuration for the requests
     printf("[CNC] Computing stream requests ... \n");
     // TODO this is just a placeholder and should be replaced by the real cnc functionality 
-    //sleep(1);
+    sleep(1);
     printf("[CNC] Finished! Sending back stream configurations\n");
 
     json_t *body = _test_emulate_stream_computation(streams);

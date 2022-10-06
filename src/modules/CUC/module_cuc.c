@@ -15,7 +15,7 @@
 #include "../../helper/json_serializer.h"
 
 
-#define EMULATE_OPENCNC      false
+#define EMULATE_OPENCNC      true
 
 
 static int rc;
@@ -100,8 +100,6 @@ cnc_compute_requests(TSN_Streams *streams)
     body = serialize_streams(streams);
 #endif
 
-    //printf("---------------- REQUEST BODY -------------\n%s\n\n", json_dumps(body, JSON_INDENT(4)));
-
     ulfius_set_json_body_request(&request, body);
 
     int res = ulfius_send_http_request(&request, &response);
@@ -109,16 +107,15 @@ cnc_compute_requests(TSN_Streams *streams)
         printf("[CUC] Successfully sent request to CNC at '%s'\n", request.http_url);
         // get JSON body containing the computed configuration
         json_t *json_body = ulfius_get_json_body_response(&response, NULL);
-        
-        //printf("---------------- RESPONSE BODY -------------\n%s\n\n", json_dumps(json_body, JSON_INDENT(4)));
-        
-
-        //printf("-------------------------- CANCELPOINT (TODO: Remove after testing) ------------");
-        //return;
 
         // Write Configurations back to sysrepo
         if (json_body != NULL) {
-            TSN_Streams *streams = deserialize_streams(json_body);
+
+#if EMULATE_OPENCNC
+            TSN_Streams *streams = deserialize_cnc_response(json_body);
+#else
+            TSN_Streams *streams = deserialize_streams(json_body);       
+#endif
             for (int i=0; i<streams->count_streams; ++i) {
                 rc = stream_set_computed(streams->streams[i].stream_id, streams->streams[i].configuration);
                 if (rc != EXIT_SUCCESS) {

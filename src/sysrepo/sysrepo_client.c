@@ -1681,7 +1681,15 @@ _read_status_info(char *xpath, IEEE_StatusInfo **si)
         goto cleanup;
     }
     //(*si)->talker_status = val_talker_status->data.enum_val;
-    (*si)->talker_status = strdup(val_talker_status->data.enum_val);
+    char *talker_status_str = strdup(val_talker_status->data.enum_val);
+    if (strcmp(talker_status_str, "none") == 0) {
+        (*si)->talker_status = 0;
+    } else if (strcmp(talker_status_str, "ready") == 0) {
+        (*si)->talker_status = 1;
+    } else if (strcmp(talker_status_str, "failed") == 0) {
+        (*si)->talker_status = 2;
+    }
+    
 
     // Read listener status
     _create_xpath(xpath, "/listener-status", &xpath_listener_status);
@@ -1689,8 +1697,17 @@ _read_status_info(char *xpath, IEEE_StatusInfo **si)
     if (rc != SR_ERR_OK) {
         goto cleanup;
     }
-    //(*si)->listener_status = val_listener_status->data.enum_val;
-    (*si)->listener_status = strdup(val_listener_status->data.enum_val);
+    //(*si)->listener_status = strdup(val_listener_status->data.enum_val);
+    char *listener_status_str = strdup(val_listener_status->data.enum_val);
+    if (strcmp(listener_status_str, "none") == 0) {
+        (*si)->listener_status = 0;
+    } else if (strcmp(listener_status_str, "ready") == 0) {
+        (*si)->listener_status = 1;
+    } else if (strcmp(listener_status_str, "partial-failed") == 0) {
+        (*si)->listener_status = 2;
+    } else if (strcmp(listener_status_str, "failed") == 0) {
+        (*si)->listener_status = 3;
+    }
 
     // Read failure code
     _create_xpath(xpath, "/failure-code", &xpath_failure_code);
@@ -1722,7 +1739,14 @@ _write_status_info(char *xpath, IEEE_StatusInfo *si)
     _create_xpath(xpath, "/talker-status", &xpath_talker_status);
     sr_val_t val_talker_status;
     val_talker_status.type = SR_ENUM_T;
-    val_talker_status.data.enum_val = strdup(si->talker_status);
+    //val_talker_status.data.enum_val = strdup(si->talker_status);
+    if (si->talker_status == 0) {
+        val_talker_status.data.enum_val = strdup("none");
+    } else if (si->talker_status == 1) {
+        val_talker_status.data.enum_val = strdup("ready");
+    } else if (si->talker_status == 2) {
+        val_talker_status.data.enum_val = strdup("failed");
+    }
     rc = sr_set_item(session, xpath_talker_status, &val_talker_status, 0);
     if (rc != SR_ERR_OK) {
         goto cleanup;
@@ -1731,7 +1755,16 @@ _write_status_info(char *xpath, IEEE_StatusInfo *si)
     _create_xpath(xpath, "/listener-status", &xpath_listener_status);
     sr_val_t val_listener_status;
     val_listener_status.type = SR_ENUM_T;
-    val_listener_status.data.enum_val = strdup(si->listener_status);
+    //val_listener_status.data.enum_val = strdup(si->listener_status);
+    if (si->listener_status == 0) {
+        val_listener_status.data.enum_val = strdup("none");
+    } else if (si->listener_status == 1) {
+        val_listener_status.data.enum_val = strdup("ready");
+    } else if (si->listener_status == 2) {
+        val_listener_status.data.enum_val = strdup("partial-failed");
+    } else if (si->listener_status == 3) {
+        val_listener_status.data.enum_val = strdup("failed");
+    }
     rc = sr_set_item(session, xpath_listener_status, &val_listener_status, 0);
     if (rc != SR_ERR_OK) {
         goto cleanup;

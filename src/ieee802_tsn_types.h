@@ -8,8 +8,8 @@
 typedef struct IEEE_StatusInfo {
     //IEEE_TalkerStatus talker_status;
     //IEEE_ListenerStatus listener_status;
-    uint8_t *talker_status;
-    uint8_t *listener_status;
+    uint8_t talker_status;
+    uint8_t listener_status;
     uint8_t failure_code;
 } IEEE_StatusInfo;
 

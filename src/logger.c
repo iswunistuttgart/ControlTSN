@@ -85,7 +85,7 @@ print_topology(TSN_Topology topology)
 void
 print_stream_request(TSN_Request request)
 {
-    printf("----- Stream Request -----\n");
+    printf("----- Request -----\n");
     printf("Talker:\n");
     for (int i=0; i<request.talker.count_end_station_interfaces; ++i) {
         printf("   End station interface #%02d: %s '%s'\n", i+1, request.talker.end_station_interfaces[i].mac_address, request.talker.end_station_interfaces[i].interface_name);
@@ -109,6 +109,103 @@ print_stream_request(TSN_Request request)
         printf("      User to network requirements:\n");
         printf("         Max latency: %d\n", request.listener_list[i].user_to_network_requirements.max_latency);
     }
+}
+
+void
+print_stream_configuration(TSN_Configuration config)
+{
+    printf("----- Configuration -----\n");
+    printf("   StatusInfo:\n");
+    printf("      Talker:       %d\n", config.status_info.talker_status);
+    printf("      Listener:     %d\n", config.status_info.listener_status);
+    printf("      Failure Code: %d\n", config.status_info.failure_code);
+    printf("   Failed Interfaces:\n");
+    for (int i=0; i<config.count_failed_interfaces; ++i) {
+        printf("      Failed interface #%02d: %s '%s'\n", i+1, config.failed_interfaces[i].mac_address, config.failed_interfaces[i].interface_name);
+    }
+    printf("   Talker:\n");
+    printf("      Accumulated Latency: %d\n", config.talker.accumulated_latency);
+    printf("      Interface Configuration:\n");
+    for (int i=0; i<config.talker.interface_configuration.count_interface_list_entries; ++i) {
+        printf("         %02d: ", i+1);
+        printf("   MAC:       %s\n", config.talker.interface_configuration.interface_list[i].mac_address);
+        printf("                Interface: %s\n", config.talker.interface_configuration.interface_list[i].interface_name);
+        printf("                Config List:\n");
+        for(int j=0; j<config.talker.interface_configuration.interface_list[i].count_config_list_entries; ++j) {
+            printf("                Index: %d\n", config.talker.interface_configuration.interface_list[i].config_list[j].index);
+            if (config.talker.interface_configuration.interface_list[i].config_list[j].field_type == CONFIG_LIST_MAC_ADDRESSES) {
+                printf("                      Destination MAC: %s\n", config.talker.interface_configuration.interface_list[i].config_list[j].ieee802_mac_addresses->destination_mac_address);
+                printf("                      Source MAC:      %s\n", config.talker.interface_configuration.interface_list[i].config_list[j].ieee802_mac_addresses->source_mac_address);
+            } else if (config.talker.interface_configuration.interface_list[i].config_list[j].field_type == CONFIG_LIST_VLAN_TAG) {
+                printf("                      PCP:     %d\n", config.talker.interface_configuration.interface_list[i].config_list[j].ieee802_vlan_tag->priority_code_point);
+                printf("                      VLAN ID: %d\n", config.talker.interface_configuration.interface_list[i].config_list[j].ieee802_vlan_tag->vlan_id);
+            } else if (config.talker.interface_configuration.interface_list[i].config_list[j].field_type == CONFIG_LIST_IPV4_TUPLE) {
+                printf("                      Source IP:        %s\n", config.talker.interface_configuration.interface_list[i].config_list[j].ipv4_tuple->source_ip_address);
+                printf("                      Destination IP:   %s\n", config.talker.interface_configuration.interface_list[i].config_list[j].ipv4_tuple->destination_ip_address);
+                printf("                      DSCP:             %d\n", config.talker.interface_configuration.interface_list[i].config_list[j].ipv4_tuple->dscp);
+                printf("                      Protocol:         %d\n", config.talker.interface_configuration.interface_list[i].config_list[j].ipv4_tuple->protocol);
+                printf("                      Source Port:      %d\n", config.talker.interface_configuration.interface_list[i].config_list[j].ipv4_tuple->source_port);
+                printf("                      Destination Port: %d\n", config.talker.interface_configuration.interface_list[i].config_list[j].ipv4_tuple->destination_port);
+            } else if (config.talker.interface_configuration.interface_list[i].config_list[j].field_type == CONFIG_LIST_IPV6_TUPLE) {
+                printf("                      Source IP:        %s\n", config.talker.interface_configuration.interface_list[i].config_list[j].ipv6_tuple->source_ip_address);
+                printf("                      Destination IP:   %s\n", config.talker.interface_configuration.interface_list[i].config_list[j].ipv6_tuple->destination_ip_address);
+                printf("                      DSCP:             %d\n", config.talker.interface_configuration.interface_list[i].config_list[j].ipv6_tuple->dscp);
+                printf("                      Protocol:         %d\n", config.talker.interface_configuration.interface_list[i].config_list[j].ipv6_tuple->protocol);
+                printf("                      Source Port:      %d\n", config.talker.interface_configuration.interface_list[i].config_list[j].ipv6_tuple->source_port);
+                printf("                      Destination Port: %d\n", config.talker.interface_configuration.interface_list[i].config_list[j].ipv6_tuple->destination_port);
+            } else if (config.talker.interface_configuration.interface_list[i].config_list[j].field_type == CONFIG_LIST_TIME_AWARE_OFFSET) {
+                printf("                      Time Aware Offset: %d\n", config.talker.interface_configuration.interface_list[i].config_list[j].time_aware_offset);
+            }
+        }
+    }
+    
+    printf("   Listeners:\n");
+    for (int i=0; i<config.count_listeners; ++i) {
+        printf("      Listener #%d\n", i);
+        printf("         Accumulated Latency: %d\n", config.listener_list[i].accumulated_latency);
+        printf("         Interface Configuration:\n");
+        for (int k=0; k<config.listener_list[i].interface_configuration.count_interface_list_entries; ++k) {
+            printf("            %02d: ", i+1);
+            printf("   MAC:          %s\n", config.listener_list[i].interface_configuration.interface_list[k].mac_address);
+            printf("                   Interface: %s\n", config.listener_list[i].interface_configuration.interface_list[k].interface_name);
+            printf("                   Config List:\n");
+            for(int j=0; j<config.listener_list[i].interface_configuration.interface_list[k].count_config_list_entries; ++j) {
+                printf("                   Index: %d\n", config.listener_list[i].interface_configuration.interface_list[k].config_list[j].index);
+                if (config.listener_list[i].interface_configuration.interface_list[k].config_list[j].field_type == CONFIG_LIST_MAC_ADDRESSES) {
+                    printf("                      Destination MAC: %s\n", config.listener_list[i].interface_configuration.interface_list[k].config_list[j].ieee802_mac_addresses->destination_mac_address);
+                    printf("                      Source MAC:      %s\n", config.listener_list[i].interface_configuration.interface_list[k].config_list[j].ieee802_mac_addresses->source_mac_address);
+                } else if (config.listener_list[i].interface_configuration.interface_list[k].config_list[j].field_type == CONFIG_LIST_VLAN_TAG) {
+                    printf("                      PCP:     %d\n", config.listener_list[i].interface_configuration.interface_list[k].config_list[j].ieee802_vlan_tag->priority_code_point);
+                    printf("                      VLAN ID: %d\n", config.listener_list[i].interface_configuration.interface_list[k].config_list[j].ieee802_vlan_tag->vlan_id);
+                } else if (config.listener_list[i].interface_configuration.interface_list[k].config_list[j].field_type == CONFIG_LIST_IPV4_TUPLE) {
+                    printf("                      Source IP:        %s\n", config.listener_list[i].interface_configuration.interface_list[k].config_list[j].ipv4_tuple->source_ip_address);
+                    printf("                      Destination IP:   %s\n", config.listener_list[i].interface_configuration.interface_list[k].config_list[j].ipv4_tuple->destination_ip_address);
+                    printf("                      DSCP:             %d\n", config.listener_list[i].interface_configuration.interface_list[k].config_list[j].ipv4_tuple->dscp);
+                    printf("                      Protocol:         %d\n", config.listener_list[i].interface_configuration.interface_list[k].config_list[j].ipv4_tuple->protocol);
+                    printf("                      Source Port:      %d\n", config.listener_list[i].interface_configuration.interface_list[k].config_list[j].ipv4_tuple->source_port);
+                    printf("                      Destination Port: %d\n", config.listener_list[i].interface_configuration.interface_list[k].config_list[j].ipv4_tuple->destination_port);
+                } else if (config.listener_list[i].interface_configuration.interface_list[k].config_list[j].field_type == CONFIG_LIST_IPV6_TUPLE) {
+                    printf("                      Source IP:        %s\n", config.listener_list[i].interface_configuration.interface_list[k].config_list[j].ipv6_tuple->source_ip_address);
+                    printf("                      Destination IP:   %s\n", config.listener_list[i].interface_configuration.interface_list[k].config_list[j].ipv6_tuple->destination_ip_address);
+                    printf("                      DSCP:             %d\n", config.listener_list[i].interface_configuration.interface_list[k].config_list[j].ipv6_tuple->dscp);
+                    printf("                      Protocol:         %d\n", config.listener_list[i].interface_configuration.interface_list[k].config_list[j].ipv6_tuple->protocol);
+                    printf("                      Source Port:      %d\n", config.listener_list[i].interface_configuration.interface_list[k].config_list[j].ipv6_tuple->source_port);
+                    printf("                      Destination Port: %d\n", config.listener_list[i].interface_configuration.interface_list[k].config_list[j].ipv6_tuple->destination_port);
+                } else if (config.listener_list[i].interface_configuration.interface_list[k].config_list[j].field_type == CONFIG_LIST_TIME_AWARE_OFFSET) {
+                    printf("                      Time Aware Offset: %d\n", config.listener_list[i].interface_configuration.interface_list[k].config_list[j].time_aware_offset);
+                }
+            }
+        }
+    }
+}
+
+void 
+print_stream(TSN_Stream stream)
+{
+    printf("----- Stream -----\n");
+    printf("StreamID: %s\n", stream.stream_id);
+    print_stream_request(stream.request);
+    print_stream_configuration(*stream.configuration);
 }
 
 void 
