@@ -8,10 +8,10 @@
 
 #include <stdint.h>
 
-/*
- * The execution parameters are fixed for all real time applications. It
- * includes the cycle times, scheduling parameters and so on.
- */
+//
+// The execution parameters are fixed for all real time applications. It
+// includes the cycle times, scheduling parameters and so on.
+//
 struct execution_parameter {
     const char *current_status;
     const char *commanded_status;
@@ -22,9 +22,9 @@ struct execution_parameter {
     int32_t socket_priority;
 };
 
-/*
- * The following struct stores the application specific parameters.
- */
+//
+// The following struct stores the application specific parameters.
+//
 struct application_parameter {
     const char **names;
     const char **values;

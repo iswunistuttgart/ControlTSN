@@ -104,11 +104,11 @@ static void configuration_fill_app_param(struct configuration_parameter *paramet
     parameter->opcua_configuration_uri = x_strdup(device->interface_uri);
     parameter->app_id = x_strdup(app->id);
 
-    /* Fetch and store execution parameters. */
+    // Fetch and store execution parameters.
     for (i = 0; i < app->count_parameters; ++i) {
         TSN_App_Parameter *par = &app->parameters[i];
 
-        /* vPLC parameter */
+        // vPLC parameter
         if (!strcmp(par->name, "current_status")) {
             parameter->exec.current_status = parameter_data_value_to_string(par);
             num_app_parameters--;
@@ -119,7 +119,7 @@ static void configuration_fill_app_param(struct configuration_parameter *paramet
             num_app_parameters--;
         }
 
-        /* Execution parameter */
+        // Execution parameter
         if (!strcmp(par->name, "cycle_time")) {
             char *time, *endptr;
 
@@ -289,7 +289,7 @@ configuration_set_app_parameter(UA_Client *client,
                 memcpy(browse_name, ref->browseName.name.data, len);
             }
 
-            /* ParameterType::Names */
+            // ParameterType::Names
             if (!strcmp(browse_name, "Names")) {
                 UA_String names[parameter->app.num_parameters];
                 UA_UInt32 array_dims = 0;
@@ -310,7 +310,7 @@ configuration_set_app_parameter(UA_Client *client,
                 }
             }
 
-            /* ParameterType::Values */
+            // ParameterType::Values
             if (!strcmp(browse_name, "Values")) {
                 UA_String values[parameter->app.num_parameters];
                 UA_UInt32 array_dims = 0;
@@ -339,7 +339,7 @@ configuration_set_app_parameter(UA_Client *client,
     return ret;
 }
 
-/* Keep in sync with [endpoint]src/app_config/app_model.c */
+// Keep in sync with [endpoint]src/app_config/app_model.c
 static UA_NodeId app_create_node_id = {1, UA_NODEIDTYPE_NUMERIC, {1010}};
 
 static UA_StatusCode
@@ -374,13 +374,13 @@ static void configuration_deploy_app_par(const struct configuration_parameter *p
     UA_StatusCode ret;
     UA_Client *client;
 
-    /* If no URI provided, nothing works */
+    // If no URI provided, nothing works
     if (!parameter || !enddevice->interface_uri || !parameter->app_id) {
         log("Missing parameters for deploying configuration to Application!");
         return;
     }
 
-    /* Connect to Application Configuration Endpoint */
+    // Connect to Application Configuration Endpoint
     client = UA_Client_new();
     UA_ClientConfig_setDefault(UA_Client_getConfig(client));
     ret = UA_Client_connect(client, enddevice->interface_uri);
@@ -391,11 +391,11 @@ static void configuration_deploy_app_par(const struct configuration_parameter *p
 
     my_variant = UA_Variant_new();
 
-    /*
-     * Check for application node: The exported UPC/UA data model should contain
-     * a node for the application to configure all parameters. If it's not
-     * there, a new application instance has to be created.
-     */
+    //
+    // Check for application node: The exported UPC/UA data model should contain
+    // a node for the application to configure all parameters. If it's not
+    // there, a new application instance has to be created.
+    //
     if (!configuration_find_app_node(client, parameter, &app_node_id)) {
         ret = configuration_create_app_node(client, parameter);
         if (ret != UA_STATUSCODE_GOOD) {
@@ -403,14 +403,14 @@ static void configuration_deploy_app_par(const struct configuration_parameter *p
             goto out;
         }
 
-        /* Find app node again. */
+        // Find app node again.
         if (!configuration_find_app_node(client, parameter, &app_node_id)) {
             log("Failed to find Application instance on Endpoint Service!");
             goto out;
         }
     }
 
-    /* Application instance found. Configure parameter.*/
+    // Application instance found. Configure parameter.
     browse_request.requestedMaxReferencesPerNode = 0;
     browse_request.nodesToBrowse = UA_BrowseDescription_new();
     browse_request.nodesToBrowseSize = 1;
@@ -432,7 +432,7 @@ static void configuration_deploy_app_par(const struct configuration_parameter *p
                 memcpy(browse_name, ref->browseName.name.data, len);
             }
 
-            /* AppType::CurrentStatus */
+            // AppType::CurrentStatus
             if (!strcmp(browse_name, "CurrentStatus")) {
                 UA_String string_value = UA_STRING((char *)parameter->exec.current_status);
                 UA_Variant_setScalarCopy(my_variant, &string_value, &UA_TYPES[UA_TYPES_STRING]);
@@ -443,7 +443,7 @@ static void configuration_deploy_app_par(const struct configuration_parameter *p
                 }
             }
 
-            /* AppType::CommandedStatus */
+            // AppType::CommandedStatus
             if (!strcmp(browse_name, "CommandedStatus")) {
                 UA_String string_value = UA_STRING((char *)parameter->exec.commanded_status);
                 UA_Variant_setScalarCopy(my_variant, &string_value, &UA_TYPES[UA_TYPES_STRING]);
@@ -454,7 +454,7 @@ static void configuration_deploy_app_par(const struct configuration_parameter *p
                 }
             }
 
-            /* AppType::CycleTime */
+            // AppType::CycleTime
             if (!strcmp(browse_name, "CycleTime")) {
                 UA_UInt64 uint_value = parameter->exec.cycle_time;
                 UA_Variant_setScalarCopy(my_variant, &uint_value, &UA_TYPES[UA_TYPES_UINT64]);
@@ -465,7 +465,7 @@ static void configuration_deploy_app_par(const struct configuration_parameter *p
                 }
             }
 
-            /* AppType::BaseTime */
+            // AppType::BaseTime
             if (!strcmp(browse_name, "BaseTime")) {
                 UA_UInt64 uint_value = parameter->exec.base_time;
                 UA_Variant_setScalarCopy(my_variant, &uint_value, &UA_TYPES[UA_TYPES_UINT64]);
@@ -476,7 +476,7 @@ static void configuration_deploy_app_par(const struct configuration_parameter *p
                 }
             }
 
-            /* AppType::WakeupLatency */
+            // AppType::WakeupLatency
             if (!strcmp(browse_name, "WakeupLatency")) {
                 UA_UInt64 uint_value = parameter->exec.wakeup_latency;
                 UA_Variant_setScalarCopy(my_variant, &uint_value, &UA_TYPES[UA_TYPES_UINT64]);
@@ -487,7 +487,7 @@ static void configuration_deploy_app_par(const struct configuration_parameter *p
                 }
             }
 
-            /* AppType::SchedulingPriority */
+            // AppType::SchedulingPriority
             if (!strcmp(browse_name, "SchedulingPriority")) {
                 UA_Int32 int_value = parameter->exec.scheduling_priority;
                 UA_Variant_setScalarCopy(my_variant, &int_value, &UA_TYPES[UA_TYPES_INT32]);
@@ -498,7 +498,7 @@ static void configuration_deploy_app_par(const struct configuration_parameter *p
                 }
             }
 
-            /* AppType::SocketPriority */
+            // AppType::SocketPriority
             if (!strcmp(browse_name, "SocketPriority")) {
                 UA_Int32 int_value = parameter->exec.socket_priority;
                 UA_Variant_setScalarCopy(my_variant, &int_value, &UA_TYPES[UA_TYPES_INT32]);
@@ -509,7 +509,7 @@ static void configuration_deploy_app_par(const struct configuration_parameter *p
                 }
             }
 
-            /* AppType::ApplicationParameter */
+            // AppType::ApplicationParameter
             if (!strcmp(browse_name, "ApplicationParameter")) {
                 ret = configuration_set_app_parameter(client, parameter, ref->nodeId.nodeId);
                 if (ret != UA_STATUSCODE_GOOD) {
