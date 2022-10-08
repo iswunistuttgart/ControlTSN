@@ -38,6 +38,7 @@ static volatile sig_atomic_t is_running = 1;
 
 static void signal_handler(int signum)
 {
+    (void)signum;
     is_running = 0;
 }
 
@@ -169,7 +170,7 @@ static void container_discover_images(void)
 {
     struct _u_response response;
     struct _u_request request;
-    char url[1024] = { };
+    char url[1024] = { 0 };
     json_t *json_body;
     int ret;
 
@@ -223,7 +224,7 @@ static void container_discover_apps(void)
 {
     struct _u_response response;
     struct _u_request request;
-    char url[1024] = { };
+    char url[1024] = { 0 };
     json_t *json_body;
     int ret;
 
@@ -278,8 +279,8 @@ static void container_start_app(const struct application_parameter *parameter)
     struct _u_response response;
     struct _u_request request;
     struct _u_map req_headers;
-    char pod[4096] = { };
-    char url[1024] = { };
+    char pod[4096] = { 0 };
+    char url[1024] = { 0 };
     int ret, len;
 
     if (!kubernetes_url) {
@@ -369,7 +370,7 @@ static void container_stop_app(const struct application_parameter *parameter)
 {
     struct _u_response response;
     struct _u_request request;
-    char url[1024] = { };
+    char url[1024] = { 0 };
     int ret;
 
     if (!kubernetes_url) {
@@ -532,7 +533,11 @@ int main(void)
     }
 
     // Start kubectl proxy for REST communication
-    system("kubectl proxy &");
+    rc = system("kubectl proxy &");
+    if (rc) {
+        log("Failed to launch kubectl proxy");
+        goto cleanup;
+    }
 
     log("Container module successfully started and running");
 
