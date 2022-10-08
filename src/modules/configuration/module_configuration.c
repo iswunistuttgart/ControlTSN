@@ -76,16 +76,18 @@ static void *x_calloc(size_t nmemb, size_t size)
     return p;
 }
 
-static TSN_Enddevice *
-_find_enddevice_of_app( char *app_id, TSN_Enddevice *enddevices, uint16_t count_enddevices)
+static const TSN_Enddevice *
+configuration_find_enddevice_of_app(char *app_id, const TSN_Enddevice *enddevices,
+                                    uint16_t count_enddevices)
 {
+    int i, j;
+
     // Search through the enddevices and find the one where the given app is running on
-    for (int i=0; i<count_enddevices; ++i) {
+    for (i = 0; i < count_enddevices; ++i) {
         if (enddevices[i].has_app) {
-            for (int j=0; j<enddevices[i].count_apps; j++) {
-                if (strcmp(enddevices[i].apps[j].app_ref, app_id) == 0) {
+            for (j = 0; j < enddevices[i].count_apps; ++j) {
+                if (!strcmp(enddevices[i].apps[j].app_ref, app_id))
                     return &enddevices[i];
-                }
             }
         }
     }
@@ -93,40 +95,13 @@ _find_enddevice_of_app( char *app_id, TSN_Enddevice *enddevices, uint16_t count_
     return NULL;
 }
 
-
-static void configuration_find_interface_uri(struct configuration_parameter *parameter,
-                                             const TSN_App *app, const TSN_Devices *devices)
-{
-    int i, j;
-
-    for (i = 0; i < devices->count_enddevices; ++i) {
-        TSN_Enddevice *device = &devices->enddevices[i];
-
-        if (device->has_app) {
-            for (j = 0; j < device->count_apps; ++j) {
-                if (!strcmp(app->id, device->apps[j].app_ref)) {
-                    if (!device->interface_uri)
-                        continue;
-                    parameter->opcua_configuration_uri = x_strdup(device->interface_uri);
-                    break;
-                }
-            }
-        }
-    }
-}
-
 static void configuration_fill_app_param(struct configuration_parameter *parameter,
-                                         const TSN_App *app, const TSN_Devices *devices)
+                                         const TSN_App *app, const TSN_Enddevice *device)
 {
     int num_app_parameters = app->count_parameters;
     int i, j;
 
-    /*
-     * Find corresponding configuration interface URI. There is only one
-     * configuration instance per enddevice.
-     */
-    configuration_find_interface_uri(parameter, app, devices);
-
+    parameter->opcua_configuration_uri = x_strdup(device->interface_uri);
     parameter->app_id = x_strdup(app->id);
 
     /* Fetch and store execution parameters. */
@@ -389,7 +364,8 @@ configuration_create_app_node(UA_Client *client,
 // ------------------------------------
 // Deploy initial configuration
 // ------------------------------------
-static void configuration_deploy_app_par(const struct configuration_parameter *parameter, TSN_Enddevice *enddevice)
+static void configuration_deploy_app_par(const struct configuration_parameter *parameter,
+                                         const TSN_Enddevice *enddevice)
 {
     UA_BrowseResponse browse_response;
     UA_BrowseRequest browse_request;
@@ -552,7 +528,10 @@ out:
     UA_Client_delete(client);
 }
 
-static void configuration_request_app_run_state(const char *app_id, TSN_Enddevice *enddevice) {
+static void
+configuration_request_app_run_state(const char *app_id,
+                                    const TSN_Enddevice *enddevice)
+{
     UA_Variant *my_variant;
     UA_NodeId nodeID;
     UA_StatusCode retval;
@@ -570,8 +549,8 @@ static void configuration_request_app_run_state(const char *app_id, TSN_Enddevic
         return;
     }
 
-    // Set AppState to "CONFIG" 
-    // --> On the endpoint side, this will trigger the app to apply the saved parameters 
+    // Set AppState to "CONFIG"
+    // --> On the endpoint side, this will trigger the app to apply the saved parameters
     // and use the communication ocnfiguration (socket prio, qbv offset, basetime, etc.) to create a PubSub connection
     TSN_APPSTATE state;
     state = CONFIG;
@@ -589,15 +568,17 @@ out:
     UA_Client_delete(client);
 }
 
-static void configuration_toggle_app_send_receive(const char *app_id, TSN_Enddevice *enddevice) {
-     UA_Variant *my_variant;
+static void
+configuration_toggle_app_send_receive(const char *app_id,
+                                      const TSN_Enddevice *enddevice)
+{
+    UA_Variant *my_variant;
     UA_NodeId nodeID;
     UA_StatusCode retval;
     UA_Client *client;
 
-    if (!enddevice || !enddevice->interface_uri) {
+    if (!enddevice || !enddevice->interface_uri)
         return;
-    }
 
     client = UA_Client_new();
     UA_ClientConfig_setDefault(UA_Client_getConfig(client));
@@ -617,7 +598,7 @@ static void configuration_toggle_app_send_receive(const char *app_id, TSN_Enddev
     }
     UA_Boolean sendReceiveEnabledFlag = *(UA_Boolean *) my_variant->data;
     sendReceiveEnabledFlag = !sendReceiveEnabledFlag;
-    
+
     UA_Variant_setScalarCopy(my_variant, &sendReceiveEnabledFlag, &UA_TYPES[UA_TYPES_BOOLEAN]);
     retval = UA_Client_writeValueAttribute(client, nodeID, my_variant);
     if (retval != UA_STATUSCODE_GOOD) {
@@ -653,13 +634,12 @@ static void _cb_event(TSN_Event_CB_Data data)
 
         // Get the corresponding enddevice this app is deployed to
         ret = sysrepo_get_all_devices(&devices);
-        TSN_Enddevice *enddev = _find_enddevice_of_app(app->id, devices->enddevices, devices->count_enddevices);
-        if (enddev == NULL) {
+        const TSN_Enddevice *enddev = configuration_find_enddevice_of_app(app->id, devices->enddevices, devices->count_enddevices);
+        if (!enddev)
             goto out;
-        }
 
         // Enrich app configuration parameters from sysrepo data
-        configuration_fill_app_param(&param, app, devices);
+        configuration_fill_app_param(&param, app, enddev);
 
         // Configure parameters via OPC/UA!
         configuration_deploy_app_par(&param, enddev);
@@ -676,13 +656,12 @@ static void _cb_event(TSN_Event_CB_Data data)
 
         // Get the corresponding enddevice this app is deployed to
         ret = sysrepo_get_all_devices(&devices);
-        TSN_Enddevice *enddev = _find_enddevice_of_app(app->id, devices->enddevices, devices->count_enddevices);
-        if (enddev == NULL) {
+        const TSN_Enddevice *enddev = configuration_find_enddevice_of_app(app->id, devices->enddevices, devices->count_enddevices);
+        if (!enddev)
             goto out;
-        }
 
         // Enrich app configuration parameters from sysrepo data
-        configuration_fill_app_param(&param, app, devices);
+        configuration_fill_app_param(&param, app, enddev);
 
         // Configure parameters via OPC/UA!
         configuration_deploy_app_par(&param, enddev);
@@ -699,10 +678,9 @@ static void _cb_event(TSN_Event_CB_Data data)
 
         // Get the corresponding enddevice this app is deployed to
         ret = sysrepo_get_all_devices(&devices);
-        TSN_Enddevice *enddev = _find_enddevice_of_app(app->id, devices->enddevices, devices->count_enddevices);
-        if (enddev == NULL) {
+        const TSN_Enddevice *enddev = configuration_find_enddevice_of_app(app->id, devices->enddevices, devices->count_enddevices);
+        if (!enddev)
             goto out;
-        }
 
         // Set app state to Config in order to trigger tghe app to apply the configuration and create the PubSub connection
         configuration_request_app_run_state(data.entry_id, enddev);
@@ -719,10 +697,9 @@ static void _cb_event(TSN_Event_CB_Data data)
 
         // Get the corresponding enddevice this app is deployed to
         ret = sysrepo_get_all_devices(&devices);
-        TSN_Enddevice *enddev = _find_enddevice_of_app(app->id, devices->enddevices, devices->count_enddevices);
-        if (enddev == NULL) {
+        const TSN_Enddevice *enddev = configuration_find_enddevice_of_app(app->id, devices->enddevices, devices->count_enddevices);
+        if (!enddev)
             goto out;
-        }
 
         // Toggle the flag
         configuration_toggle_app_send_receive(data.entry_id, enddev);
