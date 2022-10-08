@@ -32,10 +32,12 @@ target_link_libraries(MonitorModule common)
 # MODULE CONTAINER
 add_executable(ContainerModule src/modules/container/module_container.c)
 target_link_libraries(ContainerModule common ulfius json_serializer)
+target_compile_options(ContainerModule PRIVATE -Wall -Wextra -pedantic)
 
 # MODULE CONFIGURATION
 add_executable(ConfigurationModule src/modules/configuration/module_configuration.c)
 target_link_libraries(ConfigurationModule common ulfius json_serializer open62541)
+target_compile_options(ConfigurationModule PRIVATE -Wall -Wextra -pedantic)
 
 ##### This is just for Testing purposes #####
 add_executable(CNCPrototype src/CNC/cnc_prototype.c)
