@@ -29,6 +29,7 @@ static volatile sig_atomic_t is_running = 1;
 
 static void signal_handler(int signum)
 {
+    (void)signum;
     is_running = 0;
 }
 
@@ -533,13 +534,13 @@ configuration_request_app_run_state(const char *app_id,
                                     const TSN_Enddevice *enddevice)
 {
     UA_Variant *my_variant;
-    UA_NodeId nodeID;
     UA_StatusCode retval;
     UA_Client *client;
 
-    if (!enddevice || !enddevice->interface_uri) {
+    (void)app_id;
+
+    if (!enddevice || !enddevice->interface_uri)
         return;
-    }
 
     client = UA_Client_new();
     UA_ClientConfig_setDefault(UA_Client_getConfig(client));
@@ -576,6 +577,8 @@ configuration_toggle_app_send_receive(const char *app_id,
     UA_NodeId nodeID;
     UA_StatusCode retval;
     UA_Client *client;
+
+    (void)app_id;
 
     if (!enddevice || !enddevice->interface_uri)
         return;
@@ -617,7 +620,7 @@ out:
 // ------------------------------------
 static void _cb_event(TSN_Event_CB_Data data)
 {
-    struct configuration_parameter param = { };
+    struct configuration_parameter param = { 0 };
     const char *event_name = NULL;
     TSN_App *app = NULL;
     int ret;
