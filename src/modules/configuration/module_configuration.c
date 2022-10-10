@@ -105,29 +105,57 @@ static void configuration_fill_app_param(struct configuration_parameter *paramet
     parameter->opcua_configuration_uri = x_strdup(device->interface_uri);
     parameter->app_id = x_strdup(app->id);
 
-    // Fetch and store execution parameters.
+    //
+    // Fetch and store engineering parameters.
+    //
     for (i = 0; i < app->count_parameters; ++i) {
         TSN_App_Parameter *par = &app->parameters[i];
 
-        // vPLC parameter
         if (!strcmp(par->name, "current_status")) {
-            parameter->exec.current_status = parameter_data_value_to_string(par);
+            parameter->eng.current_status = parameter_data_value_to_string(par);
             num_app_parameters--;
         }
 
         if (!strcmp(par->name, "commanded_status")) {
-            parameter->exec.commanded_status = parameter_data_value_to_string(par);
+            parameter->eng.commanded_status = parameter_data_value_to_string(par);
             num_app_parameters--;
         }
 
-        // Execution parameter
+        if (!strcmp(par->name, "destination_mac")) {
+            parameter->eng.destination_mac = parameter_data_value_to_string(par);
+            num_app_parameters--;
+        }
+
+        if (!strcmp(par->name, "subscribed_mac")) {
+            parameter->eng.subscribed_mac = parameter_data_value_to_string(par);
+            num_app_parameters--;
+        }
+
+        if (!strcmp(par->name, "interface")) {
+            parameter->eng.interface = parameter_data_value_to_string(par);
+            num_app_parameters--;
+        }
+
+        if (!strcmp(par->name, "sendreceive_enabled")) {
+            char *txrx;
+            int tmp;
+
+            txrx = parameter_data_value_to_string(par);
+            tmp = atoi(txrx);
+            parameter->eng.sendreceive_enabled = tmp ? true : false;
+            if (tmp <= 0)
+                parameter->eng.sendreceive_enabled = CONFIGURATION_DEFAULT_SENDRECEIVE_ENABLED;
+            free(txrx);
+            num_app_parameters--;
+        }
+
         if (!strcmp(par->name, "cycle_time")) {
             char *time, *endptr;
 
             time = parameter_data_value_to_string(par);
-            parameter->exec.cycle_time = strtoull(time, &endptr, 10);
+            parameter->eng.cycle_time = strtoull(time, &endptr, 10);
             if (errno != 0 || endptr == time || *endptr != '\0')
-                parameter->exec.cycle_time = CONFIGURATION_DEFAULT_CYCLE_TIME_NS;
+                parameter->eng.cycle_time = CONFIGURATION_DEFAULT_CYCLE_TIME_NS;
             free(time);
             num_app_parameters--;
         }
@@ -136,9 +164,20 @@ static void configuration_fill_app_param(struct configuration_parameter *paramet
             char *time, *endptr;
 
             time = parameter_data_value_to_string(par);
-            parameter->exec.base_time = strtoull(time, &endptr, 10);
+            parameter->eng.base_time = strtoull(time, &endptr, 10);
             if (errno != 0 || endptr == time || *endptr != '\0')
-                parameter->exec.base_time = CONFIGURATION_DEFAULT_BASE_TIME_NS;
+                parameter->eng.base_time = CONFIGURATION_DEFAULT_BASE_TIME_NS;
+            free(time);
+            num_app_parameters--;
+        }
+
+        if (!strcmp(par->name, "qbv_offset")) {
+            char *time, *endptr;
+
+            time = parameter_data_value_to_string(par);
+            parameter->eng.qbv_offset = strtoll(time, &endptr, 10);
+            if (errno != 0 || endptr == time || *endptr != '\0')
+                parameter->eng.qbv_offset = CONFIGURATION_DEFAULT_QBV_OFFSET_NS;
             free(time);
             num_app_parameters--;
         }
@@ -147,9 +186,20 @@ static void configuration_fill_app_param(struct configuration_parameter *paramet
             char *time, *endptr;
 
             time = parameter_data_value_to_string(par);
-            parameter->exec.wakeup_latency = strtoull(time, &endptr, 10);
+            parameter->eng.wakeup_latency = strtoull(time, &endptr, 10);
             if (errno != 0 || endptr == time || *endptr != '\0')
-                parameter->exec.wakeup_latency = CONFIGURATION_DEFAULT_WAKEUP_LATENCY_NS;
+                parameter->eng.wakeup_latency = CONFIGURATION_DEFAULT_WAKEUP_LATENCY_NS;
+            free(time);
+            num_app_parameters--;
+        }
+
+        if (!strcmp(par->name, "wcet")) {
+            char *time, *endptr;
+
+            time = parameter_data_value_to_string(par);
+            parameter->eng.wcet = strtoull(time, &endptr, 10);
+            if (errno != 0 || endptr == time || *endptr != '\0')
+                parameter->eng.wcet = CONFIGURATION_DEFAULT_WCET;
             free(time);
             num_app_parameters--;
         }
@@ -158,9 +208,9 @@ static void configuration_fill_app_param(struct configuration_parameter *paramet
             char *prio;
 
             prio = parameter_data_value_to_string(par);
-            parameter->exec.scheduling_priority = atoi(prio);
-            if (parameter->exec.scheduling_priority <= 0)
-                parameter->exec.scheduling_priority = CONFIGURATION_DEFAULT_SCHEDULING_PRIORITY;
+            parameter->eng.scheduling_priority = atoi(prio);
+            if (parameter->eng.scheduling_priority <= 0)
+                parameter->eng.scheduling_priority = CONFIGURATION_DEFAULT_SCHEDULING_PRIORITY;
             free(prio);
             num_app_parameters--;
         }
@@ -169,9 +219,9 @@ static void configuration_fill_app_param(struct configuration_parameter *paramet
             char *prio;
 
             prio = parameter_data_value_to_string(par);
-            parameter->exec.socket_priority = atoi(prio);
-            if (parameter->exec.socket_priority < 0)
-                parameter->exec.scheduling_priority = CONFIGURATION_DEFAULT_SOCKET_PRIORITY;
+            parameter->eng.socket_priority = atoi(prio);
+            if (parameter->eng.socket_priority < 0)
+                parameter->eng.scheduling_priority = CONFIGURATION_DEFAULT_SOCKET_PRIORITY;
             free(prio);
             num_app_parameters--;
         }
@@ -180,18 +230,23 @@ static void configuration_fill_app_param(struct configuration_parameter *paramet
     parameter->app.num_parameters = num_app_parameters;
     parameter->app.names = x_calloc(num_app_parameters, sizeof(char *));
     parameter->app.values = x_calloc(num_app_parameters, sizeof(char *));
+    parameter->app.types = x_calloc(num_app_parameters, sizeof(char *));
 
     for (i = 0, j = 0; i < app->count_parameters; ++i) {
         TSN_App_Parameter *par = &app->parameters[i];
 
         if (!strcmp(par->name, "current_status") || !strcmp(par->name, "commanded_status") ||
+            !strcmp(par->name, "destination_mac") || !strcmp(par->name, "subscribed_mac") ||
+            !strcmp(par->name, "interface") || !strcmp(par->name, "sendreceive_enabled") ||
             !strcmp(par->name, "cycle_time") || !strcmp(par->name, "base_time") ||
-            !strcmp(par->name, "wakeup_latency") || !strcmp(par->name, "scheduling_priority") ||
+            !strcmp(par->name, "qbv_offset") || !strcmp(par->name, "wakeup_latency") ||
+            !strcmp(par->name, "wcet") || !strcmp(par->name, "scheduling_priority") ||
             !strcmp(par->name, "socket_priority"))
             continue;
 
         parameter->app.names[j] = x_strdup(par->name);
         parameter->app.values[j] = parameter_data_value_to_string(par);
+        parameter->app.types[j] = x_strdup(data_type_to_string(par->type));
         j++;
     }
 }
@@ -205,16 +260,21 @@ static void configuration_free_app_param(struct configuration_parameter *paramet
 
     free((void *)parameter->opcua_configuration_uri);
     free((void *)parameter->app_id);
-    free((void *)parameter->exec.current_status);
-    free((void *)parameter->exec.commanded_status);
+    free((void *)parameter->eng.current_status);
+    free((void *)parameter->eng.commanded_status);
+    free((void *)parameter->eng.destination_mac);
+    free((void *)parameter->eng.subscribed_mac);
+    free((void *)parameter->eng.interface);
 
     for (i = 0; i < parameter->app.num_parameters; ++i) {
         free((void *)parameter->app.names[i]);
         free((void *)parameter->app.values[i]);
+        free((void *)parameter->app.types[i]);
     }
 
     free(parameter->app.names);
     free(parameter->app.values);
+    free(parameter->app.types);
 }
 
 static bool
@@ -435,77 +495,77 @@ static void configuration_deploy_app_par(const struct configuration_parameter *p
 
             // AppType::CurrentStatus
             if (!strcmp(browse_name, "CurrentStatus")) {
-                UA_String string_value = UA_STRING((char *)parameter->exec.current_status);
+                UA_String string_value = UA_STRING((char *)parameter->eng.current_status);
                 UA_Variant_setScalarCopy(my_variant, &string_value, &UA_TYPES[UA_TYPES_STRING]);
                 ret = UA_Client_writeValueAttribute(client, ref->nodeId.nodeId, my_variant);
                 if (ret != UA_STATUSCODE_GOOD) {
-                    log("Failed to write %s to %s!", parameter->exec.current_status, "AppType::CurrentStatus");
+                    log("Failed to write %s to %s!", parameter->eng.current_status, "AppType::CurrentStatus");
                     continue;
                 }
             }
 
             // AppType::CommandedStatus
             if (!strcmp(browse_name, "CommandedStatus")) {
-                UA_String string_value = UA_STRING((char *)parameter->exec.commanded_status);
+                UA_String string_value = UA_STRING((char *)parameter->eng.commanded_status);
                 UA_Variant_setScalarCopy(my_variant, &string_value, &UA_TYPES[UA_TYPES_STRING]);
                 ret = UA_Client_writeValueAttribute(client, ref->nodeId.nodeId, my_variant);
                 if (ret != UA_STATUSCODE_GOOD) {
-                    log("Failed to write %s to %s!", parameter->exec.commanded_status, "AppType::CommandedStatus");
+                    log("Failed to write %s to %s!", parameter->eng.commanded_status, "AppType::CommandedStatus");
                     continue;
                 }
             }
 
             // AppType::CycleTime
             if (!strcmp(browse_name, "CycleTime")) {
-                UA_UInt64 uint_value = parameter->exec.cycle_time;
+                UA_UInt64 uint_value = parameter->eng.cycle_time;
                 UA_Variant_setScalarCopy(my_variant, &uint_value, &UA_TYPES[UA_TYPES_UINT64]);
                 ret = UA_Client_writeValueAttribute(client, ref->nodeId.nodeId, my_variant);
                 if (ret != UA_STATUSCODE_GOOD) {
-                    log("Failed to write %lu to %s!", parameter->exec.cycle_time, "AppType::CycleTime");
+                    log("Failed to write %lu to %s!", parameter->eng.cycle_time, "AppType::CycleTime");
                     continue;
                 }
             }
 
             // AppType::BaseTime
             if (!strcmp(browse_name, "BaseTime")) {
-                UA_UInt64 uint_value = parameter->exec.base_time;
+                UA_UInt64 uint_value = parameter->eng.base_time;
                 UA_Variant_setScalarCopy(my_variant, &uint_value, &UA_TYPES[UA_TYPES_UINT64]);
                 ret = UA_Client_writeValueAttribute(client, ref->nodeId.nodeId, my_variant);
                 if (ret != UA_STATUSCODE_GOOD) {
-                    log("Failed to write %lu to %s!", parameter->exec.base_time, "AppType::BaseTime");
+                    log("Failed to write %lu to %s!", parameter->eng.base_time, "AppType::BaseTime");
                     continue;
                 }
             }
 
             // AppType::WakeupLatency
             if (!strcmp(browse_name, "WakeupLatency")) {
-                UA_UInt64 uint_value = parameter->exec.wakeup_latency;
+                UA_UInt64 uint_value = parameter->eng.wakeup_latency;
                 UA_Variant_setScalarCopy(my_variant, &uint_value, &UA_TYPES[UA_TYPES_UINT64]);
                 ret = UA_Client_writeValueAttribute(client, ref->nodeId.nodeId, my_variant);
                 if (ret != UA_STATUSCODE_GOOD) {
-                    log("Failed to write %lu to %s!", parameter->exec.wakeup_latency, "AppType::WakeupLatency");
+                    log("Failed to write %lu to %s!", parameter->eng.wakeup_latency, "AppType::WakeupLatency");
                     continue;
                 }
             }
 
             // AppType::SchedulingPriority
             if (!strcmp(browse_name, "SchedulingPriority")) {
-                UA_Int32 int_value = parameter->exec.scheduling_priority;
+                UA_Int32 int_value = parameter->eng.scheduling_priority;
                 UA_Variant_setScalarCopy(my_variant, &int_value, &UA_TYPES[UA_TYPES_INT32]);
                 ret = UA_Client_writeValueAttribute(client, ref->nodeId.nodeId, my_variant);
                 if (ret != UA_STATUSCODE_GOOD) {
-                    log("Failed to write %d to %s!", parameter->exec.socket_priority, "AppType::SchedulingPriority");
+                    log("Failed to write %d to %s!", parameter->eng.socket_priority, "AppType::SchedulingPriority");
                     continue;
                 }
             }
 
             // AppType::SocketPriority
             if (!strcmp(browse_name, "SocketPriority")) {
-                UA_Int32 int_value = parameter->exec.socket_priority;
+                UA_Int32 int_value = parameter->eng.socket_priority;
                 UA_Variant_setScalarCopy(my_variant, &int_value, &UA_TYPES[UA_TYPES_INT32]);
                 ret = UA_Client_writeValueAttribute(client, ref->nodeId.nodeId, my_variant);
                 if (ret != UA_STATUSCODE_GOOD) {
-                    log("Failed to write %d to %s!", parameter->exec.socket_priority, "AppType::SocketPriority");
+                    log("Failed to write %d to %s!", parameter->eng.socket_priority, "AppType::SocketPriority");
                     continue;
                 }
             }
@@ -514,7 +574,7 @@ static void configuration_deploy_app_par(const struct configuration_parameter *p
             if (!strcmp(browse_name, "ApplicationParameter")) {
                 ret = configuration_set_app_parameter(client, parameter, ref->nodeId.nodeId);
                 if (ret != UA_STATUSCODE_GOOD) {
-                    log("Failed to write %d to %s!", parameter->exec.socket_priority, "AppType::SocketPriority");
+                    log("Failed to write %d to %s!", parameter->eng.socket_priority, "AppType::SocketPriority");
                     continue;
                 }
             }
