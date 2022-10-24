@@ -35,7 +35,27 @@ target_link_libraries(ContainerModule common ulfius json_serializer)
 target_compile_options(ContainerModule PRIVATE -Wall -Wextra -pedantic)
 
 # MODULE CONFIGURATION
-add_executable(ConfigurationModule src/modules/configuration/module_configuration.c)
+find_package(open62541 REQUIRED)
+
+set(GENERATED_SERVER_OUTPUT ${PROJECT_SOURCE_DIR}/src_generated)
+set(FILE_NS_DIRPREFIX ${PROJECT_SOURCE_DIR}/nodeset)
+
+ua_generate_nodeset_and_datatypes(
+  NAME "endpoint"
+  FILE_NS "${FILE_NS_DIRPREFIX}/tsnendpointmodel.xml"
+  FILE_BSD "${FILE_NS_DIRPREFIX}/tsnendpointtypes.bsd"
+  FILE_CSV "${FILE_NS_DIRPREFIX}/tsnendpointmodel.csv"
+  NAMESPACE_MAP "2:https://isw.uni-stuttgart.de/TSNEndpointModel/"
+  OUTPUT_DIR "${GENERATED_SERVER_OUTPUT}"
+  INTERNAL
+)
+
+add_executable(ConfigurationModule
+  src/modules/configuration/module_configuration.c
+  src_generated/namespace_endpoint_generated.c
+  src_generated/types_endpoint_generated.c
+)
+add_dependencies(ConfigurationModule open62541-generator-ns-endpoint)
 target_link_libraries(ConfigurationModule common ulfius json_serializer open62541)
 target_compile_options(ConfigurationModule PRIVATE -Wall -Wextra -pedantic)
 

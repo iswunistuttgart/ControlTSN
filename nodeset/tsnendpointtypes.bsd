@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<opc:TypeDictionary xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:tns="https://isw.uni-stuttgart.de/TSNEndpointModel/" DefaultByteOrder="LittleEndian" xmlns:opc="http://opcfoundation.org/BinarySchema/" xmlns:ua="http://opcfoundation.org/UA/" TargetNamespace="https://isw.uni-stuttgart.de/TSNEndpointModel/">
+ <opc:Import Namespace="http://opcfoundation.org/UA/"/>
+ <opc:StructuredType BaseType="ua:ExtensionObject" Name="TSNApplication">
+  <opc:Field TypeName="opc:CharArray" Name="ID"/>
+  <opc:Field TypeName="opc:CharArray" Name="Path"/>
+  <opc:Field TypeName="opc:Int32" Name="NoOfApplicationParameters"/>
+  <opc:Field LengthField="NoOfApplicationParameters" TypeName="tns:TSNApplicationParameter" Name="ApplicationParameters"/>
+  <opc:Field TypeName="tns:TSNApplicationEngineeringParameters" Name="EngineeringParameters"/>
+ </opc:StructuredType>
+ <opc:StructuredType BaseType="ua:ExtensionObject" Name="TSNApplicationEngineeringParameters">
+  <opc:Field TypeName="opc:CharArray" Name="CommandedStatus"/>
+  <opc:Field TypeName="opc:CharArray" Name="CurrentStatus"/>
+  <opc:Field TypeName="opc:Boolean" Name="SendReceiveEnabled"/>
+  <opc:Field TypeName="opc:UInt64" Name="Basetime"/>
+  <opc:Field TypeName="opc:Int32" Name="QbvOffset"/>
+  <opc:Field TypeName="opc:CharArray" Name="DestinationMAC"/>
+  <opc:Field TypeName="opc:CharArray" Name="SubscribedMAC"/>
+  <opc:Field TypeName="opc:CharArray" Name="Interface"/>
+  <opc:Field TypeName="opc:Double" Name="CycleTime"/>
+  <opc:Field TypeName="opc:Int32" Name="SocketPriority"/>
+  <opc:Field TypeName="opc:UInt32" Name="WCET"/>
+ </opc:StructuredType>
+ <opc:StructuredType BaseType="ua:ExtensionObject" Name="TSNApplicationParameter">
+  <opc:Field TypeName="opc:CharArray" Name="Name"/>
+  <opc:Field TypeName="opc:CharArray" Name="Type"/>
+  <opc:Field TypeName="opc:CharArray" Name="Value"/>
+ </opc:StructuredType>
+</opc:TypeDictionary>

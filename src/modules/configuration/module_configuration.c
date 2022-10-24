@@ -20,12 +20,16 @@
 #include "../../helper/json_serializer.h"
 #include "../../logger.h"
 
+#include "../../../src_generated/types_endpoint_generated.h"
+
 #include "module_configuration.h"
 
 //---------------------------------------
 // Configuration Module Utility functions
 //---------------------------------------
 static volatile sig_atomic_t is_running = 1;
+
+static UA_DataTypeArray customTypesArray = { NULL, UA_TYPES_ENDPOINT_COUNT, UA_TYPES_ENDPOINT, UA_FALSE };
 
 static void signal_handler(int signum)
 {
@@ -443,7 +447,11 @@ static void configuration_deploy_app_par(const struct configuration_parameter *p
 
     // Connect to Application Configuration Endpoint
     client = UA_Client_new();
-    UA_ClientConfig_setDefault(UA_Client_getConfig(client));
+    UA_ClientConfig *cc = UA_Client_getConfig(client);
+
+    UA_ClientConfig_setDefault(cc);
+    cc->customDataTypes = &customTypesArray;
+
     ret = UA_Client_connect(client, enddevice->interface_uri);
     if (ret != UA_STATUSCODE_GOOD) {
         UA_Client_delete(client);
@@ -603,7 +611,11 @@ configuration_request_app_run_state(const char *app_id,
         return;
 
     client = UA_Client_new();
-    UA_ClientConfig_setDefault(UA_Client_getConfig(client));
+    UA_ClientConfig *cc = UA_Client_getConfig(client);
+
+    UA_ClientConfig_setDefault(cc);
+    cc->customDataTypes = &customTypesArray;
+
     retval = UA_Client_connect(client, enddevice->interface_uri);
     if (retval != UA_STATUSCODE_GOOD) {
         UA_Client_delete(client);
@@ -644,7 +656,11 @@ configuration_toggle_app_send_receive(const char *app_id,
         return;
 
     client = UA_Client_new();
-    UA_ClientConfig_setDefault(UA_Client_getConfig(client));
+    UA_ClientConfig *cc = UA_Client_getConfig(client);
+
+    UA_ClientConfig_setDefault(cc);
+    cc->customDataTypes = &customTypesArray;
+
     retval = UA_Client_connect(client, enddevice->interface_uri);
     if (retval != UA_STATUSCODE_GOOD) {
         UA_Client_delete(client);
