@@ -21,6 +21,8 @@
 #include "../../logger.h"
 
 #include "../../../src_generated/types_endpoint_generated.h"
+#include "../../../src_generated/types_endpoint_generated_handling.h"
+#include "../../../src_generated/endpoint_nodeids.h"
 
 #include "module_configuration.h"
 
@@ -73,6 +75,19 @@ static void *x_calloc(size_t nmemb, size_t size)
     void *p;
 
     p = calloc(nmemb, size);
+    if (!p) {
+        log("Error allocating memory!");
+        exit(EXIT_FAILURE);
+    }
+
+    return p;
+}
+
+static void *x_realloc(void *ptr, size_t size)
+{
+    void *p;
+
+    p = realloc(ptr, size);
     if (!p) {
         log("Error allocating memory!");
         exit(EXIT_FAILURE);
@@ -264,6 +279,7 @@ static void configuration_free_app_param(struct configuration_parameter *paramet
 
     free((void *)parameter->opcua_configuration_uri);
     free((void *)parameter->app_id);
+    free((void *)parameter->app_path);
     free((void *)parameter->eng.current_status);
     free((void *)parameter->eng.commanded_status);
     free((void *)parameter->eng.destination_mac);
@@ -281,163 +297,16 @@ static void configuration_free_app_param(struct configuration_parameter *paramet
     free(parameter->app.types);
 }
 
-static bool
-configuration_find_app_node(UA_Client *client,
-                            const struct configuration_parameter *parameter,
-                            UA_NodeId *app_node_id)
-{
-    UA_BrowseRequest browse_request;
-    bool found = false;
-
-    UA_BrowseRequest_init(&browse_request);
-
-    browse_request.requestedMaxReferencesPerNode = 0;
-    browse_request.nodesToBrowse = UA_BrowseDescription_new();
-    browse_request.nodesToBrowseSize = 1;
-    browse_request.nodesToBrowse[0].nodeId = UA_NODEID_NUMERIC(0, UA_NS0ID_OBJECTSFOLDER);
-    browse_request.nodesToBrowse[0].resultMask = UA_BROWSERESULTMASK_ALL;
-
-    UA_BrowseResponse browse_response = UA_Client_Service_browse(client, browse_request);
-    for (size_t i = 0; i < browse_response.resultsSize; ++i) {
-        for (size_t j = 0; j < browse_response.results[i].referencesSize; ++j) {
-            UA_ReferenceDescription *ref = &browse_response.results[i].references[j];
-            char browse_name[1024] = { 0 };
-
-            if (ref->nodeId.nodeId.identifierType == UA_NODEIDTYPE_NUMERIC ||
-                ref->nodeId.nodeId.identifierType == UA_NODEIDTYPE_STRING) {
-                size_t len = ref->browseName.name.length >= sizeof(browse_name) ? sizeof(browse_name) - 1 :
-                    ref->browseName.name.length;
-
-                memcpy(browse_name, ref->browseName.name.data, len);
-            }
-
-            if (!strcmp(browse_name, parameter->app_id)) {
-                found = true;
-                *app_node_id = ref->nodeId.nodeId;
-                break;
-            }
-        }
-    }
-    UA_BrowseRequest_clear(&browse_request);
-    UA_BrowseResponse_clear(&browse_response);
-
-    return found;
-}
-
-static UA_StatusCode
-configuration_set_app_parameter(UA_Client *client,
-                                const struct configuration_parameter *parameter,
-                                UA_NodeId parameter_node_id)
-{
-    UA_StatusCode ret = UA_STATUSCODE_GOOD;
-    UA_BrowseRequest browse_request;
-
-    UA_BrowseRequest_init(&browse_request);
-
-    browse_request.requestedMaxReferencesPerNode = 0;
-    browse_request.nodesToBrowse = UA_BrowseDescription_new();
-    browse_request.nodesToBrowseSize = 1;
-    browse_request.nodesToBrowse[0].nodeId = parameter_node_id;
-    browse_request.nodesToBrowse[0].resultMask = UA_BROWSERESULTMASK_ALL;
-
-    UA_BrowseResponse browse_response = UA_Client_Service_browse(client, browse_request);
-    for (size_t i = 0; i < browse_response.resultsSize; ++i) {
-        for (size_t j = 0; j < browse_response.results[i].referencesSize; ++j) {
-            UA_ReferenceDescription *ref = &browse_response.results[i].references[j];
-            char browse_name[1024] = { 0 };
-
-            if (ref->nodeId.nodeId.identifierType == UA_NODEIDTYPE_NUMERIC ||
-                ref->nodeId.nodeId.identifierType == UA_NODEIDTYPE_STRING) {
-                size_t len = ref->browseName.name.length >= sizeof(browse_name) ? sizeof(browse_name) - 1 :
-                    ref->browseName.name.length;
-
-                memcpy(browse_name, ref->browseName.name.data, len);
-            }
-
-            // ParameterType::Names
-            if (!strcmp(browse_name, "Names")) {
-                UA_String names[parameter->app.num_parameters];
-                UA_UInt32 array_dims = 0;
-                UA_Variant array;
-
-                for (size_t i = 0; i < parameter->app.num_parameters; ++i)
-                    names[i] = UA_STRING((char *)parameter->app.names[i]);
-
-                UA_Variant_setArrayCopy(&array, names, parameter->app.num_parameters, &UA_TYPES[UA_TYPES_STRING]);
-                array.arrayDimensions = &array_dims;
-                array.arrayDimensionsSize = 1;
-                array.arrayDimensions[0] = parameter->app.num_parameters;
-
-                ret = UA_Client_writeValueAttribute(client, ref->nodeId.nodeId, &array);
-                if (ret != UA_STATUSCODE_GOOD) {
-                    log("Failed to write ParameterType::Names!");
-                    continue;
-                }
-            }
-
-            // ParameterType::Values
-            if (!strcmp(browse_name, "Values")) {
-                UA_String values[parameter->app.num_parameters];
-                UA_UInt32 array_dims = 0;
-                UA_Variant array;
-
-                for (size_t i = 0; i < parameter->app.num_parameters; ++i)
-                    values[i] = UA_STRING((char *)parameter->app.values[i]);
-
-                UA_Variant_setArrayCopy(&array, values, parameter->app.num_parameters, &UA_TYPES[UA_TYPES_STRING]);
-                array.arrayDimensions = &array_dims;
-                array.arrayDimensionsSize = 1;
-                array.arrayDimensions[0] = parameter->app.num_parameters;
-
-                ret = UA_Client_writeValueAttribute(client, ref->nodeId.nodeId, &array);
-                if (ret != UA_STATUSCODE_GOOD) {
-                    log("Failed to write ParameterType::Values!");
-                    continue;
-                }
-            }
-        }
-    }
-
-    UA_BrowseRequest_clear(&browse_request);
-    UA_BrowseResponse_clear(&browse_response);
-
-    return ret;
-}
-
-// Keep in sync with [endpoint]src/app_config/app_model.c
-static UA_NodeId app_create_node_id = {1, UA_NODEIDTYPE_NUMERIC, {1010}};
-
-static UA_StatusCode
-configuration_create_app_node(UA_Client *client,
-                              const struct configuration_parameter *parameter)
-{
-    UA_Variant input, *output;
-    size_t output_size;
-    UA_StatusCode ret;
-
-    UA_Variant_init(&input);
-    UA_String app_id = UA_String_fromChars(parameter->app_id);
-    UA_Variant_setScalar(&input, &app_id, &UA_TYPES[UA_TYPES_STRING]);
-
-    ret = UA_Client_call(client, UA_NODEID_NUMERIC(0, UA_NS0ID_OBJECTSFOLDER),
-                         app_create_node_id, 1, &input, &output_size, &output);
-    UA_String_clear(&app_id);
-
-    return ret;
-}
-
 // ------------------------------------
-// Deploy initial configuration
+// Deploy OPC/UA configuration
 // ------------------------------------
 static void configuration_deploy_app_par(const struct configuration_parameter *parameter,
                                          const TSN_Enddevice *enddevice)
 {
-    UA_BrowseResponse browse_response;
-    UA_BrowseRequest browse_request;
-    UA_Variant *my_variant;
-    UA_NodeId app_node_id;
+    UA_NodeId app_node;
     UA_StatusCode ret;
     UA_Client *client;
+    UA_Variant out;
 
     // If no URI provided, nothing works
     if (!parameter || !enddevice->interface_uri || !parameter->app_id) {
@@ -454,146 +323,113 @@ static void configuration_deploy_app_par(const struct configuration_parameter *p
 
     ret = UA_Client_connect(client, enddevice->interface_uri);
     if (ret != UA_STATUSCODE_GOOD) {
+        log("Failed to connect to endpoint service!");
         UA_Client_delete(client);
         return;
     }
 
-    my_variant = UA_Variant_new();
-
     //
-    // Check for application node: The exported UPC/UA data model should contain
-    // a node for the application to configure all parameters. If it's not
-    // there, a new application instance has to be created.
+    // Retrieve all TSN applications stored on endpoint service.
     //
-    if (!configuration_find_app_node(client, parameter, &app_node_id)) {
-        ret = configuration_create_app_node(client, parameter);
-        if (ret != UA_STATUSCODE_GOOD) {
-            log("Failed to create Application instance on Endpoint Service!");
-            goto out;
-        }
+    UA_Variant_init(&out);
+    app_node = UA_NODEID_NUMERIC(2, UA_ENDPOINTID_ENDPOINT_APPLICATION);
 
-        // Find app node again.
-        if (!configuration_find_app_node(client, parameter, &app_node_id)) {
-            log("Failed to find Application instance on Endpoint Service!");
-            goto out;
-        }
+    ret = UA_Client_readValueAttribute(client, app_node, &out);
+    if (ret != UA_STATUSCODE_GOOD) {
+        log("Failed to read TSN applications!");
+        goto out;
     }
 
-    // Application instance found. Configure parameter.
-    browse_request.requestedMaxReferencesPerNode = 0;
-    browse_request.nodesToBrowse = UA_BrowseDescription_new();
-    browse_request.nodesToBrowseSize = 1;
-    browse_request.nodesToBrowse[0].nodeId = app_node_id;
-    browse_request.nodesToBrowse[0].resultMask = UA_BROWSERESULTMASK_ALL;
+    //
+    // Check whether the application already exists.
+    //
+    UA_ExtensionObject *obj = out.data;
+    size_t num_apps = out.arrayLength;
+    UA_TSNApplication *apps, *app = NULL;
+    apps = x_calloc(num_apps, sizeof(*apps));
 
-    browse_response = UA_Client_Service_browse(client, browse_request);
+    for (size_t i = 0; i < num_apps; ++i) {
+        UA_TSNApplication *a = obj[i].content.decoded.data;
 
-    for (size_t i = 0; i < browse_response.resultsSize; ++i) {
-        for (size_t j = 0; j < browse_response.results[i].referencesSize; ++j) {
-            UA_ReferenceDescription *ref = &browse_response.results[i].references[j];
-            char browse_name[1024] = { 0 };
+        UA_TSNApplication_init(&apps[i]);
+        UA_TSNApplication_copy(a, &apps[i]);
 
-            if (ref->nodeId.nodeId.identifierType == UA_NODEIDTYPE_NUMERIC ||
-                ref->nodeId.nodeId.identifierType == UA_NODEIDTYPE_STRING) {
-                size_t len = ref->browseName.name.length >= sizeof(browse_name) ? sizeof(browse_name) - 1 :
-                    ref->browseName.name.length;
+        char id[a->iD.length + 1];
+        memcpy(id, a->iD.data, a->iD.length);
+        id[a->iD.length] = '\0';
 
-                memcpy(browse_name, ref->browseName.name.data, len);
-            }
-
-            // AppType::CurrentStatus
-            if (!strcmp(browse_name, "CurrentStatus")) {
-                UA_String string_value = UA_STRING((char *)parameter->eng.current_status);
-                UA_Variant_setScalarCopy(my_variant, &string_value, &UA_TYPES[UA_TYPES_STRING]);
-                ret = UA_Client_writeValueAttribute(client, ref->nodeId.nodeId, my_variant);
-                if (ret != UA_STATUSCODE_GOOD) {
-                    log("Failed to write %s to %s!", parameter->eng.current_status, "AppType::CurrentStatus");
-                    continue;
-                }
-            }
-
-            // AppType::CommandedStatus
-            if (!strcmp(browse_name, "CommandedStatus")) {
-                UA_String string_value = UA_STRING((char *)parameter->eng.commanded_status);
-                UA_Variant_setScalarCopy(my_variant, &string_value, &UA_TYPES[UA_TYPES_STRING]);
-                ret = UA_Client_writeValueAttribute(client, ref->nodeId.nodeId, my_variant);
-                if (ret != UA_STATUSCODE_GOOD) {
-                    log("Failed to write %s to %s!", parameter->eng.commanded_status, "AppType::CommandedStatus");
-                    continue;
-                }
-            }
-
-            // AppType::CycleTime
-            if (!strcmp(browse_name, "CycleTime")) {
-                UA_UInt64 uint_value = parameter->eng.cycle_time;
-                UA_Variant_setScalarCopy(my_variant, &uint_value, &UA_TYPES[UA_TYPES_UINT64]);
-                ret = UA_Client_writeValueAttribute(client, ref->nodeId.nodeId, my_variant);
-                if (ret != UA_STATUSCODE_GOOD) {
-                    log("Failed to write %lu to %s!", parameter->eng.cycle_time, "AppType::CycleTime");
-                    continue;
-                }
-            }
-
-            // AppType::BaseTime
-            if (!strcmp(browse_name, "BaseTime")) {
-                UA_UInt64 uint_value = parameter->eng.base_time;
-                UA_Variant_setScalarCopy(my_variant, &uint_value, &UA_TYPES[UA_TYPES_UINT64]);
-                ret = UA_Client_writeValueAttribute(client, ref->nodeId.nodeId, my_variant);
-                if (ret != UA_STATUSCODE_GOOD) {
-                    log("Failed to write %lu to %s!", parameter->eng.base_time, "AppType::BaseTime");
-                    continue;
-                }
-            }
-
-            // AppType::WakeupLatency
-            if (!strcmp(browse_name, "WakeupLatency")) {
-                UA_UInt64 uint_value = parameter->eng.wakeup_latency;
-                UA_Variant_setScalarCopy(my_variant, &uint_value, &UA_TYPES[UA_TYPES_UINT64]);
-                ret = UA_Client_writeValueAttribute(client, ref->nodeId.nodeId, my_variant);
-                if (ret != UA_STATUSCODE_GOOD) {
-                    log("Failed to write %lu to %s!", parameter->eng.wakeup_latency, "AppType::WakeupLatency");
-                    continue;
-                }
-            }
-
-            // AppType::SchedulingPriority
-            if (!strcmp(browse_name, "SchedulingPriority")) {
-                UA_Int32 int_value = parameter->eng.scheduling_priority;
-                UA_Variant_setScalarCopy(my_variant, &int_value, &UA_TYPES[UA_TYPES_INT32]);
-                ret = UA_Client_writeValueAttribute(client, ref->nodeId.nodeId, my_variant);
-                if (ret != UA_STATUSCODE_GOOD) {
-                    log("Failed to write %d to %s!", parameter->eng.socket_priority, "AppType::SchedulingPriority");
-                    continue;
-                }
-            }
-
-            // AppType::SocketPriority
-            if (!strcmp(browse_name, "SocketPriority")) {
-                UA_Int32 int_value = parameter->eng.socket_priority;
-                UA_Variant_setScalarCopy(my_variant, &int_value, &UA_TYPES[UA_TYPES_INT32]);
-                ret = UA_Client_writeValueAttribute(client, ref->nodeId.nodeId, my_variant);
-                if (ret != UA_STATUSCODE_GOOD) {
-                    log("Failed to write %d to %s!", parameter->eng.socket_priority, "AppType::SocketPriority");
-                    continue;
-                }
-            }
-
-            // AppType::ApplicationParameter
-            if (!strcmp(browse_name, "ApplicationParameter")) {
-                ret = configuration_set_app_parameter(client, parameter, ref->nodeId.nodeId);
-                if (ret != UA_STATUSCODE_GOOD) {
-                    log("Failed to write %d to %s!", parameter->eng.socket_priority, "AppType::SocketPriority");
-                    continue;
-                }
-            }
-        }
+        if (!strcmp(parameter->app_id, id))
+            app = a;
     }
 
-    UA_BrowseRequest_clear(&browse_request);
-    UA_BrowseResponse_clear(&browse_response);
+    //
+    // If not found, increase the apps array by one.
+    //
+    if (!app) {
+        num_apps++;
+        apps = x_realloc(apps, num_apps * sizeof(*apps));
+        app = &apps[num_apps - 1];
+        UA_TSNApplication_init(app);
+    }
+
+    //
+    // Set all application parameter.
+    //
+    app->iD = UA_STRING((char *)parameter->app_id);
+    app->path = UA_STRING((char *)parameter->app_path);
+    app->engineeringParameters.basetime = parameter->eng.base_time;
+    app->engineeringParameters.commandedStatus = UA_STRING_ALLOC(parameter->eng.commanded_status);
+    app->engineeringParameters.currentStatus = UA_STRING_ALLOC(parameter->eng.current_status);
+    app->engineeringParameters.cycleTime = parameter->eng.cycle_time;
+    app->engineeringParameters.destinationMAC = UA_STRING_ALLOC(parameter->eng.destination_mac);
+    app->engineeringParameters.interface = UA_STRING_ALLOC(parameter->eng.interface);
+    app->engineeringParameters.qbvOffset = parameter->eng.qbv_offset;
+    app->engineeringParameters.sendReceiveEnabled = parameter->eng.sendreceive_enabled;
+    app->engineeringParameters.socketPriority = parameter->eng.socket_priority;
+    app->engineeringParameters.subscribedMAC = UA_STRING_ALLOC(parameter->eng.subscribed_mac);
+    app->engineeringParameters.wCET = parameter->eng.wakeup_latency;
+
+    app->applicationParameters = x_calloc(parameter->app.num_parameters, sizeof(UA_TSNApplicationEngineeringParameters));
+    app->applicationParametersSize = parameter->app.num_parameters;
+
+    for (size_t i = 0; i < app->applicationParametersSize; ++i) {
+        app->applicationParameters[i].name = UA_STRING_ALLOC(parameter->app.names[i]);
+        app->applicationParameters[i].type = UA_STRING_ALLOC(parameter->app.types[i]);
+        app->applicationParameters[i].value = UA_STRING_ALLOC(parameter->app.values[i]);
+    }
+
+    //
+    // Write array of TSN application back to TSN endpoint.
+    //
+    UA_ExtensionObject *new_obj = x_calloc(num_apps, sizeof(*new_obj));
+
+    for (size_t i = 0; i < num_apps; ++i) {
+        UA_ExtensionObject *o = &new_obj[i];
+
+        UA_ExtensionObject_init(o);
+
+        o->encoding = UA_EXTENSIONOBJECT_DECODED;
+        o->content.decoded.data = &apps[i];
+        o->content.decoded.type = &UA_TYPES_ENDPOINT[UA_TYPES_ENDPOINT_TSNAPPLICATION];
+    }
+
+    UA_Variant v;
+    UA_Variant_init(&v);
+
+    UA_Variant_setArrayCopy(&v, new_obj, num_apps, &UA_TYPES[UA_TYPES_EXTENSIONOBJECT]);
+    ret = UA_Client_writeValueAttribute(client, app_node, &v);
+    if (ret != UA_STATUSCODE_GOOD)
+        log("Failed to write TSN applications!\n");
+
+    for (size_t i = 0; i < num_apps; ++i)
+        UA_TSNApplication_clear(&apps[i]);
+    free(apps);
+    free(new_obj);
+
+    UA_Variant_clear(&v);
 
 out:
-    UA_Variant_delete(my_variant);
+    UA_Variant_clear(&out);
     UA_Client_delete(client);
 }
 
@@ -601,43 +437,113 @@ static void
 configuration_request_app_run_state(const char *app_id,
                                     const TSN_Enddevice *enddevice)
 {
-    UA_Variant *my_variant;
-    UA_StatusCode retval;
+    UA_NodeId app_node;
+    UA_StatusCode ret;
     UA_Client *client;
+    UA_Variant out;
 
-    (void)app_id;
-
-    if (!enddevice || !enddevice->interface_uri)
+    // If no URI provided, nothing works
+    if (!enddevice || !app_id || !enddevice->interface_uri) {
+        log("Missing parameters for requesting run state!");
         return;
+    }
 
+    // Connect to Application Configuration Endpoint
     client = UA_Client_new();
     UA_ClientConfig *cc = UA_Client_getConfig(client);
 
     UA_ClientConfig_setDefault(cc);
     cc->customDataTypes = &customTypesArray;
 
-    retval = UA_Client_connect(client, enddevice->interface_uri);
-    if (retval != UA_STATUSCODE_GOOD) {
+    ret = UA_Client_connect(client, enddevice->interface_uri);
+    if (ret != UA_STATUSCODE_GOOD) {
+        log("Failed to connect to endpoint service!");
         UA_Client_delete(client);
         return;
     }
 
-    // Set AppState to "CONFIG"
-    // --> On the endpoint side, this will trigger the app to apply the saved parameters
-    // and use the communication ocnfiguration (socket prio, qbv offset, basetime, etc.) to create a PubSub connection
-    TSN_APPSTATE state;
-    state = CONFIG;
-    my_variant = UA_Variant_new();
-    UA_NodeId appStateNodeID = UA_NODEID_STRING(1, "AppState");
-    UA_Variant_setScalarCopy(my_variant, &state, &UA_TYPES[UA_TYPES_INT32]);
-    retval = UA_Client_writeValueAttribute(client, appStateNodeID, my_variant);
-    if (retval != UA_STATUSCODE_GOOD) {
-        log("Failed to write AppState 'CONFIG' to NodeID %s on OPC UA Server %s!", appStateNodeID.identifier.string, enddevice->interface_uri);
+    //
+    // Retrieve all TSN applications stored on endpoint service.
+    //
+    UA_Variant_init(&out);
+    app_node = UA_NODEID_NUMERIC(2, UA_ENDPOINTID_ENDPOINT_APPLICATION);
+
+    ret = UA_Client_readValueAttribute(client, app_node, &out);
+    if (ret != UA_STATUSCODE_GOOD) {
+        log("Failed to read TSN applications!");
         goto out;
     }
 
+    //
+    // Check whether the application already exists.
+    //
+    UA_ExtensionObject *obj = out.data;
+    size_t num_apps = out.arrayLength;
+    UA_TSNApplication *apps, *app = NULL;
+    apps = x_calloc(num_apps, sizeof(*apps));
+
+    for (size_t i = 0; i < num_apps; ++i) {
+        UA_TSNApplication *a = obj[i].content.decoded.data;
+
+        UA_TSNApplication_init(&apps[i]);
+        UA_TSNApplication_copy(a, &apps[i]);
+
+        char id[a->iD.length + 1];
+        memcpy(id, a->iD.data, a->iD.length);
+        id[a->iD.length] = '\0';
+
+        if (!strcmp(app_id, id))
+            app = a;
+    }
+
+    //
+    // To request the run state the application should exist.
+    //
+    if (!app) {
+        log("Failed to request run state for app '%s'", app_id);
+        goto out;
+    }
+
+    //
+    // Set AppState to "CONFIG"
+    // --> On the endpoint side, this will trigger the app to apply the saved parameters
+    // and use the communication configuration (socket prio, qbv offset, basetime, etc.) to create a PubSub connection
+    //
+    app->engineeringParameters.commandedStatus = UA_STRING_ALLOC("CONFIG");
+    app->engineeringParameters.currentStatus = UA_STRING_ALLOC("CONFIG");
+
+    //
+    // Write array of TSN application back to TSN endpoint.
+    //
+    UA_ExtensionObject *new_obj = x_calloc(num_apps, sizeof(*new_obj));
+
+    for (size_t i = 0; i < num_apps; ++i) {
+        UA_ExtensionObject *o = &new_obj[i];
+
+        UA_ExtensionObject_init(o);
+
+        o->encoding = UA_EXTENSIONOBJECT_DECODED;
+        o->content.decoded.data = &apps[i];
+        o->content.decoded.type = &UA_TYPES_ENDPOINT[UA_TYPES_ENDPOINT_TSNAPPLICATION];
+    }
+
+    UA_Variant v;
+    UA_Variant_init(&v);
+
+    UA_Variant_setArrayCopy(&v, new_obj, num_apps, &UA_TYPES[UA_TYPES_EXTENSIONOBJECT]);
+    ret = UA_Client_writeValueAttribute(client, app_node, &v);
+    if (ret != UA_STATUSCODE_GOOD)
+        log("Failed to write TSN applications!\n");
+
+    for (size_t i = 0; i < num_apps; ++i)
+        UA_TSNApplication_clear(&apps[i]);
+    free(apps);
+    free(new_obj);
+
+    UA_Variant_clear(&v);
+
 out:
-    UA_Variant_delete(my_variant);
+    UA_Variant_clear(&out);
     UA_Client_delete(client);
 }
 
@@ -645,51 +551,112 @@ static void
 configuration_toggle_app_send_receive(const char *app_id,
                                       const TSN_Enddevice *enddevice)
 {
-    UA_Variant *my_variant;
-    UA_NodeId nodeID;
-    UA_StatusCode retval;
+    UA_NodeId app_node;
+    UA_StatusCode ret;
     UA_Client *client;
+    UA_Variant out;
 
-    (void)app_id;
-
-    if (!enddevice || !enddevice->interface_uri)
+    // If no URI provided, nothing works
+    if (!enddevice || !app_id || !enddevice->interface_uri) {
+        log("Missing parameters for requesting run state!");
         return;
+    }
 
+    // Connect to Application Configuration Endpoint
     client = UA_Client_new();
     UA_ClientConfig *cc = UA_Client_getConfig(client);
 
     UA_ClientConfig_setDefault(cc);
     cc->customDataTypes = &customTypesArray;
 
-    retval = UA_Client_connect(client, enddevice->interface_uri);
-    if (retval != UA_STATUSCODE_GOOD) {
+    ret = UA_Client_connect(client, enddevice->interface_uri);
+    if (ret != UA_STATUSCODE_GOOD) {
+        log("Failed to connect to endpoint service!");
         UA_Client_delete(client);
         return;
     }
 
-    // Read current send & receive enabled flag ('PubsubEnabled')
-    my_variant = UA_Variant_new();
-    nodeID = UA_NODEID_STRING(1, "PubSubEnabled");
-    retval = UA_Client_readValueAttribute(client, nodeID, my_variant);
-    if (retval != UA_STATUSCODE_GOOD) {
-        log("Failed to read App send & receive flag from NodeID %s on OPC UA Server %s!", nodeID.identifier.string, enddevice->interface_uri);
-        goto out;
-    }
-    UA_Boolean sendReceiveEnabledFlag = *(UA_Boolean *) my_variant->data;
-    sendReceiveEnabledFlag = !sendReceiveEnabledFlag;
+    //
+    // Retrieve all TSN applications stored on endpoint service.
+    //
+    UA_Variant_init(&out);
+    app_node = UA_NODEID_NUMERIC(2, UA_ENDPOINTID_ENDPOINT_APPLICATION);
 
-    UA_Variant_setScalarCopy(my_variant, &sendReceiveEnabledFlag, &UA_TYPES[UA_TYPES_BOOLEAN]);
-    retval = UA_Client_writeValueAttribute(client, nodeID, my_variant);
-    if (retval != UA_STATUSCODE_GOOD) {
-        log("Failed to write App send & receive flag to NodeID %s on OPC UA Server %s!", nodeID.identifier.string, enddevice->interface_uri);
+    ret = UA_Client_readValueAttribute(client, app_node, &out);
+    if (ret != UA_STATUSCODE_GOOD) {
+        log("Failed to read TSN applications!");
         goto out;
     }
+
+    //
+    // Check whether the application already exists.
+    //
+    UA_ExtensionObject *obj = out.data;
+    size_t num_apps = out.arrayLength;
+    UA_TSNApplication *apps, *app = NULL;
+    apps = x_calloc(num_apps, sizeof(*apps));
+
+    for (size_t i = 0; i < num_apps; ++i) {
+        UA_TSNApplication *a = obj[i].content.decoded.data;
+
+        UA_TSNApplication_init(&apps[i]);
+        UA_TSNApplication_copy(a, &apps[i]);
+
+        char id[a->iD.length + 1];
+        memcpy(id, a->iD.data, a->iD.length);
+        id[a->iD.length] = '\0';
+
+        if (!strcmp(app_id, id))
+            app = a;
+    }
+
+    //
+    // To request the run state the application should exist.
+    //
+    if (!app) {
+        log("Failed to request send/receive enable for app '%s'", app_id);
+        goto out;
+    }
+
+    //
+    // Toggle send/receive enable flag.
+    //
+    app->engineeringParameters.sendReceiveEnabled = !app->engineeringParameters.sendReceiveEnabled;
+
+    //
+    // Write array of TSN application back to TSN endpoint.
+    //
+    UA_ExtensionObject *new_obj = x_calloc(num_apps, sizeof(*new_obj));
+
+    for (size_t i = 0; i < num_apps; ++i) {
+        UA_ExtensionObject *o = &new_obj[i];
+
+        UA_ExtensionObject_init(o);
+
+        o->encoding = UA_EXTENSIONOBJECT_DECODED;
+        o->content.decoded.data = &apps[i];
+        o->content.decoded.type = &UA_TYPES_ENDPOINT[UA_TYPES_ENDPOINT_TSNAPPLICATION];
+    }
+
+    UA_Variant v;
+    UA_Variant_init(&v);
+
+    UA_Variant_setArrayCopy(&v, new_obj, num_apps, &UA_TYPES[UA_TYPES_EXTENSIONOBJECT]);
+    ret = UA_Client_writeValueAttribute(client, app_node, &v);
+    if (ret != UA_STATUSCODE_GOOD)
+        log("Failed to write TSN applications!\n");
+
+    for (size_t i = 0; i < num_apps; ++i)
+        UA_TSNApplication_clear(&apps[i]);
+    free(apps);
+    free(new_obj);
+
+    UA_Variant_clear(&v);
 
 out:
-    UA_Variant_delete(my_variant);
+    UA_Variant_clear(&out);
     UA_Client_delete(client);
 }
-
 
 // ------------------------------------
 // Callback handler

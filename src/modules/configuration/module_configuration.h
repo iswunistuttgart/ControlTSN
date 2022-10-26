@@ -44,6 +44,7 @@ struct application_parameter {
 struct configuration_parameter {
     const char *opcua_configuration_uri;
     const char *app_id;
+    const char *app_path;
     struct engineering_parameter eng;
     struct application_parameter app;
 };
