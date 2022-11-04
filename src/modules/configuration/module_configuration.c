@@ -359,7 +359,7 @@ static void configuration_deploy_app_par(const struct configuration_parameter *p
         id[a->iD.length] = '\0';
 
         if (!strcmp(parameter->app_id, id))
-            app = a;
+            app = &apps[i];
     }
 
     //
@@ -493,7 +493,7 @@ configuration_request_app_run_state(const char *app_id,
         id[a->iD.length] = '\0';
 
         if (!strcmp(app_id, id))
-            app = a;
+            app = &apps[i];
     }
 
     //
@@ -607,7 +607,7 @@ configuration_toggle_app_send_receive(const char *app_id,
         id[a->iD.length] = '\0';
 
         if (!strcmp(app_id, id))
-            app = a;
+            app = &apps[i];
     }
 
     //
