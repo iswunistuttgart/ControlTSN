@@ -674,7 +674,7 @@ static void _cb_event(TSN_Event_CB_Data data)
         event_name = "EVENT_CONFIGURATION_DEPLOY";
 
         // Get app from sysrepo
-        ret = sysrepo_get_application_app(data.entry_id, &app);
+        ret = sysrepo_get_application_app(data.msg, &app);
         if (ret != EXIT_SUCCESS)
             goto out;
 
@@ -696,7 +696,7 @@ static void _cb_event(TSN_Event_CB_Data data)
         event_name = "EVENT_CONFIGURATION_CHANGED";
 
         // Get app from sysrepo
-        ret = sysrepo_get_application_app(data.entry_id, &app);
+        ret = sysrepo_get_application_app(data.msg, &app);
         if (ret != EXIT_SUCCESS)
             goto out;
 
@@ -718,7 +718,7 @@ static void _cb_event(TSN_Event_CB_Data data)
         event_name = "EVENT_CONFIGURATION_REQUEST_RUN_STATE";
 
         // Get app from sysrepo
-        ret = sysrepo_get_application_app(data.entry_id, &app);
+        ret = sysrepo_get_application_app(data.msg, &app);
         if (ret != EXIT_SUCCESS)
             goto out;
 
@@ -737,7 +737,7 @@ static void _cb_event(TSN_Event_CB_Data data)
         event_name = "EVENT_CONFIGURATION_TOGGLE_APP_SEND_RECEIVE";
 
         // Get app from sysrepo
-        ret = sysrepo_get_application_app(data.entry_id, &app);
+        ret = sysrepo_get_application_app(data.msg, &app);
         if (ret != EXIT_SUCCESS)
             goto out;
 
