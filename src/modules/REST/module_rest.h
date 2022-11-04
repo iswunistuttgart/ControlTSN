@@ -57,5 +57,7 @@ const char *API_APPLICATION_APPS_UPDATE = "/application/apps/:id/update";
 // Configuration
 const char *API_CONFIGURATION_DEPLOY = "/configuration/apps/:id/deploy";
 const char *API_CONFIGURATION_UPDATE = "/configuration/apps/:id/update";
+const char *API_CONFIGURATION_RUN_STATE = "/configuration/apps/:id/state";
+const char *API_CONFIGURATION_TOGGLE_TXRX = "/configuration/apps/:id/toggle_txrx";
 
 #endif // __MODULE_REST_H__

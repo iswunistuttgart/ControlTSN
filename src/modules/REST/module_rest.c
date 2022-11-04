@@ -113,8 +113,10 @@ _api_index_get(const struct _u_request *request, struct _u_response *response, v
                        "<tr><td><a href='/application/apps/:id/start'>/application/apps/:id/start</a></td><td>POST</td><td>Start a specific app</td></tr>" \
                        "<tr><td><a href='/application/apps/:id/stop'>/application/apps/:id/stop</a></td><td>POST</td><td>Stop a specific app</td></tr>" \
                        // Configuration
-                       "<tr><td><a href='/configuration/apps/:id/deploy'>/configuration/apps/:id/stop</a></td><td>POST</td><td>Deploy initial parameters to specific app</td></tr>"
-                       "<tr><td><a href='/configuration/apps/:id/update'>/configuration/apps/:id/stop</a></td><td>POST</td><td>Update parameters of specific app</td></tr>"
+                       "<tr><td><a href='/configuration/apps/:id/deploy'>/configuration/apps/:id/deploy</a></td><td>POST</td><td>Deploy initial parameters to specific app</td></tr>" \
+                       "<tr><td><a href='/configuration/apps/:id/update'>/configuration/apps/:id/update</a></td><td>POST</td><td>Update parameters of specific app</td></tr>" \
+                       "<tr><td><a href='/configuration/apps/:id/state'>/configuration/apps/:id/state</a></td><td>POST</td><td>Request App run state</td></tr>" \
+                       "<tr><td><a href='/configuration/apps/:id/toggle_txrx'>/configuration/apps/:id/toggle_txrx</a></td><td>POST</td><td>Toggle Send and Receive flag</td></tr>" \
                        // TEST
                        "<tr><th>JUST TESTING</th></tr>" \
                        "<tr><td><a href='/testing/set_topology'>/testing/set_topology</a></td><td>GET</td><td>TESTING: Set the topology</td></tr>" \
@@ -904,6 +906,40 @@ _api_configuration_app_update(const struct _u_request *request, struct _u_respon
     return U_CALLBACK_COMPLETE;
 }
 
+static int
+_api_configuration_app_run_state(const struct _u_request *request, struct _u_response *response, void *user_data)
+{
+    const char *app_id = u_map_get(request->map_url, "id");
+    int ret;
+
+    if (!app_id)
+        return U_CALLBACK_ERROR;
+
+    // Notify configuration module to request the run state of the app
+    ret = sysrepo_send_notification(EVENT_CONFIGURATION_REQUEST_RUN_STATE, NULL, (char *)app_id);
+    if (ret == EXIT_FAILURE)
+        return U_CALLBACK_ERROR;
+
+    return U_CALLBACK_COMPLETE;
+}
+
+static int
+_api_configuration_app_toggle_txrx(const struct _u_request *request, struct _u_response *response, void *user_data)
+{
+    const char *app_id = u_map_get(request->map_url, "id");
+    int ret;
+
+    if (!app_id)
+        return U_CALLBACK_ERROR;
+
+    // Notify configuration module to toggle send and receive of the app
+    ret = sysrepo_send_notification(EVENT_CONFIGURATION_TOGGLE_APP_SEND_RECEIVE, NULL, (char *)app_id);
+    if (ret == EXIT_FAILURE)
+        return U_CALLBACK_ERROR;
+
+    return U_CALLBACK_COMPLETE;
+}
+
 // ------------------------------------
 // TESTING
 // ------------------------------------
@@ -1169,6 +1205,8 @@ _init_server()
     // Configuration
     ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_CONFIGURATION_DEPLOY, 0, &_api_configuration_app_deploy,    NULL);
     ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_CONFIGURATION_UPDATE, 0, &_api_configuration_app_update,    NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_CONFIGURATION_RUN_STATE, 0, &_api_configuration_app_run_state,    NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_CONFIGURATION_TOGGLE_TXRX, 0, &_api_configuration_app_toggle_txrx,    NULL);
 
     // JUST TESTING
     ulfius_add_endpoint_by_val(&server_instance, "GET",  API_PREFIX, "/testing/set_topology",    0, &_api_testing_set_topology,    NULL);
