@@ -71,7 +71,7 @@
           network settings, ...) on the enddevices.
         </desc>
         <executable-path>./ConfigurationModule</executable-path>
-        <subscribed-events-mask>805306368</subscribed-events-mask>
+        <subscribed-events-mask>4026531840</subscribed-events-mask>
         <registered>1</registered>
         <pid>0</pid>
       </mod>

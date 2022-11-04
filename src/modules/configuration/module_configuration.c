@@ -772,8 +772,11 @@ int main(void)
     signal(SIGTERM, signal_handler);
 
     // Init this module
-    rc = module_init("AppConfiguration", &this_module,
-                     -1,
+    rc = module_init("Configuration", &this_module,
+                     EVENT_CONFIGURATION_DEPLOY |
+                     EVENT_CONFIGURATION_CHANGED |
+                     EVENT_CONFIGURATION_REQUEST_RUN_STATE |
+                     EVENT_CONFIGURATION_TOGGLE_APP_SEND_RECEIVE,
                      _cb_event);
     if (rc == EXIT_FAILURE) {
         log("Error initializing module!");
