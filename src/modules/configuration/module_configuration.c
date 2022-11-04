@@ -375,8 +375,8 @@ static void configuration_deploy_app_par(const struct configuration_parameter *p
     //
     // Set all application parameter.
     //
-    app->iD = UA_STRING((char *)parameter->app_id);
-    app->path = UA_STRING((char *)parameter->app_path);
+    app->iD = UA_STRING_ALLOC((char *)parameter->app_id);
+    app->path = UA_STRING_ALLOC((char *)parameter->app_path);
     app->engineeringParameters.basetime = parameter->eng.base_time;
     app->engineeringParameters.commandedStatus = UA_STRING_ALLOC(parameter->eng.commanded_status);
     app->engineeringParameters.currentStatus = UA_STRING_ALLOC(parameter->eng.current_status);
