@@ -5312,7 +5312,7 @@ sysrepo_set_application_app(TSN_App *app)
     apps.count_apps = 1;
     apps.apps = app;
     ret = _write_apps("/control-tsn-uni:tsn-uni/application/apps", &apps);
-    if (rc != SR_ERR_OK)
+    if (ret != SR_ERR_OK)
         goto cleanup;
 
     ret = sr_apply_changes(session, 0, 1);
