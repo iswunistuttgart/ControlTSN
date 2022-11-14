@@ -300,6 +300,7 @@ static void container_start_app(const struct application_parameter *parameter)
                    "metadata:\n"
                    "  name: %s\n"
                    "spec:\n"
+                   "  hostIPC: true\n"
                    "  containers:\n"
                    "  - name: rt-container\n"
                    "    image: %s\n"
@@ -315,7 +316,15 @@ static void container_start_app(const struct application_parameter *parameter)
                    "        memory: \"%dM\"\n"
                    "      limits:\n"
                    "        cpu: %d\n"
-                   "        memory: \"%dM\"\n",
+                   "        memory: \"%dM\"\n"
+                   "    volumeMounts:\n"
+                   "    - mountPath: /etc/sysrepo\n"
+                   "      name: sysrepo-volume\n"
+                   "  volumes:\n"
+                   "  - name: sysrepo-volume\n"
+                   "    hostPath:\n"
+                   "      path: /etc/sysrepo\n"
+                   "      type: DirectoryOrCreate\n",
                    parameter->name,
                    parameter->application_image,
                    parameter->command,
