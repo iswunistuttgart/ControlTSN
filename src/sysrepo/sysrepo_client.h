@@ -246,4 +246,10 @@ int sysrepo_get_application_app(const char *id, TSN_App **app);
  */
 int sysrepo_remove_application_app(const char *id);
 
+
+// -------------------------------------------------------- //
+// ROOT / UNI
+// -------------------------------------------------------- //
+int sysrepo_get_uni(TSN_Uni **uni);
+
 #endif // __SYSREPO_CLIENT_H__

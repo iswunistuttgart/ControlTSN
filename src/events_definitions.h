@@ -23,7 +23,7 @@
 #define EVENT_MODULE_DELETED        0x00001000
 //#define ...                       0x00002000
 //#define ...                       0x00004000
-//#define ...                       0x00008000
+#define EVENT_MODULE_EXPORT_DATA    0x00008000
 
 // Topology related
 #define EVENT_TOPOLOGY_DISCOVERY_REQUESTED  0x00010000

@@ -221,6 +221,7 @@ deserialize_module_data(json_t *obj)
     //uint16_t count_entries = json_number_value(json_object_get(obj, "count-entries"));
     //module_data->count_entries = count_entries;
     uint16_t count_entries = json_array_size(entries_json);
+    module_data->count_entries = count_entries;
     module_data->entries = (TSN_Module_Data_Entry *) malloc(sizeof(TSN_Module_Data_Entry) * count_entries);
     
     for (int i=0; i<count_entries; ++i) {
@@ -2159,6 +2160,39 @@ serialize_application(TSN_Application *application)
     json_t *images = NULL;
     images = serialize_images(&application->images);
     json_object_set_new(root, "images", images);
+
+    return root;
+}
+
+
+// ------------------------------------
+// UNI
+// ------------------------------------
+json_t *
+serialize_uni(TSN_Uni *uni)
+{
+    json_t *root = NULL;
+    root = json_object();
+
+    // Streams
+    json_t *streams = NULL;
+    streams = serialize_streams(&uni->streams);
+    json_object_set_new(root, "streams", streams);
+
+    // Modules
+    json_t *modules = NULL;
+    modules = serialize_modules(&uni->modules);
+    json_object_set_new(root, "modules", modules);
+
+    // Topology
+    json_t *topology = NULL;
+    topology = serialize_topology(&uni->topology);
+    json_object_set_new(root, "topology", topology);
+
+    // Application
+    json_t *application = NULL;
+    application = serialize_application(&uni->application);
+    json_object_set_new(root, "application", application);
 
     return root;
 }

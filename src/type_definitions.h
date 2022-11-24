@@ -103,10 +103,12 @@ typedef struct TSN_Module_Data
     TSN_Module_Data_Entry *entries;
 } TSN_Module_Data;
 
+/*
 typedef struct TSN_Module_Reg {
     uint16_t id;
     uint32_t pid;
 } TSN_Module_Reg;
+*/
 
 typedef struct TSN_Module
 {
@@ -326,6 +328,7 @@ typedef struct TSN_Uni {
 // ----------------------------------------------
 // Endpoint App Definitions
 // ----------------------------------------------
+/*
 typedef enum TSN_APPSTATE {
     INIT = 0,
     CONFIG = 1,
@@ -334,7 +337,7 @@ typedef enum TSN_APPSTATE {
     ERROR = 4,
     __APP_STATE_FORCE32BIT = 0x7fffffff
 } TSN_APPSTATE;
-
+*/
 
 // ----------------------------------------------
 // Other

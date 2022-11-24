@@ -764,6 +764,7 @@ out:
 int main(void)
 {
     TSN_Module *this_module = NULL;
+    this_module = malloc(sizeof(TSN_Module));
     int rc;
 
     // Signal handling

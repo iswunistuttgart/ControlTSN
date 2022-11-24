@@ -1,6 +1,10 @@
 #ifndef __MODULE_REST_H__
 #define __MODULE_REST_H__
 
+
+// Module DATA
+static const char *MODULE_DATA_EXPORT_REST_API_URL = "export_rest_api";
+
 // 
 // Based on Ulfius framework
 // https://github.com/babelouest/ulfius
@@ -14,6 +18,9 @@
 //      The API endpoint urls
 // ----------------------------------------------
 const char *API_INDEX                  = "/";
+
+// Root
+const char *API_ROOT                   = "/uni";
 
 // Modules
 const char *API_MODULES                 = "/modules";

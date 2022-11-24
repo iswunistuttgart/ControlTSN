@@ -132,6 +132,12 @@ TSN_Images *deserialize_images(json_t *obj, const char *docker_host);
 TSN_Apps *deserialize_apps(json_t *obj);
 TSN_App *deserialize_app(json_t *obj);
 
+
+// ------------------------------------
+// UNI
+// ------------------------------------
+json_t *serialize_uni(TSN_Uni *uni);
+
 // ------------------------------------
 // Other
 // ------------------------------------

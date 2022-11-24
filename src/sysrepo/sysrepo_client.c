@@ -2835,7 +2835,6 @@ _write_module_data(char *xpath, TSN_Module_Data *module_data)
     char *xpath_data = NULL;
 
     _create_xpath(xpath, "/entry[data-name='%s']", &xpath_data);
-
     for (int i=0; i<module_data->count_entries; ++i) {
         char *xpath_data_entry = NULL;
         TSN_Module_Data_Entry *e = &(module_data->entries[i]);
@@ -4396,6 +4395,70 @@ cleanup:
 }
 
 
+static int
+_read_uni(char *xpath, TSN_Uni **uni)
+{
+    int rc = SR_ERR_OK;
+    char *xpath_streams = NULL;
+    char *xpath_modules = NULL;
+    char *xpath_topology = NULL;
+    char *xpath_application = NULL;
+
+    // Streams
+    _create_xpath(xpath, "/streams", &xpath_streams);
+    TSN_Streams *streams = NULL;
+    streams = malloc(sizeof(TSN_Streams));
+    rc = _read_streams(xpath_streams, &streams, false);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*uni)->streams = *streams;
+    free(streams);
+
+    // Modules
+    _create_xpath(xpath, "/modules", &xpath_modules);
+    TSN_Modules *modules = NULL;
+    modules = malloc(sizeof(TSN_Modules));
+    rc = _read_modules(xpath_modules, &modules);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*uni)->modules = *modules;
+    free(modules);
+
+    // Topology
+    _create_xpath(xpath, "/topology", &xpath_topology);
+    TSN_Topology *topology = NULL;
+    topology = malloc(sizeof(TSN_Topology));
+    rc = _read_topology(xpath_topology, &topology);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*uni)->topology = *topology;
+    free(topology);
+
+    // Application
+    _create_xpath(xpath, "/application", &xpath_application);
+    TSN_Application *application = NULL;
+    application = malloc(sizeof(TSN_Application));
+    rc = _read_application(xpath_application, &application);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*uni)->application = *application;
+    free(application);
+
+cleanup:
+
+    free(xpath_streams);
+    free(xpath_modules);
+    free(xpath_topology);
+    free(xpath_application);
+
+    return rc;
+}
+
+
 
 
 // -------------------------------------------------------- //
@@ -5363,3 +5426,18 @@ cleanup:
     return ret ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
+
+// -------------------------------------------------------- //
+// ROOT / UNI
+// -------------------------------------------------------- //
+int 
+sysrepo_get_uni(TSN_Uni **uni)
+{
+    rc = _read_uni("/control-tsn-uni:tsn-uni", uni);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+cleanup:
+    return rc ? EXIT_FAILURE : EXIT_SUCCESS;
+}

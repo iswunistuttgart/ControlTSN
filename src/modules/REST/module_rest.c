@@ -13,6 +13,9 @@ static int rc;
 volatile sig_atomic_t is_running = 1;
 
 TSN_Module *this_module;
+// Module Data
+static const char *export_rest_api;
+
 struct _u_instance server_instance;
 
 // WebSocket test
@@ -57,6 +60,45 @@ _cb_event(TSN_Event_CB_Data data)
     //    printf("[REST][CB] Topology discovery requested!\n");
     //}
 
+    else if (data.event_id == EVENT_MODULE_EXPORT_DATA) {
+        printf("[REST][CB] Export of data requested!\n");
+        // Get Sysrepo data and send them to the URL that is set in the module data ('export_rest_api')
+        TSN_Uni *uni = malloc(sizeof(TSN_Uni));
+        rc = sysrepo_get_uni(&uni);
+        if (rc != EXIT_SUCCESS) {
+            printf("[REST][CB] Error reading stored data!\n");
+            goto cleanup_export;
+        } 
+
+        // Make request to send the exported json data
+        if (!export_rest_api) {
+            printf("[REST][CB][ERROR]: No API for export specified!\n");
+            goto cleanup_export;
+        }
+
+        struct _u_response response;
+        struct _u_request request;
+        ulfius_init_request(&request);
+        ulfius_init_response(&response);
+        request.http_url = strdup(export_rest_api);
+        request.http_verb = strdup("POST");
+        json_t *json_body = NULL;
+        json_body = serialize_uni(uni);
+        ulfius_set_json_body_request(&request, json_body);
+
+        int ret = ulfius_send_http_request(&request, &response);
+        if (ret == U_OK && response.status == 200) {
+            printf("[REST][CB] Successfully exported data to '%s'!\n", request.http_url);
+        } else {
+            printf("[REST][CB][ERROR]: Failure sending data to API '%s'!\n", request.http_url);
+        }
+
+cleanup_export:
+        free(uni);
+        ulfius_clean_response(&response);
+        ulfius_clean_request(&request);
+    }
+
     return;
 }
 
@@ -75,6 +117,9 @@ _api_index_get(const struct _u_request *request, struct _u_response *response, v
                        // Index
                        "<tr><th>Index</th></tr>" \
                        "<tr><td><a href='/'>/</a></td><td>GET</td><td>This site</td></tr>" \
+                       // Root
+                       "<tr><th>Root</th></tr>" \
+                       "<tr><td><a href='/uni'>/uni</a></td><td>GET</td><td>Get the root element of the stored data</td></tr>" \
                        // Modules
                        "<tr><th>Modules</th></tr>" \
                        "<tr><td><a href='/modules'>/modules</a></td><td>GET</td><td>Get all available and registered modules</td></tr>" \
@@ -127,6 +172,29 @@ _api_index_get(const struct _u_request *request, struct _u_response *response, v
     ulfius_set_string_body_response(response, 200, resp);
 
     return U_CALLBACK_CONTINUE;
+}
+
+// ------------------------------------
+// Root
+// ------------------------------------
+static int
+_api_uni_get(const struct _u_request *request, struct _u_response *response, void *user_data)
+{
+    // Get the root element from sysrepo
+    TSN_Uni *uni = malloc(sizeof(TSN_Uni));
+    rc = sysrepo_get_uni(&uni);
+    if (rc == EXIT_FAILURE) {
+        return U_CALLBACK_ERROR;
+    }
+
+    // Return data as JSON
+    json_t *json_body = serialize_uni(uni);
+    ulfius_set_json_body_response(response, 200, json_body);
+
+    // Decrease the reference count so the jansson lib is able to release the resources
+    json_decref(json_body);
+
+    return U_CALLBACK_COMPLETE;
 }
 
 // ------------------------------------
@@ -1132,7 +1200,7 @@ _api_testing_trigger_event(const struct _u_request *request, struct _u_response 
     }
 
     uint32_t event_id = json_integer_value(json_object_get(json_post_body, "event_id"));
-    json_t *entry_id_key = json_string_value(json_object_get(json_post_body, "entry_id"));
+    const char *entry_id_key = json_string_value(json_object_get(json_post_body, "entry_id"));
     char *entry_id = NULL;
     if (entry_id_key) {
         entry_id = strdup(entry_id_key);
@@ -1165,6 +1233,9 @@ _init_server()
 
     // Add the API endpoints to the server
     ulfius_add_endpoint_by_val(&server_instance, "GET", API_PREFIX, API_INDEX, 0, &_api_index_get, NULL);
+
+    // Root
+    ulfius_add_endpoint_by_val(&server_instance, "GET", API_PREFIX, API_ROOT, 0, &_api_uni_get, NULL);
 
     // Modules
     ulfius_add_endpoint_by_val(&server_instance, "GET",     API_PREFIX, API_MODULES,                0, &_api_modules_get,               NULL);
@@ -1245,12 +1316,25 @@ main(void)
     rc = module_init(&this_module);
     */
     this_module = malloc(sizeof(TSN_Module));
-    rc = module_init("REST", &this_module, (EVENT_ERROR), _cb_event);
+    rc = module_init("REST", &this_module, -1, _cb_event);
     if (rc == EXIT_FAILURE) {
         printf("[REST] Error initializing module!\n");
         goto cleanup;
     }
 
+    // Get saved module data
+    TSN_Module_Data *module_data = malloc(sizeof(TSN_Module_Data));
+    rc = module_get_data(this_module->id, &module_data);
+    if (module_data) {
+
+        // To this URL the saved data will be exported to Sysrepo. 
+        // The reason is the fulfillment of the technical parameters 
+        // from the proposal (several protocols --> here JSON; up to 10000 data).
+        TSN_Module_Data_Entry *export_api_entry = module_get_data_entry(module_data, MODULE_DATA_EXPORT_REST_API_URL);
+        if (export_api_entry) {
+            export_rest_api = strdup(export_api_entry->value.string_val);
+        }
+    }
 
     // Init the web server instance
     rc = _init_server();

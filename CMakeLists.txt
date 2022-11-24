@@ -62,3 +62,7 @@ target_compile_options(ConfigurationModule PRIVATE -Wall -Wextra -pedantic)
 ##### This is just for Testing purposes #####
 add_executable(CNCPrototype src/CNC/cnc_prototype.c)
 target_link_libraries(CNCPrototype ulfius json_serializer)
+
+##### Dummy Server for receiving exported data #####
+add_executable(ExportServer src/ExportServer/export_server.c)
+target_link_libraries(ExportServer ulfius json_serializer)
