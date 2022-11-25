@@ -2938,15 +2938,15 @@ _read_module(char *xpath, TSN_Module **mod)
     free(data);
 
     // ONLY READ PID OF REGISTERED MODULES
-    if ((*mod)->registered) {
-        // PID
-        _create_xpath(xpath, "/pid", &xpath_pid);
-        rc = sr_get_item(session, xpath_pid, 0, &val_pid);
-        if (rc != SR_ERR_OK) {
-            goto cleanup;
-        }
-        (*mod)->p_id = val_pid->data.uint32_val;
+    //if ((*mod)->registered) {
+    // PID
+    _create_xpath(xpath, "/pid", &xpath_pid);
+    rc = sr_get_item(session, xpath_pid, 0, &val_pid);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
     }
+    (*mod)->p_id = val_pid->data.uint32_val;
+    //}
 
 cleanup:
     sr_free_val(val_id);
@@ -3041,17 +3041,17 @@ _write_module(char *xpath, TSN_Module *mod)
     }
 
     // ONLY WRITE PID TO REGISTERED MODULES
-    if (mod->registered) {
-        // Write PID
-        _create_xpath(xpath, "/pid", &xpath_pid);
-        sr_val_t val_pid;
-        val_pid.type = SR_UINT32_T;
-        val_pid.data.uint32_val = mod->p_id;
-        rc = sr_set_item(session, xpath_pid, &val_pid, 0);
-        if (rc != SR_ERR_OK) {
-            goto cleanup;
-        }
+    //if (mod->registered) {
+    // Write PID
+    _create_xpath(xpath, "/pid", &xpath_pid);
+    sr_val_t val_pid;
+    val_pid.type = SR_UINT32_T;
+    val_pid.data.uint32_val = mod->p_id;
+    rc = sr_set_item(session, xpath_pid, &val_pid, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
     }
+    //}
 
     // Apply the changes
     //rc = sr_apply_changes(session, 0, 1);
@@ -4551,11 +4551,24 @@ sysrepo_add_module(TSN_Module **module)
     int highest_used_id = 0;
     for (int i=0; i<stored_modules->count_modules; ++i) {
         // Compare name and path
+        /*
         if ((strcmp((*module)->name, stored_modules->modules[i].name) == 0 &&
             (strcmp((*module)->path, stored_modules->modules[i].path) == 0))) {
 
             // We found a module with the same name and path
             printf("[SYSREPO] Module not added. Module with the same name and path already exists!\n");
+            is_failure = 1;
+            goto cleanup;
+        }
+        */
+
+        if (strcmp((*module)->name, stored_modules->modules[i].name) == 0) {
+            printf("[SYSREPO] Module not added. Module with the same name already exists!\n");
+            is_failure = 1;
+            goto cleanup;
+        }
+        if (strcmp((*module)->path, stored_modules->modules[i].path) == 0) {
+            printf("[SYSREPO] Module not added. Module with the same path already exists!\n");
             is_failure = 1;
             goto cleanup;
         }
@@ -4568,6 +4581,8 @@ sysrepo_add_module(TSN_Module **module)
     // Otherwise we can add the new module
     (*module)->id = (highest_used_id + 1);
     _create_xpath_id("/control-tsn-uni:tsn-uni/modules/mod[id='%d']", (*module)->id, &xpath_module);
+    (*module)->p_id = 0;
+    (*module)->data.count_entries = 0;
     rc = _write_module(xpath_module, (*module));
     if (rc != SR_ERR_OK) {
         printf("[SYSREPO] Error adding a new module to the list!\n");

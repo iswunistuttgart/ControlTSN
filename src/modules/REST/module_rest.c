@@ -315,7 +315,6 @@ _api_modules_add(const struct _u_request *request, struct _u_response *response,
     const char *description = json_string_value(json_object_get(json_post_body, "description"));
     const char *path = json_string_value(json_object_get(json_post_body, "path"));
     const uint32_t subscribed_events_mask = json_number_value(json_object_get(json_post_body, "subscribed_events_mask"));
-
     TSN_Module *module = malloc(sizeof(TSN_Module));
 
     if (name == NULL || strlen(name) <= 0
@@ -324,10 +323,8 @@ _api_modules_add(const struct _u_request *request, struct _u_response *response,
         || subscribed_events_mask < 0) {
 
         json_decref(json_post_body);
-
         return U_CALLBACK_ERROR;
     }
-
 
     module->name = strdup(name);
     module->description = strdup(description);
@@ -340,6 +337,11 @@ _api_modules_add(const struct _u_request *request, struct _u_response *response,
     if (rc != EXIT_SUCCESS) {
         return U_CALLBACK_ERROR;
     }
+
+    json_t *id_response = json_object();
+    json_object_set_new(id_response, "id", json_integer(module->id));
+    ulfius_set_json_body_response(response, 200, id_response);
+    json_decref(id_response);
 
     return U_CALLBACK_COMPLETE;
 }
@@ -524,7 +526,7 @@ _api_modules_update(const struct _u_request *request, struct _u_response *respon
     if (rc == EXIT_SUCCESS) {
         return U_CALLBACK_COMPLETE;
     }
-
+    
     return U_CALLBACK_ERROR;
 }
 
@@ -1366,7 +1368,7 @@ main(void)
 
 cleanup:
     ulfius_clean_instance(&server_instance);
-    rc = module_shutdown();
+    rc = module_shutdown(this_module->id);
     if (rc == EXIT_FAILURE) {
         printf("[REST] Error shutting down the module!\n");
     }

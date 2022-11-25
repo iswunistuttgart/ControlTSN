@@ -764,7 +764,6 @@ out:
 int main(void)
 {
     TSN_Module *this_module = NULL;
-    this_module = malloc(sizeof(TSN_Module));
     int rc;
 
     // Signal handling
@@ -773,11 +772,11 @@ int main(void)
     signal(SIGTERM, signal_handler);
 
     // Init this module
-    rc = module_init("Configuration", &this_module,
-                     EVENT_CONFIGURATION_DEPLOY |
+    rc = module_init("AppConfiguration", &this_module,
+                     (EVENT_CONFIGURATION_DEPLOY |
                      EVENT_CONFIGURATION_CHANGED |
                      EVENT_CONFIGURATION_REQUEST_RUN_STATE |
-                     EVENT_CONFIGURATION_TOGGLE_APP_SEND_RECEIVE,
+                     EVENT_CONFIGURATION_TOGGLE_APP_SEND_RECEIVE),
                      _cb_event);
     if (rc == EXIT_FAILURE) {
         log("Error initializing module!");
@@ -802,6 +801,6 @@ int main(void)
     log("Stopping the module...");
 
 cleanup:
-    module_shutdown();
+    module_shutdown(this_module->id);
     return rc;
 }

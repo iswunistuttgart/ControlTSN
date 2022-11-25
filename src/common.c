@@ -30,9 +30,11 @@ module_init(char *module_name, TSN_Module **module, uint32_t adjusted_subscribed
     // Connect (if not done yet)
     ret = module_connect();
 
+    printf("1\n");
     // Get the registered modules
     TSN_Modules *all_modules = malloc(sizeof(TSN_Modules));
     ret = sysrepo_get_all_modules(&all_modules);
+    printf("2\n");
 
     // Search for the desired module
     for (int i=0; i<all_modules->count_modules; ++i) {
@@ -69,10 +71,18 @@ cleanup:
 }
 
 int
-module_shutdown()
+module_shutdown(int module_id)
 {
+    // Reset pid in datastore
+    ret = sysrepo_set_module_pid(module_id, 0);
+    if (ret) {
+        printf("[COMMON] Error resetting pid of module with ID %d in sysrepo!\n", module_id);
+        return EXIT_FAILURE;
+    }
+
     // Disconnect from sysrepo connection and stop listening
     int rc = sysrepo_disconnect();
+
     return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 

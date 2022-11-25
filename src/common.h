@@ -27,9 +27,10 @@ int module_init(char *module_name, TSN_Module **module, uint32_t adjusted_subscr
 
 /**
  * @brief Shutdown the module by disconnecting from sysrepo and stopping the subscription of notification.
+ * @param module_id The id of the module
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
-int module_shutdown();
+int module_shutdown(int module_id);
 
 /**
  * @brief Registers a module in the core.

@@ -102,7 +102,7 @@ main(void)
     printf("[Monitor] Stopping the module...\n");
     
 cleanup:
-    rc = module_shutdown();
+    rc = module_shutdown(this_module->id);
     if (rc == EXIT_FAILURE) {
         printf("[Monitor] Error shutting down the module!\n");
     }

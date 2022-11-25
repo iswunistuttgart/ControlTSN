@@ -96,7 +96,7 @@ int main (void)
     // ...
 
     // Cleanup and shutdown of the module
-    rc = module_shutdown();
+    rc = module_shutdown(this_module->id);
 
     return rc;
 }

@@ -557,6 +557,6 @@ int main(void)
     log("Stopping the module...");
 
 cleanup:
-    module_shutdown();
+    module_shutdown(this_module->id);
     return rc;
 }
