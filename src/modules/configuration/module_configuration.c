@@ -246,14 +246,31 @@ static void configuration_fill_app_param(struct configuration_parameter *paramet
         }
     }
 
+    //
+    // Skip container module parameters.
+    //
+    for (i = 0; i < app->count_parameters; ++i) {
+        TSN_App_Parameter *par = &app->parameters[i];
+
+        if (!strcmp(par->name, "command") || !strcmp(par->name, "command_line") ||
+            !strcmp(par->name, "capabilities") || !strcmp(par->name, "cpus") ||
+            !strcmp(par->name, "ram"))
+            num_app_parameters--;
+    }
+
     parameter->app.num_parameters = num_app_parameters;
     parameter->app.names = x_calloc(num_app_parameters, sizeof(char *));
     parameter->app.values = x_calloc(num_app_parameters, sizeof(char *));
     parameter->app.types = x_calloc(num_app_parameters, sizeof(char *));
 
+    //
+    // All parameters which not belong to engineering or container are
+    // application specific.
+    //
     for (i = 0, j = 0; i < app->count_parameters; ++i) {
         TSN_App_Parameter *par = &app->parameters[i];
 
+        // Skip engineering parameter
         if (!strcmp(par->name, "current_status") || !strcmp(par->name, "commanded_status") ||
             !strcmp(par->name, "destination_mac") || !strcmp(par->name, "subscribed_mac") ||
             !strcmp(par->name, "interface") || !strcmp(par->name, "sendreceive_enabled") ||
@@ -261,6 +278,12 @@ static void configuration_fill_app_param(struct configuration_parameter *paramet
             !strcmp(par->name, "qbv_offset") || !strcmp(par->name, "wakeup_latency") ||
             !strcmp(par->name, "wcet") || !strcmp(par->name, "scheduling_priority") ||
             !strcmp(par->name, "socket_priority"))
+            continue;
+
+        // Skip container parameter
+        if (!strcmp(par->name, "command") || !strcmp(par->name, "command_line") ||
+            !strcmp(par->name, "capabilities") || !strcmp(par->name, "cpus") ||
+            !strcmp(par->name, "ram"))
             continue;
 
         parameter->app.names[j] = x_strdup(par->name);
