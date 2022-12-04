@@ -109,9 +109,6 @@ static void container_fill_app_param(struct application_parameter *parameter,
         if (!strcmp(par->name, "command_line"))
             parameter->command_line = parameter_data_value_to_string(par);
 
-        if (!strcmp(par->name, "node"))
-            parameter->node_selector = parameter_data_value_to_string(par);
-
         if (!strcmp(par->name, "capabilities"))
             parameter->capabilities = parameter_data_value_to_string(par);
 
@@ -159,7 +156,6 @@ static void container_free_app_param(struct application_parameter *parameter)
 
     free((void *)parameter->command);
     free((void *)parameter->command_line);
-    free((void *)parameter->node_selector);
     free((void *)parameter->capabilities);
 }
 
