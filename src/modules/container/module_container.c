@@ -304,7 +304,7 @@ static void container_start_app(const struct application_parameter *parameter)
                    "  containers:\n"
                    "  - name: rt-container\n"
                    "    image: %s\n"
-                   "    imagePullPolicy: IfNotPresent\n"
+                   "    imagePullPolicy: Always\n"
                    "    command: [ \"%s\" ]\n"
                    "    args: [ %s ]\n"
                    "    securityContext:\n"
