@@ -214,6 +214,30 @@
             <param-value>test</param-value>
             <param-desc>Test for application specific parameter</param-desc>
           </parameter>
+          <parameter>
+            <param-name>command</param-name>
+            <param-type>string</param-type>
+            <param-value>/root/endpoint/build/MinimalEndpoint</param-value>
+            <param-desc>Path to executable</param-desc>
+          </parameter>
+          <parameter>
+            <param-name>command_line</param-name>
+            <param-type>string</param-type>
+            <param-value>"-a", "TestApp1"</param-value>
+            <param-desc>Command line arguments</param-desc>
+          </parameter>
+          <parameter>
+            <param-name>cpus</param-name>
+            <param-type>int32</param-type>
+            <param-value>1</param-value>
+            <param-desc>Number of CPU core(s) required</param-desc>
+          </parameter>
+          <parameter>
+            <param-name>ram</param-name>
+            <param-type>int32</param-type>
+            <param-value>1024</param-value>
+            <param-desc>Amount of RAM in MiB required</param-desc>
+          </parameter>
         </parameters>
       </app>
       <app>
@@ -298,6 +322,30 @@
             <param-value>test</param-value>
             <param-desc>Test for application specific parameter</param-desc>
           </parameter>
+          <parameter>
+            <param-name>command</param-name>
+            <param-type>string</param-type>
+            <param-value>/root/endpoint/build/MinimalEndpoint</param-value>
+            <param-desc>Path to executable</param-desc>
+          </parameter>
+          <parameter>
+            <param-name>command_line</param-name>
+            <param-type>string</param-type>
+            <param-value>"-a", "TestApp2"</param-value>
+            <param-desc>Command line arguments</param-desc>
+          </parameter>
+          <parameter>
+            <param-name>cpus</param-name>
+            <param-type>int32</param-type>
+            <param-value>1</param-value>
+            <param-desc>Number of CPU core(s) required</param-desc>
+          </parameter>
+          <parameter>
+            <param-name>ram</param-name>
+            <param-type>int32</param-type>
+            <param-value>1024</param-value>
+            <param-desc>Amount of RAM in MiB required</param-desc>
+          </parameter>
         </parameters>
       </app>
       <app>
@@ -381,6 +429,30 @@
             <param-type>string</param-type>
             <param-value>test</param-value>
             <param-desc>Test for application specific parameter</param-desc>
+          </parameter>
+          <parameter>
+            <param-name>command</param-name>
+            <param-type>string</param-type>
+            <param-value>/root/endpoint/build/MinimalEndpoint</param-value>
+            <param-desc>Path to executable</param-desc>
+          </parameter>
+          <parameter>
+            <param-name>command_line</param-name>
+            <param-type>string</param-type>
+            <param-value>"-a", "TestApp3"</param-value>
+            <param-desc>Command line arguments</param-desc>
+          </parameter>
+          <parameter>
+            <param-name>cpus</param-name>
+            <param-type>int32</param-type>
+            <param-value>1</param-value>
+            <param-desc>Number of CPU core(s) required</param-desc>
+          </parameter>
+          <parameter>
+            <param-name>ram</param-name>
+            <param-type>int32</param-type>
+            <param-value>1024</param-value>
+            <param-desc>Amount of RAM in MiB required</param-desc>
           </parameter>
         </parameters>
       </app>
