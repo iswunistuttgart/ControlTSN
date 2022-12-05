@@ -408,6 +408,24 @@ application_get_apps(TSN_Apps **apps)
     return ret;
 }
 
+static void _application_app_put(TSN_App *app)
+{
+    int i;
+
+    if (!app)
+        return;
+
+    free(app->id);
+    free(app->name);
+    free(app->description);
+    free(app->version);
+    free(app->image_ref);
+
+    for (i = 0; i < app->count_parameters; ++i)
+        free(app->parameters[i].name);
+    free(app->parameters);
+}
+
 void application_put_apps(TSN_Apps *apps)
 {
     int i;
@@ -416,7 +434,8 @@ void application_put_apps(TSN_Apps *apps)
         return;
 
     for (i = 0; i < apps->count_apps; ++i)
-        application_app_put(&apps->apps[i]);
+        _application_app_put(&apps->apps[i]);
+    free(apps->apps);
 
     free(apps);
 }
@@ -447,19 +466,6 @@ void application_put_images(TSN_Images *images)
 
 void application_app_put(TSN_App *app)
 {
-    int i;
-
-    if (!app)
-        return;
-
-    free(app->id);
-    free(app->name);
-    free(app->description);
-    free(app->version);
-    free(app->image_ref);
-
-    for (i = 0; i < app->count_parameters; ++i)
-        free(app->parameters[i].name);
-    free(app->parameters);
+    _application_app_put(app);
     free(app);
 }
