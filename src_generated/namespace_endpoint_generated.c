@@ -588,7 +588,7 @@ attr.accessLevel = 3;
 attr.valueRank = 1;
 attr.arrayDimensionsSize = 1;
 UA_UInt32 arrayDimensions[1];
-arrayDimensions[0] = 1;
+arrayDimensions[0] = 0;
 attr.arrayDimensions = &arrayDimensions[0];
 attr.dataType = UA_NODEID_NUMERIC(ns[1], 3005LU);
 attr.displayName = UA_LOCALIZEDTEXT("", "applications");
