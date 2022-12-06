@@ -133,7 +133,7 @@
         </parameters>
       </app>
       <app>
-        <id>TestApp1</id>
+        <id>testapp1</id>
         <name>TestApp1</name>
         <desc>Sample OPC/UA PubSub App 1</desc>
         <version>1.0</version>
@@ -223,7 +223,7 @@
           <parameter>
             <param-name>command_line</param-name>
             <param-type>string</param-type>
-            <param-value>"-a", "TestApp1"</param-value>
+            <param-value>"-a", "testapp1"</param-value>
             <param-desc>Command line arguments</param-desc>
           </parameter>
           <parameter>
@@ -241,7 +241,7 @@
         </parameters>
       </app>
       <app>
-        <id>TestApp2</id>
+        <id>testapp2</id>
         <name>TestApp2</name>
         <desc>Sample OPC/UA PubSub App 2</desc>
         <version>1.0</version>
@@ -331,7 +331,7 @@
           <parameter>
             <param-name>command_line</param-name>
             <param-type>string</param-type>
-            <param-value>"-a", "TestApp2"</param-value>
+            <param-value>"-a", "testapp2"</param-value>
             <param-desc>Command line arguments</param-desc>
           </parameter>
           <parameter>
@@ -349,7 +349,7 @@
         </parameters>
       </app>
       <app>
-        <id>TestApp3</id>
+        <id>testapp3</id>
         <name>TestApp3</name>
         <desc>Sample OPC/UA PubSub App 3</desc>
         <version>1.0</version>
@@ -439,7 +439,7 @@
           <parameter>
             <param-name>command_line</param-name>
             <param-type>string</param-type>
-            <param-value>"-a", "TestApp3"</param-value>
+            <param-value>"-a", "testapp3"</param-value>
             <param-desc>Command line arguments</param-desc>
           </parameter>
           <parameter>
@@ -483,13 +483,13 @@
           <has-app>1</has-app>
           <apps>
             <app>
-              <app-ref>TestApp1</app-ref>
+              <app-ref>testapp1</app-ref>
             </app>
             <app>
-              <app-ref>TestApp2</app-ref>
+              <app-ref>testapp2</app-ref>
             </app>
             <app>
-              <app-ref>TestApp3</app-ref>
+              <app-ref>testapp3</app-ref>
             </app>
           </apps>
         </enddevice>
