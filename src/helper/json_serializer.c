@@ -223,7 +223,7 @@ deserialize_module_data(json_t *obj)
     uint16_t count_entries = json_array_size(entries_json);
     module_data->count_entries = count_entries;
     module_data->entries = (TSN_Module_Data_Entry *) malloc(sizeof(TSN_Module_Data_Entry) * count_entries);
-    
+
     for (int i=0; i<count_entries; ++i) {
         json_t *entry = json_array_get(entries_json, i);
         TSN_Module_Data_Entry *e = deserialize_module_data_entry(entry);
@@ -820,7 +820,7 @@ serialize_cnc_request(TSN_Streams *streams)
     for (int i=0; i<streams->count_streams; ++i) {
         TSN_Stream *s = &streams->streams[i];
         json_t *req = serialize_stream_request(&s->request);
-        
+
         // Add Stream-id to talker and listeners (because openCNC expecting it that way?!)
         // --> see TODO function ('serialize_cnc_request') description
         json_t *add_stream_id = json_object();
@@ -874,7 +874,7 @@ serialize_cnc_request(TSN_Streams *streams)
             }
             json_object_set(listener, "end-station-interfaces", esi_array_lis_new);
         }
-        
+
         json_array_append(array_requests, req);
     }
     json_object_set_new(root, "requests", array_requests);
@@ -1299,7 +1299,7 @@ deserialize_status_talker(json_t *obj)
 {
     TSN_StatusTalker *x = malloc(sizeof(TSN_StatusTalker));
 
-    x->accumulated_latency = json_integer_value(json_object_get(obj, "accumulated-latency")); 
+    x->accumulated_latency = json_integer_value(json_object_get(obj, "accumulated-latency"));
     x->interface_configuration = *(deserialize_interface_configuration(json_object_get(obj, "interface-configuration")));
 
     return x;
@@ -1318,24 +1318,24 @@ deserialize_status_listener(json_t *obj)
 }
 
 TSN_StatusTalker *
-deserialize_cnc_status_talker(json_t *obj) 
+deserialize_cnc_status_talker(json_t *obj)
 {
     TSN_StatusTalker *x = malloc(sizeof(TSN_StatusTalker));
 
-    x->accumulated_latency = json_integer_value(json_object_get(obj, "accumulated-latency")); 
+    x->accumulated_latency = json_integer_value(json_object_get(obj, "accumulated-latency"));
     x->interface_configuration = *(deserialize_cnc_interface_configuration(json_object_get(obj, "interface-configuration")));
-    
+
     return x;
 }
 
 TSN_StatusListener *
-deserialize_cnc_status_listener(json_t *obj) 
+deserialize_cnc_status_listener(json_t *obj)
 {
     TSN_StatusListener *x = malloc(sizeof(TSN_StatusListener));
     x->index = json_integer_value(json_object_get(obj, "index"));
-    x->accumulated_latency = json_integer_value(json_object_get(obj, "accumulated-latency")); 
+    x->accumulated_latency = json_integer_value(json_object_get(obj, "accumulated-latency"));
     x->interface_configuration = *(deserialize_cnc_interface_configuration(json_object_get(obj, "interface-configuration")));
-    
+
     return x;
 }
 
@@ -1410,7 +1410,7 @@ deserialize_cnc_stream_configuration(json_t *obj)
         json_t *e = json_array_get(status_talker_listener, i+1);
         x->listener_list[i] = *(deserialize_cnc_status_listener(e));
     }
-    
+
 
     return x;
 }
@@ -1449,7 +1449,7 @@ deserialize_streams(json_t *obj)
     uint16_t count_streams = json_array_size(streams_json);
     streams->count_streams = count_streams;
     streams->streams = (TSN_Stream *) malloc(sizeof(TSN_Stream) * count_streams);
-    
+
     for (int i=0; i<count_streams; ++i) {
         json_t *stream = json_array_get(streams_json, i);
         TSN_Stream *s = deserialize_stream(stream);
@@ -1465,7 +1465,7 @@ deserialize_cnc_response(json_t *obj) {
 
     json_t *streams_array = json_object_get(obj, "streams");
     uint16_t count_streams = json_array_size(streams_array);
-    
+
     streams->count_streams = count_streams;
     streams->streams = (TSN_Stream *) malloc(sizeof(TSN_Stream) * count_streams);
 
@@ -1474,7 +1474,7 @@ deserialize_cnc_response(json_t *obj) {
         streams->streams[i].stream_id = strdup(json_string_value(json_object_get(stream, "stream-id")));
         json_t *stream_conf = json_object_get(stream, "configuration");
         TSN_Configuration *conf = deserialize_cnc_stream_configuration(stream_conf);
-        streams->streams[i].configuration = conf;    
+        streams->streams[i].configuration = conf;
     }
 
     return streams;
@@ -2017,10 +2017,7 @@ TSN_App *deserialize_app(json_t *obj)
     json_t *has_image = json_object_get(obj, "has-image");
     json_t *image = json_object_get(obj, "image-ref");
     json_t *params = json_object_get(obj, "parameters");
-    const char *key;
-    json_t *value;
     TSN_App *app;
-    int i = 0;
 
     // Invalid request
     if (!name || !desc || !version || !image || !params)
@@ -2052,7 +2049,7 @@ TSN_App *deserialize_app(json_t *obj)
     }
     if (!app->id)
         goto err3;
-    
+
 
     app->has_mac = json_integer_value(has_mac);
     if (app->has_mac) {
@@ -2076,35 +2073,6 @@ TSN_App *deserialize_app(json_t *obj)
     }
 
     // Parameters
-    /*
-    app->count_parameters = 0;
-
-    // Note: Currently there are about ~10 known parameters.
-    app->parameters = malloc(sizeof(TSN_App_Parameter) * 10);
-    if (!app->parameters)
-        goto err6;
-    memset(app->parameters, '\0', sizeof(TSN_App_Parameter) * 10);
-
-    json_object_foreach(param, key, value) {
-        TSN_App_Parameter *par = &app->parameters[i++];
-
-        par->name = strdup(key);
-        if (!par->name)
-            goto err7;
-        par->description = "N/A";
-
-        par->type = STRING;
-        par->value.string_val = strdup(json_string_value(value));
-        if (!par->value.string_val)
-            goto err7;
-
-        app->count_parameters++;
-
-        if (i == 10)
-            break;
-    }
-    */
-
     uint8_t count_parameters = json_array_size(params);
     app->count_parameters = count_parameters;
     app->parameters = malloc(sizeof(TSN_App_Parameter) * count_parameters);
@@ -2120,16 +2088,12 @@ TSN_App *deserialize_app(json_t *obj)
         p->type = string_to_data_type(json_string_value(p_type));
         p->description = strdup(json_string_value(p_description));
         p->value = _json_to_data_value(p_value, p->type);
-        
+
         app->parameters[i] = *p;
     }
 
     return app;
 
-err7:
-    free(app->parameters);
-err6:
-    free(app->image_ref);
 err5:
     free(app->description);
 err4:
