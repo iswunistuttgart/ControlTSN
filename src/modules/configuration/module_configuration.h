@@ -22,7 +22,7 @@ struct engineering_parameter {
     const char *subscribed_mac;
     const char *interface;
     bool sendreceive_enabled;
-    uint64_t cycle_time;
+    double cycle_time;
     uint64_t base_time;
     int32_t qbv_offset;
     uint64_t wakeup_latency;
@@ -50,7 +50,7 @@ struct configuration_parameter {
 };
 
 static const bool     CONFIGURATION_DEFAULT_SENDRECEIVE_ENABLED = true;
-static const uint64_t CONFIGURATION_DEFAULT_CYCLE_TIME_NS       = 1000000;
+static const double   CONFIGURATION_DEFAULT_CYCLE_TIME          = 0.125;
 static const uint64_t CONFIGURATION_DEFAULT_BASE_TIME_NS        = 0;
 static const int32_t  CONFIGURATION_DEFAULT_QBV_OFFSET_NS       = 0;
 static const uint64_t CONFIGURATION_DEFAULT_WAKEUP_LATENCY_NS   = 500000;

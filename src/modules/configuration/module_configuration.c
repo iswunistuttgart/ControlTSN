@@ -172,9 +172,9 @@ static void configuration_fill_app_param(struct configuration_parameter *paramet
             char *time, *endptr;
 
             time = parameter_data_value_to_string(par);
-            parameter->eng.cycle_time = strtoull(time, &endptr, 10);
+            parameter->eng.cycle_time = strtod(time, &endptr);
             if (errno != 0 || endptr == time || *endptr != '\0')
-                parameter->eng.cycle_time = CONFIGURATION_DEFAULT_CYCLE_TIME_NS;
+                parameter->eng.cycle_time = CONFIGURATION_DEFAULT_CYCLE_TIME;
             free(time);
             num_app_parameters--;
         }
