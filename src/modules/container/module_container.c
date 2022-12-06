@@ -97,7 +97,7 @@ static void container_fill_app_param(struct application_parameter *parameter,
     char *cpus = NULL, *ram = NULL;
     int i;
 
-    parameter->name = app->name;
+    parameter->name = app->id;
     parameter->application_image = app->image_ref;
 
     for (i = 0; i < app->count_parameters; ++i) {
