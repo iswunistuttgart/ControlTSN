@@ -30,11 +30,9 @@ module_init(char *module_name, TSN_Module **module, uint32_t adjusted_subscribed
     // Connect (if not done yet)
     ret = module_connect();
 
-    printf("1\n");
     // Get the registered modules
     TSN_Modules *all_modules = malloc(sizeof(TSN_Modules));
     ret = sysrepo_get_all_modules(&all_modules);
-    printf("2\n");
 
     // Search for the desired module
     for (int i=0; i<all_modules->count_modules; ++i) {
@@ -309,8 +307,6 @@ create_stream_request(TSN_Enddevice *talker_device,
         listener.interface_capabilities.count_cb_sequence_types = 0;
 
         listener_list[i] = listener;
-
-        printf("HERE 4.%d - 2 \n", i);
     }
 
     request.talker = talker;

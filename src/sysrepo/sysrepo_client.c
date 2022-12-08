@@ -3172,16 +3172,26 @@ static int
 _read_enddevice(char *xpath, TSN_Enddevice **enddevice)
 {
     int rc = SR_ERR_OK;
+    sr_val_t *val_name = NULL;
     sr_val_t *val_mac = NULL;
     sr_val_t *val_interface_uri = NULL;
     sr_val_t *val_apps = NULL;
     sr_val_t *val_has_app = NULL;
     //sr_val_t *val_app_ref = NULL;
+    char *xpath_name = NULL;
     char *xpath_mac = NULL;
     char *xpath_interface_uri = NULL;
     char *xpath_apps = NULL;
     char *xpath_has_app = NULL;
     //char *xpath_app_ref = NULL;
+
+    // Name
+    _create_xpath(xpath, "/name", &xpath_name);
+    rc = sr_get_item(session, xpath_name, 0, &val_name);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*enddevice)->name = strdup(val_name->data.string_val);
 
     // MAC
     _create_xpath(xpath, "/mac", &xpath_mac);
@@ -3238,11 +3248,13 @@ _read_enddevice(char *xpath, TSN_Enddevice **enddevice)
     }
 
 cleanup:
+    sr_free_val(val_name);
     sr_free_val(val_mac);
     sr_free_val(val_interface_uri);
     sr_free_val(val_has_app);
     //sr_free_val(val_app_ref);
     sr_free_val(val_apps);
+    free(xpath_name);
     free(xpath_mac);
     free(xpath_interface_uri);
     free(xpath_has_app);
@@ -3256,10 +3268,20 @@ static int
 _read_switch(char *xpath, TSN_Switch **sw)
 {
     int rc = SR_ERR_OK;
+    sr_val_t *val_name = NULL;
     sr_val_t *val_mac = NULL;
     sr_val_t *val_ports_count = NULL;
+    char *xpath_name = NULL;
     char *xpath_mac = NULL;
     char *xpath_ports_count = NULL;
+
+    // Name
+    _create_xpath(xpath, "/name", &xpath_name);
+    rc = sr_get_item(session, xpath_name, 0, &val_name);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*sw)->name = strdup(val_name->data.string_val);
 
     // MAC
     _create_xpath(xpath, "/mac", &xpath_mac);
@@ -3278,8 +3300,10 @@ _read_switch(char *xpath, TSN_Switch **sw)
     (*sw)->ports_count = val_ports_count->data.uint8_val;
 
 cleanup:
+    sr_free_val(val_name);
     sr_free_val(val_mac);
     sr_free_val(val_ports_count);
+    free(xpath_name);
     free(xpath_mac);
     free(xpath_ports_count);
 
@@ -3493,10 +3517,18 @@ static int
 _write_enddevice(char *xpath, TSN_Enddevice *enddevice)
 {
     int rc = SR_ERR_OK;
+    char *xpath_name = NULL;
     char *xpath_mac = NULL;
     char *xpath_has_app = NULL;
     //char *xpath_app_ref = NULL;
     char *xpath_apps = NULL;
+
+    // Name
+    _create_xpath(xpath, "/name", &xpath_name);
+    rc = sr_set_item_str(session, xpath_name, enddevice->name, NULL, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
 
     // Mac
     _create_xpath(xpath, "/mac", &xpath_mac);
@@ -3548,6 +3580,7 @@ _write_enddevice(char *xpath, TSN_Enddevice *enddevice)
     //}
 
 cleanup:
+    free(xpath_name);
     free(xpath_mac);
     free(xpath_has_app);
     //free(xpath_app_ref);
@@ -3560,8 +3593,16 @@ static int
 _write_switch(char *xpath, TSN_Switch *sw)
 {
     int rc = SR_ERR_OK;
+    char *xpath_name = NULL;
     char *xpath_mac = NULL;
     char *xpath_ports_count = NULL;
+
+    // Name
+    _create_xpath(xpath, "/name", &xpath_name);
+    rc = sr_set_item_str(session, xpath_name, sw->name, NULL, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
 
     // Mac
     _create_xpath(xpath, "/mac", &xpath_mac);
@@ -3587,6 +3628,7 @@ _write_switch(char *xpath, TSN_Switch *sw)
     //}
 
 cleanup:
+    free(xpath_name);
     free(xpath_mac);
     free(xpath_ports_count);
 

@@ -222,6 +222,7 @@ typedef struct TSN_Enddevice_AppRef {
 } TSN_Enddevice_AppRef;
 
 typedef struct TSN_Enddevice {
+    char *name;
     char *mac;
     char *interface_uri;
     uint8_t has_app;
@@ -231,6 +232,7 @@ typedef struct TSN_Enddevice {
 } TSN_Enddevice;
 
 typedef struct TSN_Switch {
+    char *name;
     char *mac;
     uint8_t ports_count;
 } TSN_Switch;

@@ -130,6 +130,7 @@
     <devices>
       <enddevices>
         <enddevice>
+          <name>NUC 1</name>
           <mac>48-21-0b-26-3d-8a</mac>
           <interface-uri>opc.tcp://10.200.9.101:62541</interface-uri>
           <has-app>1</has-app>
@@ -140,6 +141,7 @@
           </apps>
         </enddevice>
         <enddevice>
+          <name>NUC 2</name>
           <mac>48-21-0b-26-3f-ed</mac>
           <interface-uri>opc.tcp://10.200.9.102:62542</interface-uri>
           <has-app>1</has-app>
@@ -150,6 +152,7 @@
           </apps>
         </enddevice>
         <enddevice>
+          <name>NUC 3</name>
           <mac>48-21-0b-26-3f-42</mac>
           <interface-uri>opc.tcp://10.200.9.103:62543</interface-uri>
           <has-app>1</has-app>
@@ -162,8 +165,9 @@
       </enddevices>
       <switches>
         <switch>
+          <name>KSwitch D10</name>
           <mac>01-02-03-04-05-06</mac>
-          <ports-count>56</ports-count>
+          <ports-count>8</ports-count>
         </switch>
       </switches>
     </devices>

@@ -1501,6 +1501,7 @@ serialize_enddevice(TSN_Enddevice *enddevice)
     json_t *root = NULL;
     root = json_object();
 
+    json_object_set_new(root, "name", json_string(enddevice->name));
     json_object_set_new(root, "mac", json_string(enddevice->mac));
     json_object_set_new(root, "interface-uri", json_string(enddevice->interface_uri));
     json_object_set_new(root, "has-app", json_integer(enddevice->has_app));
@@ -1525,6 +1526,7 @@ serialize_switch(TSN_Switch *sw)
     json_t *root = NULL;
     root = json_object();
 
+    json_object_set_new(root, "name", json_string(sw->name));
     json_object_set_new(root, "mac", json_string(sw->mac));
     json_object_set_new(root, "ports-count", json_integer(sw->ports_count));
 
@@ -1634,9 +1636,13 @@ TSN_Enddevice *
 deserialize_enddevice(json_t *obj)
 {
     TSN_Enddevice *enddevice = malloc(sizeof(TSN_Enddevice));
+    json_t *name;
     json_t *mac;
     json_t *interface_uri;
     json_t *has_app;
+
+    name = json_object_get(obj, "name");
+    enddevice->name = strdup(json_string_value(name));
 
     mac = json_object_get(obj, "mac");
     enddevice->mac = strdup(json_string_value(mac));
@@ -1667,8 +1673,12 @@ TSN_Switch
 *deserialize_switch(json_t *obj)
 {
     TSN_Switch *sw = malloc(sizeof(TSN_Switch));
+    json_t *name;
     json_t *mac;
     json_t *ports_count;
+
+    name = json_object_get(obj, "name");
+    sw->name = strdup(json_string_value(name));
 
     mac = json_object_get(obj, "mac");
     sw->mac = strdup(json_string_value(mac));

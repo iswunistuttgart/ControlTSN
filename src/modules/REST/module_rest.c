@@ -162,12 +162,12 @@ _api_index_get(const struct _u_request *request, struct _u_response *response, v
                        "<tr><td><a href='/configuration/apps/:id/update'>/configuration/apps/:id/update</a></td><td>POST</td><td>Update parameters of specific app</td></tr>" \
                        "<tr><td><a href='/configuration/apps/:id/state'>/configuration/apps/:id/state</a></td><td>POST</td><td>Request App run state</td></tr>" \
                        "<tr><td><a href='/configuration/apps/:id/toggle_txrx'>/configuration/apps/:id/toggle_txrx</a></td><td>POST</td><td>Toggle Send and Receive flag</td></tr>" \
-                       // TEST
-                       "<tr><th>JUST TESTING</th></tr>" \
-                       "<tr><td><a href='/testing/set_topology'>/testing/set_topology</a></td><td>GET</td><td>TESTING: Set the topology</td></tr>" \
-                       "<tr><td><a href='/testing/remove_topology'>/testing/remove_topology</a></td><td>GET</td><td>TESTING: Remove the topology</td></tr>" \
-                       "<tr><td><a href='/testing/websocket'>/testing/websocket</a></td><td>GET</td><td>TESTING: Open WebSocket</td></tr>" \
-                       "<tr><td><a href='/testing/trigger-event'>/testing/trigger-event</a></td><td>POST</td><td>TESTING: Manual trigger an event</td><td>event_id (int), entry_id (string, optional)</td></tr>" \
+                       // Debug
+                       "<tr><th>Debug</th></tr>" \
+                       "<tr><td><a href='/debug/set_topology'>/debug/set_topology</a></td><td>GET</td><td>Set the topology</td></tr>" \
+                       "<tr><td><a href='/debug/remove_topology'>/debug/remove_topology</a></td><td>GET</td><td>Remove the topology</td></tr>" \
+                       "<tr><td><a href='/debug/websocket'>/debug/websocket</a></td><td>GET</td><td>Connect to WebSocket</td></tr>" \
+                       "<tr><td><a href='/debug/trigger-event'>/debug/trigger-event</a></td><td>POST</td><td>Manual trigger an event</td><td>event_id (int), entry_id (string, optional)</td></tr>" \
                        "</table></html>";
     ulfius_set_string_body_response(response, 200, resp);
 
@@ -1011,11 +1011,11 @@ _api_configuration_app_toggle_txrx(const struct _u_request *request, struct _u_r
 }
 
 // ------------------------------------
-// TESTING
+// Debug
 // ------------------------------------
 
 static int
-_api_testing_set_topology(const struct _u_request *request, struct _u_response *response, void *user_data)
+_api_debug_set_topology(const struct _u_request *request, struct _u_response *response, void *user_data)
 {
     TSN_Enddevice_AppRef *ar = NULL;
     TSN_Enddevice *e1 = NULL;
@@ -1107,7 +1107,7 @@ cleanup:
 }
 
 static int
-_api_testing_remove_topology(const struct _u_request *request, struct _u_response *response, void *user_data)
+_api_debug_remove_topology(const struct _u_request *request, struct _u_response *response, void *user_data)
 {
     rc = sysrepo_set_topology(NULL);
     if (rc == EXIT_FAILURE) {
@@ -1179,7 +1179,7 @@ _websocket_onclose_cb(const struct _u_request *request, struct _websocket_manage
 }
 
 static int
-_api_testing_websocket(const struct _u_request *request, struct _u_response *response, void *user_data)
+_api_debug_websocket(const struct _u_request *request, struct _u_response *response, void *user_data)
 {
     int ret;
 
@@ -1191,7 +1191,7 @@ _api_testing_websocket(const struct _u_request *request, struct _u_response *res
 }
 
 static int
-_api_testing_trigger_event(const struct _u_request *request, struct _u_response *response, void *user_data)
+_api_debug_trigger_event(const struct _u_request *request, struct _u_response *response, void *user_data)
 {
     json_t *json_post_body;
     int ret;
@@ -1281,11 +1281,11 @@ _init_server()
     ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_CONFIGURATION_RUN_STATE, 0, &_api_configuration_app_run_state,    NULL);
     ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_CONFIGURATION_TOGGLE_TXRX, 0, &_api_configuration_app_toggle_txrx,    NULL);
 
-    // JUST TESTING
-    ulfius_add_endpoint_by_val(&server_instance, "GET",  API_PREFIX, "/testing/set_topology",    0, &_api_testing_set_topology,    NULL);
-    ulfius_add_endpoint_by_val(&server_instance, "GET",  API_PREFIX, "/testing/remove_topology", 0, &_api_testing_remove_topology, NULL);
-    ulfius_add_endpoint_by_val(&server_instance, "GET",  API_PREFIX, "/testing/websocket",       0, &_api_testing_websocket,       NULL);
-    ulfius_add_endpoint_by_val(&server_instance, "POST", API_PREFIX, "/testing/trigger-event",   0, &_api_testing_trigger_event,   NULL);
+    // Debug
+    ulfius_add_endpoint_by_val(&server_instance, "GET",  API_PREFIX, "/debug/set_topology",    0, &_api_debug_set_topology,    NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "GET",  API_PREFIX, "/debug/remove_topology", 0, &_api_debug_remove_topology, NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "GET",  API_PREFIX, "/debug/websocket",       0, &_api_debug_websocket,       NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "POST", API_PREFIX, "/debug/trigger-event",   0, &_api_debug_trigger_event,   NULL);
 
     // Default
     ulfius_set_default_endpoint(&server_instance, &_api_index_get, NULL);

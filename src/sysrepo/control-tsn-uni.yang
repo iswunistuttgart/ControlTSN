@@ -11,8 +11,8 @@ module control-tsn-uni {
 
     description "YANG Module for storing Data in the ControlTSN Framework";
 
-    revision 2021-06-25 {
-        description "Initial Revision for ControlTSN Framework";
+    revision 2021-12-08 {
+        description "Updated Revision for ControlTSN Framework";
     }
 
 
