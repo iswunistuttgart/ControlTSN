@@ -3928,6 +3928,35 @@ cleanup:
     return ret;
 }
 
+static int _write_app_stream_mapping(char *xpath, TSN_App_StreamMapping *mapping)
+{
+    char *xpath_egress = NULL;
+    char *xpath_ingress = NULL;
+    int rc;
+
+    _create_xpath(xpath, "/egress", &xpath_egress);
+    for (int i=0; i<mapping->count_egress; ++i) {
+        rc = sr_set_item_str(session, xpath_egress, mapping->egress[i], NULL, 0);
+        if (rc != SR_ERR_OK) {
+            goto cleanup;
+        }
+    }
+
+    _create_xpath(xpath, "/ingress", &xpath_ingress);
+    for (int i=0; i<mapping->count_ingress; ++i) {
+        rc = sr_set_item_str(session, xpath_ingress, mapping->ingress[i], NULL, 0);
+        if (rc != SR_ERR_OK) {
+            goto cleanup;
+        }
+    }
+
+cleanup:
+    free(xpath_egress);
+    free(xpath_ingress);
+
+    return rc;
+}
+
 static int _write_app(char *xpath, TSN_App *app)
 {
     char *xpath_parameters_delete = NULL;
@@ -3940,6 +3969,7 @@ static int _write_app(char *xpath, TSN_App *app)
     char *xpath_name = NULL;
     char *xpath_desc = NULL;
     char *xpath_id = NULL;
+    char *xpath_stream_mapping = NULL;
     sr_val_t has_image;
     sr_val_t has_mac;
     int ret, i;
@@ -4017,8 +4047,15 @@ static int _write_app(char *xpath, TSN_App *app)
         ret = _write_parameter(xpath_entry, par);
         free(xpath_entry);
 
-        if (ret != SR_ERR_OK)
+        if (ret != SR_ERR_OK) 
             goto cleanup;
+    }
+
+    // Stream Mapping
+    _create_xpath(xpath, "/stream-mapping", &xpath_stream_mapping);
+    rc = _write_app_stream_mapping(xpath_stream_mapping, &app->stream_mapping);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
     }
 
 cleanup:
@@ -4032,6 +4069,7 @@ cleanup:
     free(xpath_has_image);
     free(xpath_parameters);
     free(xpath_parameters_delete);
+    free(xpath_stream_mapping);
 
     return ret;
 }
@@ -4150,6 +4188,50 @@ cleanup:
 }
 
 static int
+_read_app_stream_mapping(char *xpath, TSN_App_StreamMapping **mapping)
+{
+    int rc = SR_ERR_OK;
+
+    sr_val_t *val_egress = NULL;
+    sr_val_t *val_ingress = NULL;
+    char *xpath_egress = NULL;
+    char *xpath_ingress = NULL;
+
+    _create_xpath(xpath, "/egress", &xpath_egress);
+    ssize_t count_egress = 0;
+    rc = sr_get_items(session, xpath_egress, 0, 0, &val_egress, &count_egress);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*mapping)->count_egress = count_egress;
+    (*mapping)->egress = malloc(sizeof(char *) * count_egress);
+    for (int i=0; i<count_egress; ++i) {
+        (*mapping)->egress[i] = strdup(val_egress[i].data.string_val);
+    }
+
+    _create_xpath(xpath, "/ingress", &xpath_ingress);
+    ssize_t count_ingress = 0;
+    rc = sr_get_items(session, xpath_ingress, 0, 0, &val_ingress, &count_ingress);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*mapping)->count_ingress = count_ingress;
+    (*mapping)->ingress = malloc(sizeof(char *) * count_ingress);
+    for (int i=0; i<count_ingress; ++i) {
+        (*mapping)->ingress[i] = strdup(val_ingress[i].data.string_val);
+    }
+
+
+cleanup:
+    sr_free_val(val_egress);
+    sr_free_val(val_ingress);
+    free(xpath_egress);
+    free(xpath_ingress);
+
+    return rc;
+}
+
+static int
 _read_app(char *xpath, TSN_App **app)
 {
     int rc = SR_ERR_OK;
@@ -4171,6 +4253,7 @@ _read_app(char *xpath, TSN_App **app)
     char *xpath_has_image = NULL;
     char *xpath_image_ref = NULL;
     char *xpath_parameters = NULL;
+    char *xpath_stream_mapping = NULL;
 
     // ID
     _create_xpath(xpath, "/id", &xpath_id);
@@ -4255,6 +4338,16 @@ _read_app(char *xpath, TSN_App **app)
         free(p);
     }
 
+    // Stream Mapping
+    _create_xpath(xpath, "/stream-mapping", &xpath_stream_mapping);
+    TSN_App_StreamMapping *mapping = malloc(sizeof(TSN_App_StreamMapping));
+    rc = _read_app_stream_mapping(xpath_stream_mapping, &mapping);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*app)->stream_mapping = *mapping;
+
+
 cleanup:
     sr_free_val(val_id);
     sr_free_val(val_name);
@@ -4274,6 +4367,7 @@ cleanup:
     free(xpath_has_image);
     free(xpath_image_ref);
     free(xpath_parameters);
+    free(xpath_stream_mapping);
 
     return rc;
 }

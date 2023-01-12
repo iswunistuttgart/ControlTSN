@@ -126,8 +126,10 @@ json_t *serialize_app(TSN_App *app);
 json_t *serialize_apps(TSN_Apps *apps);
 json_t *serialize_image(TSN_Image *image);
 json_t *serialize_images(TSN_Images *images);
+json_t *serialize_app_stream_mapping(TSN_App_StreamMapping *mapping);
 json_t *serialize_application(TSN_Application *application);
 
+TSN_App_StreamMapping *deserialize_app_stream_mapping(json_t *obj);
 TSN_Images *deserialize_images(json_t *obj, const char *docker_host);
 TSN_Apps *deserialize_apps(json_t *obj);
 TSN_App *deserialize_app(json_t *obj);

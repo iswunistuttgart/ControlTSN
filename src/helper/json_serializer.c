@@ -1796,6 +1796,29 @@ serialize_app_parameter(TSN_App_Parameter *param)
 }
 
 json_t *
+serialize_app_stream_mapping(TSN_App_StreamMapping *mapping)
+{
+    json_t *root = NULL;
+    root = json_object();
+
+    json_t *array_egress = NULL;
+    array_egress = json_array();
+    for (int i=0; i<mapping->count_egress; ++i) {
+        json_array_append_new(array_egress, json_string(mapping->egress[i]));
+    }
+    json_object_set_new(root, "egress", array_egress);
+
+    json_t *array_ingress = NULL;
+    array_ingress = json_array();
+    for (int i=0; i<mapping->count_ingress; ++i) {
+        json_array_append_new(array_ingress, json_string(mapping->ingress[i]));
+    }
+    json_object_set_new(root, "ingress", array_ingress);
+
+    return root;
+}
+
+json_t *
 serialize_app(TSN_App *app)
 {
     json_t *root = NULL;
@@ -1820,6 +1843,10 @@ serialize_app(TSN_App *app)
         json_array_append_new(array_parameters, param);
     }
     json_object_set_new(root, "parameters", array_parameters);
+
+    json_t *stream_mapping = NULL;
+    stream_mapping = serialize_app_stream_mapping(&app->stream_mapping);
+    json_object_set_new(root, "stream-mapping", stream_mapping);
 
     return root;
 }
@@ -1878,6 +1905,30 @@ serialize_images(TSN_Images *images)
     json_object_set_new(root, "images", array_images);
 
     return root;
+}
+
+TSN_App_StreamMapping *
+deserialize_app_stream_mapping(json_t *obj)
+{
+    TSN_App_StreamMapping *mapping = malloc(sizeof(TSN_App_StreamMapping));
+    json_t *array_egress;
+    json_t *array_ingress;
+
+    array_egress = json_object_get(obj, "egress");
+    mapping->count_egress = json_array_size(array_egress);
+    mapping->egress = malloc(sizeof(char *) * mapping->count_egress);
+    for (int i=0; i<mapping->count_egress; ++i) {
+        mapping->egress[i] = strdup(json_string_value(json_array_get(array_egress, i)));
+    }
+
+    array_ingress = json_object_get(obj, "ingress");
+    mapping->count_ingress = json_array_size(array_ingress);
+    mapping->ingress = malloc(sizeof(char *) * mapping->count_ingress);
+    for (int i=0; i<mapping->count_ingress; ++i) {
+        mapping->ingress[i] = strdup(json_string_value(json_array_get(array_ingress, i)));
+    }
+
+    return mapping;
 }
 
 TSN_Images *deserialize_images(json_t *obj, const char *docker_host)
@@ -2101,6 +2152,10 @@ TSN_App *deserialize_app(json_t *obj)
 
         app->parameters[i] = *p;
     }
+
+    // Stream Mapping
+    json_t *stream_mapping = json_object_get(obj, "stream-mapping");
+    app->stream_mapping = *deserialize_app_stream_mapping(stream_mapping);
 
     return app;
 

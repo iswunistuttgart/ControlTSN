@@ -83,6 +83,9 @@
         <image-ref>SensorImage_0.0.1</image-ref>
         <has-mac>1</has-mac>
         <mac>48-21-0b-26-3d-8a</mac>
+        <stream-mapping>
+          <egress>48-21-0b-26-3d-8a:00-01</egress>
+        </stream-mapping>
       </app>
       <app>
         <id>PLC_0.0.1</id>
@@ -93,6 +96,10 @@
         <image-ref>PLCImage_0.0.1</image-ref>
         <has-mac>1</has-mac>
         <mac>48-21-0b-26-3f-ed</mac>
+        <stream-mapping>
+          <egress>48-21-0b-26-3f-ed:00-01</egress>
+          <ingress>48-21-0b-26-3d-8a:00-01</ingress>
+        </stream-mapping>
       </app>
       <app>
         <id>ConveyorBelt_0.0.1</id>
@@ -103,6 +110,9 @@
         <image-ref>ConveyorBeltImage_0.0.1</image-ref>
         <has-mac>1</has-mac>
         <mac>48-21-0b-26-3f-42</mac>
+        <stream-mapping>
+          <ingress>48-21-0b-26-3f-ed:00-01</ingress>
+        </stream-mapping>
       </app>
     </apps>
     <images>
@@ -130,8 +140,8 @@
     <devices>
       <enddevices>
         <enddevice>
-          <name>NUC 1</name>
           <mac>48-21-0b-26-3d-8a</mac>
+          <name>NUC 1</name>
           <interface-uri>opc.tcp://10.200.9.101:62541</interface-uri>
           <has-app>1</has-app>
           <apps>
@@ -141,8 +151,8 @@
           </apps>
         </enddevice>
         <enddevice>
-          <name>NUC 2</name>
           <mac>48-21-0b-26-3f-ed</mac>
+          <name>NUC 2</name>
           <interface-uri>opc.tcp://10.200.9.102:62542</interface-uri>
           <has-app>1</has-app>
           <apps>
@@ -152,8 +162,8 @@
           </apps>
         </enddevice>
         <enddevice>
-          <name>NUC 3</name>
           <mac>48-21-0b-26-3f-42</mac>
+          <name>NUC 3</name>
           <interface-uri>opc.tcp://10.200.9.103:62543</interface-uri>
           <has-app>1</has-app>
           <apps>
@@ -165,8 +175,8 @@
       </enddevices>
       <switches>
         <switch>
-          <name>KSwitch D10</name>
           <mac>01-02-03-04-05-06</mac>
+          <name>KSwitch D10</name>
           <ports-count>8</ports-count>
         </switch>
       </switches>

@@ -224,4 +224,13 @@ print_app(TSN_App app)
         char *val_str = data_value_to_string(app.parameters[i].type, app.parameters[i].value);
         printf("   %s (%s): %s | %s\n", app.parameters[i].name, type_str, val_str, app.parameters[i].description);
     }
+    printf("Associated Streams:\n");
+    printf("   Egress (%d):\n", app.stream_mapping.count_egress);
+    for (int i=0; i<app.stream_mapping.count_egress; ++i) {
+        printf("      %s\n", app.stream_mapping.egress[i]);
+    }
+    printf("   Ingress (%d):\n", app.stream_mapping.count_ingress);
+    for (int i=0; i<app.stream_mapping.count_ingress; ++i) {
+        printf("      %s\n", app.stream_mapping.ingress[i]);
+    }
 }

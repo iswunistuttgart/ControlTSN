@@ -280,6 +280,15 @@ typedef struct TSN_App_Parameter {
 char *
 parameter_data_value_to_string(TSN_App_Parameter *parameter);
 
+
+typedef struct TSN_App_StreamMapping {
+    uint16_t count_egress;
+    uint16_t count_ingress;
+    char **egress;               // Contains the Stream IDs of outgoing streams (App as Talker)
+    char **ingress;              // Contains the Stream IDs of incoming streams (App as Listener)
+} TSN_App_StreamMapping;
+
+
 typedef struct TSN_App {
     char *id;           // {name}_{version}
     char *name;
@@ -291,6 +300,8 @@ typedef struct TSN_App {
     char *image_ref;
     uint8_t count_parameters;
     TSN_App_Parameter *parameters;
+
+    TSN_App_StreamMapping stream_mapping;
 } TSN_App;
 
 typedef struct TSN_Image {

@@ -11,7 +11,11 @@ module control-tsn-uni {
 
     description "YANG Module for storing Data in the ControlTSN Framework";
 
-    revision 2021-12-08 {
+    //revision 2021-06-25 {
+    //    description "Initial Revision for ControlTSN Framework";
+    //}
+
+    revision 2022-12-08 {
         description "Updated Revision for ControlTSN Framework";
     }
 
@@ -164,6 +168,10 @@ module control-tsn-uni {
             }
         }
 
+        leaf name {
+            type string;
+        }
+
         leaf interface-uri {
             type string;
         }
@@ -207,6 +215,9 @@ module control-tsn-uni {
             type string {
                 pattern '[0-9a-fA-F]{2}(-[0-9a-fA-F]{2}){5}';
             }
+        }
+        leaf name {
+            type string;
         }
         leaf ports-count {
             type uint8;
@@ -320,6 +331,20 @@ module control-tsn-uni {
             list parameter {
                 key "param-name";
                 uses app-parameter;
+            }
+        }
+        container stream-mapping {
+            leaf-list egress {
+                type leafref {
+                    path "/control-tsn-uni:tsn-uni/streams/stream/stream-id";
+                    require-instance "true";
+                }
+            }
+            leaf-list ingress {
+                type leafref {
+                    path "/control-tsn-uni:tsn-uni/streams/stream/stream-id";
+                    require-instance "true";
+                }
             }
         }
     }
