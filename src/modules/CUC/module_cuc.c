@@ -221,13 +221,182 @@ cleanup:
     return ret;
 }
 
+static void 
+_deploy_bnm_interface_configuration(UA_Client *client, UA_NodeId rootNode, UA_NodeId interfaceConfigurationTypeNode, UA_NodeId macAddressNodeObject, UA_NodeId vlanTagNodeObject, IEEE_InterfaceList *iface, bool is_listener) {
+    UA_StatusCode ret;
+    UA_Variant *variant;
+    UA_NodeId ifaceNodeObject;
+    UA_ObjectAttributes ifaceObjAttr = UA_ObjectAttributes_default;
+    ifaceObjAttr.displayName = UA_LOCALIZEDTEXT("en-US", "InterfaceConfiguration");
+    ret = UA_Client_addObjectNode(client,
+                                  UA_NODEID_NULL,
+                                  rootNode,
+                                  UA_NODEID_NUMERIC(0, UA_NS0ID_ORGANIZES),
+                                  UA_QUALIFIEDNAME(2, "InterfaceConfiguration"),
+                                  interfaceConfigurationTypeNode,
+                                  ifaceObjAttr,
+                                  &ifaceNodeObject);
+
+    if (ret != UA_STATUSCODE_GOOD) {
+        return;
+    }
+
+    variant = UA_Variant_new();
+    UA_NodeId resNodeId;
+
+    // Mac Address
+    UA_NodeId ns0MacAddress = UA_NODEID_NUMERIC(0, UA_NS0ID_IIEEETSNINTERFACECONFIGURATIONTYPE_MACADDRESS);
+    ret = _findChildNodeID(client, ifaceNodeObject, ns0MacAddress, &resNodeId);
+    if (ret == UA_STATUSCODE_GOOD) {
+        UA_String macAddress = UA_STRING(iface->mac_address);
+        UA_Variant_setScalarCopy(variant, &macAddress, &UA_TYPES[UA_TYPES_STRING]);  
+        ret = UA_Client_writeValueAttribute(client, resNodeId, variant);
+        if (ret != UA_STATUSCODE_GOOD) {
+            printf("[CUC][ERROR] Could not write to node 'MacAddress'!\n");
+        }
+    } else {
+        printf("[CUC][ERROR] Could not find node 'MacAddress' in the stream object in the endpoint!\n");
+    }  
+
+    // Interface Name
+    UA_NodeId ns0InterfaceName = UA_NODEID_NUMERIC(0, UA_NS0ID_IIEEETSNINTERFACECONFIGURATIONTYPE_INTERFACENAME);
+    ret = _findChildNodeID(client, ifaceNodeObject, ns0InterfaceName, &resNodeId);
+    if (ret == UA_STATUSCODE_GOOD) {
+        UA_String interfaceName = UA_STRING(iface->interface_name);
+        UA_Variant_setScalarCopy(variant, &interfaceName, &UA_TYPES[UA_TYPES_STRING]);  
+        ret = UA_Client_writeValueAttribute(client, resNodeId, variant);
+        if (ret != UA_STATUSCODE_GOOD) {
+            printf("[CUC][ERROR] Could not write to node 'InterfaceName'!\n");
+        }
+    } else {
+        printf("[CUC][ERROR] Could not find node 'InterfaceName' in the stream object in the endpoint!\n");
+    }  
+
+    
+    // Config Entries
+    for (int i=0; i<iface->count_config_list_entries; ++i) {
+        IEEE_ConfigList *configEntry = &iface->config_list[i];
+
+        if (configEntry->field_type == CONFIG_LIST_MAC_ADDRESSES) {
+            // MacAddress Object
+            UA_NodeId macAddressNode = macAddressNodeObject;
+            ret = _findChildNodeID(client, ifaceNodeObject, macAddressNode, &resNodeId);
+            if (ret == UA_STATUSCODE_GOOD) {
+                UA_NodeId_copy(&resNodeId, &macAddressNode);
+
+                // Destination Address
+                UA_NodeId ns0DestinationAddress = UA_NODEID_NUMERIC(0, UA_NS0ID_IIEEETSNMACADDRESSTYPE_DESTINATIONADDRESS);
+                ret = _findChildNodeID(client, macAddressNode, ns0DestinationAddress, &resNodeId);
+                if (ret == UA_STATUSCODE_GOOD) {
+                    UA_Byte destinationAddress[6];
+                    if (6 == sscanf(configEntry->ieee802_mac_addresses->destination_mac_address, "%hhx-%hhx-%hhx-%hhx-%hhx-%hhx", &destinationAddress[0], &destinationAddress[1], &destinationAddress[2], &destinationAddress[3], &destinationAddress[4], &destinationAddress[5])) {
+                        UA_Variant_setArrayCopy(variant, &destinationAddress, 6, &UA_TYPES[UA_TYPES_BYTE]);
+                        ret = UA_Client_writeValueAttribute(client, resNodeId, variant);
+                        if (ret != UA_STATUSCODE_GOOD) {
+                            printf("[CUC][ERROR] Could not write to node 'DestinationAddress'!\n");
+                        }
+                    } else {
+                        printf("[CUC][ERROR] Could not parse 'DestinationAddress'!\n");
+                    }
+
+                } else {
+                    printf("[CUC][ERROR] Could not find node 'DestinationAddress' in the stream object in the endpoint!\n");
+                }   
+
+                // Source Address
+                UA_NodeId ns0SourceAddress = UA_NODEID_NUMERIC(0, UA_NS0ID_IIEEETSNMACADDRESSTYPE_SOURCEADDRESS);
+                ret = _findChildNodeID(client, macAddressNode, ns0SourceAddress, &resNodeId);
+                if (ret == UA_STATUSCODE_GOOD) {
+                    UA_Byte sourceAddress[6];
+                    if (6 == sscanf(configEntry->ieee802_mac_addresses->source_mac_address, "%hhx-%hhx-%hhx-%hhx-%hhx-%hhx", &sourceAddress[0], &sourceAddress[1], &sourceAddress[2], &sourceAddress[3], &sourceAddress[4], &sourceAddress[5])) {
+                        UA_Variant_setArrayCopy(variant, &sourceAddress, 6, &UA_TYPES[UA_TYPES_BYTE]);
+                        ret = UA_Client_writeValueAttribute(client, resNodeId, variant);
+                        if (ret != UA_STATUSCODE_GOOD) {
+                            printf("[CUC][ERROR] Could not write to node 'SourceAddress'!\n");
+                        }
+                    } else {
+                        printf("[CUC][ERROR] Could not parse 'SourceAddress'!\n");
+                    }
+
+                } else {
+                    printf("[CUC][ERROR] Could not find node 'SourceAddress' in the stream object in the endpoint!\n");
+                }   
+            }
+
+
+        } else if (configEntry->field_type == CONFIG_LIST_VLAN_TAG) {
+            // VLAN Tag Object
+            UA_NodeId vlanTagNode = vlanTagNodeObject;
+            ret = _findChildNodeID(client, ifaceNodeObject, vlanTagNode, &resNodeId);
+            if (ret == UA_STATUSCODE_GOOD) {
+                UA_NodeId_copy(&resNodeId, &vlanTagNode);
+
+                // VlanId
+                UA_NodeId ns0VlanId = UA_NODEID_NUMERIC(0, UA_NS0ID_IIEEETSNVLANTAGTYPE_VLANID);
+                ret = _findChildNodeID(client, vlanTagNode, ns0VlanId, &resNodeId); 
+                if (ret == UA_STATUSCODE_GOOD) {
+                    UA_UInt16 vlanId = configEntry->ieee802_vlan_tag->vlan_id;
+                    UA_Variant_setScalarCopy(variant, &vlanId, &UA_TYPES[UA_TYPES_UINT16]);  
+                    ret = UA_Client_writeValueAttribute(client, resNodeId, variant);
+                    if (ret != UA_STATUSCODE_GOOD) {
+                        printf("[CUC][ERROR] Could not write to node 'VlanId'!\n");
+                    }
+                } else {
+                    printf("[CUC][ERROR] Could not find node 'VlanId' in the stream object in the endpoint!\n");
+                }  
+
+                // Priority Code Point
+                UA_NodeId ns0PriorityCodePoint = UA_NODEID_NUMERIC(0, UA_NS0ID_IIEEETSNVLANTAGTYPE_PRIORITYCODEPOINT);
+                ret = _findChildNodeID(client, vlanTagNode, ns0PriorityCodePoint, &resNodeId); 
+                if (ret == UA_STATUSCODE_GOOD) {
+                    UA_Byte priorityCodePoint = configEntry->ieee802_vlan_tag->priority_code_point;
+                    UA_Variant_setScalarCopy(variant, &priorityCodePoint, &UA_TYPES[UA_TYPES_BYTE]);  
+                    ret = UA_Client_writeValueAttribute(client, resNodeId, variant);
+                    if (ret != UA_STATUSCODE_GOOD) {
+                        printf("[CUC][ERROR] Could not write to node 'PriorityCodePoint'!\n");
+                    }
+                } else {
+                    printf("[CUC][ERROR] Could not find node 'PriorityCodePoint' in the stream object in the endpoint!\n");
+                }  
+            }
+
+
+        } else if (configEntry->field_type == CONFIG_LIST_TIME_AWARE_OFFSET && !is_listener) {
+            // Time Aware Offset
+            UA_NodeId ns0TimeAwareOffset = UA_NODEID_NUMERIC(0, UA_NS0ID_IIEEETSNINTERFACECONFIGURATIONTALKERTYPE_TIMEAWAREOFFSET);
+            ret = _findChildNodeID(client, ifaceNodeObject, ns0TimeAwareOffset, &resNodeId); 
+            if (ret == UA_STATUSCODE_GOOD) {
+                UA_UInt32 timeAwareOffset = configEntry->time_aware_offset;
+                UA_Variant_setScalarCopy(variant, &timeAwareOffset, &UA_TYPES[UA_TYPES_UINT32]);  
+                ret = UA_Client_writeValueAttribute(client, resNodeId, variant);
+                if (ret != UA_STATUSCODE_GOOD) {
+                    printf("[CUC][ERROR] Could not write to node 'TimeAwareOffset'!\n");
+                }
+            } else {
+                printf("[CUC][ERROR] Could not find node 'TimeAwareOffset' in the stream object in the endpoint!\n");
+            }  
+
+        } // TODO BNM specifies ReceiveOffset for listeners but Qcc not?
+    }
+
+
+cleanup:
+    UA_Variant_delete(variant);
+
+    return;
+}
 
 static void 
 deploy_bnm(UA_Client *client, bool is_listener, uint16_t listener_nr, TSN_Stream *stream)
 {
-    #define UA_NODEID_ENDPOINT_STREAMS_FOLDER   5002
-    #define UA_NODEID_ENDPOINT_TSN_STREAM_TYPE  1003
-    #define UA_NODEID_ENDPOINT_TRAFFIC_SPECIFICATION  5004
+    #define UA_NODEID_ENDPOINT_STREAMS_FOLDER               5002
+    #define UA_NODEID_ENDPOINT_TSN_STREAM_TYPE              1003
+    #define UA_NODEID_ENDPOINT_INTERFACE_CONFIGURATION_TYPE 1010
+    #define UA_NODEID_ENDPOINT_TRAFFIC_SPECIFICATION        5004
+    #define UA_NODEID_ENDPOINT_STATUS_STREAM                5005
+    #define UA_NODEID_ENDPOINT_INTERFACE_CONFIGURATION      5006
+    #define UA_NODEID_ENDPOINT_MAC_ADDRESS                  5007
+    #define UA_NODEID_ENDPOINT_VLAN_TAG                     5008
 
     UA_StatusCode ret;
     UA_Variant *variant;
@@ -235,7 +404,7 @@ deploy_bnm(UA_Client *client, bool is_listener, uint16_t listener_nr, TSN_Stream
     // Add Stream object
     UA_NodeId streamNodeObject;
     UA_ObjectAttributes oAttr = UA_ObjectAttributes_default;
-    oAttr.writeMask = 4194303;
+    //oAttr.writeMask = 4194303;
     oAttr.displayName = UA_LOCALIZEDTEXT("en-US", "TSNStream");
     ret = UA_Client_addObjectNode(client, 
                             UA_NODEID_NULL, 
@@ -285,7 +454,7 @@ deploy_bnm(UA_Client *client, bool is_listener, uint16_t listener_nr, TSN_Stream
                 printf("[CUC][ERROR] Could not write to node 'StreamId'!\n");
             }
         } else {
-            printf("[CUC][ERROR] Could not parse StreamID!\n");
+            printf("[CUC][ERROR] Could not parse 'StreamId'!\n");
         }
 
     } else {
@@ -318,6 +487,12 @@ deploy_bnm(UA_Client *client, bool is_listener, uint16_t listener_nr, TSN_Stream
         } else {
             accumulatedLatency = stream->configuration->listener_list[listener_nr].accumulated_latency;
         }
+        UA_Variant_setScalarCopy(variant, &accumulatedLatency, &UA_TYPES[UA_TYPES_UINT32]);  
+        ret = UA_Client_writeValueAttribute(client, resNodeId, variant);
+        if (ret != UA_STATUSCODE_GOOD) {
+            printf("[CUC][ERROR] Could not write to node 'AccumulatedLatency'!\n");
+        }
+
     } else {
         printf("[CUC][ERROR] Could not find node 'AccumulatedLatency' in the stream object in the endpoint!\n");
     }  
@@ -327,14 +502,160 @@ deploy_bnm(UA_Client *client, bool is_listener, uint16_t listener_nr, TSN_Stream
     // ------------------------------
     // TrafficSpecification
     // ------------------------------
-    UA_NodeId trafficSpecificationObjectNode = UA_NODEID_NUMERIC(2, UA_NODEID_ENDPOINT_TRAFFIC_SPECIFICATION);
-    ret = _findChildNodeID(client, streamNodeObject, trafficSpecificationObjectNode, &resNodeId);
+    UA_NodeId trafficSpecificationNodeObject = UA_NODEID_NUMERIC(2, UA_NODEID_ENDPOINT_TRAFFIC_SPECIFICATION);
+    ret = _findChildNodeID(client, streamNodeObject, trafficSpecificationNodeObject, &resNodeId);
     if (ret == UA_STATUSCODE_GOOD) {
         // Found TrafficSpecification Object as child of the created Stream root object
+        UA_NodeId_copy(&resNodeId, &trafficSpecificationNodeObject);
 
 
+        // Max Interval Frames
+        UA_NodeId ns0MaxIntervalFrames = UA_NODEID_NUMERIC(0, UA_NS0ID_IIEEEBASETSNTRAFFICSPECIFICATIONTYPE_MAXINTERVALFRAMES);
+        ret = _findChildNodeID(client, trafficSpecificationNodeObject, ns0MaxIntervalFrames, &resNodeId);
+        if (ret == UA_STATUSCODE_GOOD) {
+            UA_UInt16 maxIntervalFrames = stream->request.talker.traffic_specification.max_frames_per_interval;
+            UA_Variant_setScalarCopy(variant, &maxIntervalFrames, &UA_TYPES[UA_TYPES_UINT16]);  
+            ret = UA_Client_writeValueAttribute(client, resNodeId, variant);
+            if (ret != UA_STATUSCODE_GOOD) {
+                printf("[CUC][ERROR] Could not write to node 'MaxIntervalFrames'!\n");
+            }
+
+        } else {
+            printf("[CUC][ERROR] Could not find node 'MaxIntervalFrames' in the stream object in the endpoint!\n");
+        }
+
+        // Max Frame Size
+        UA_NodeId ns0MaxFrameSize = UA_NODEID_NUMERIC(0, UA_NS0ID_IIEEEBASETSNTRAFFICSPECIFICATIONTYPE_MAXFRAMESIZE);
+        ret = _findChildNodeID(client, trafficSpecificationNodeObject, ns0MaxFrameSize, &resNodeId);
+        if (ret == UA_STATUSCODE_GOOD) {
+            UA_UInt32 maxFrameSize = stream->request.talker.traffic_specification.max_frame_size;
+            UA_Variant_setScalarCopy(variant, &maxFrameSize, &UA_TYPES[UA_TYPES_UINT32]);  
+            ret = UA_Client_writeValueAttribute(client, resNodeId, variant);
+            if (ret != UA_STATUSCODE_GOOD) {
+                printf("[CUC][ERROR] Could not write to node 'MaxFrameSize'!\n");
+            }
+
+        } else {
+            printf("[CUC][ERROR] Could not find node 'MaxFrameSize' in the stream object in the endpoint!\n");
+        }
+
+        // Interval
+        UA_NodeId ns0Interval = UA_NODEID_NUMERIC(0, UA_NS0ID_IIEEEBASETSNTRAFFICSPECIFICATIONTYPE_INTERVAL);
+        ret = _findChildNodeID(client, trafficSpecificationNodeObject, ns0Interval, &resNodeId);
+        if (ret == UA_STATUSCODE_GOOD) {
+            UA_UnsignedRationalNumber interval;
+            interval.numerator = stream->request.talker.traffic_specification.interval.numerator;
+            interval.denominator = stream->request.talker.traffic_specification.interval.denominator;
+            UA_Variant_setScalarCopy(variant, &interval, &UA_TYPES[UA_TYPES_UNSIGNEDRATIONALNUMBER]);  
+            ret = UA_Client_writeValueAttribute(client, resNodeId, variant);
+            if (ret != UA_STATUSCODE_GOOD) {
+                printf("[CUC][ERROR] Could not write to node 'Interval'!\n");
+            }
+
+        } else {
+            printf("[CUC][ERROR] Could not find node 'Interval' in the stream object in the endpoint!\n");
+        }
     }
 
+
+    // ------------------------------
+    // StatusStream
+    // ------------------------------
+    UA_NodeId statusStreamNodeObject = UA_NODEID_NUMERIC(2, UA_NODEID_ENDPOINT_STATUS_STREAM);
+    ret = _findChildNodeID(client, streamNodeObject, statusStreamNodeObject, &resNodeId);
+    if (ret == UA_STATUSCODE_GOOD) {
+        // Found StatusStream Object as child of the created Stream root object
+        UA_NodeId_copy(&resNodeId, &statusStreamNodeObject);
+
+
+        // Failure Code
+        UA_NodeId ns0Failurecode = UA_NODEID_NUMERIC(0, UA_NS0ID_IIEEEBASETSNSTATUSSTREAMTYPE_FAILURECODE);
+        ret = _findChildNodeID(client, statusStreamNodeObject, ns0Failurecode, &resNodeId);
+        if (ret == UA_STATUSCODE_GOOD) {  
+            UA_TsnFailureCode failureCode = (UA_TsnFailureCode) stream->configuration->status_info.failure_code;
+            UA_Variant_setScalarCopy(variant, &failureCode, &UA_TYPES[UA_TYPES_TSNFAILURECODE]);
+            ret = UA_Client_writeValueAttribute(client, resNodeId, variant);
+            if (ret != UA_STATUSCODE_GOOD) {
+                printf("[CUC][ERROR] Could not write to node 'FailureCode'!\n");
+            }
+
+        } else {
+            printf("[CUC][ERROR] Could not find node 'FailureCode' in the stream object in the endpoint!\n");
+        }
+
+        // Talker Status
+        UA_NodeId ns0TalkerStatus = UA_NODEID_NUMERIC(0, UA_NS0ID_IIEEEBASETSNSTATUSSTREAMTYPE_TALKERSTATUS);
+        ret = _findChildNodeID(client, statusStreamNodeObject, ns0TalkerStatus, &resNodeId);
+        if (ret == UA_STATUSCODE_GOOD) {
+            UA_TsnTalkerStatus talkerStatus = (UA_TsnTalkerStatus) stream->configuration->status_info.talker_status;
+            UA_Variant_setScalarCopy(variant, &talkerStatus, &UA_TYPES[UA_TYPES_TSNTALKERSTATUS]);  
+            ret = UA_Client_writeValueAttribute(client, resNodeId, variant);
+            if (ret != UA_STATUSCODE_GOOD) {
+                printf("[CUC][ERROR] Could not write to node 'TalkerStatus'!\n");
+            }
+
+        } else {
+            printf("[CUC][ERROR] Could not find node 'TalkerStatus' in the stream object in the endpoint!\n");
+        }
+
+        // Listener Status
+        UA_NodeId ns0ListenerStatus = UA_NODEID_NUMERIC(0, UA_NS0ID_IIEEEBASETSNSTATUSSTREAMTYPE_LISTENERSTATUS);
+        ret = _findChildNodeID(client, statusStreamNodeObject, ns0ListenerStatus, &resNodeId);
+        if (ret == UA_STATUSCODE_GOOD) {
+            UA_TsnListenerStatus listenerStatus = (UA_TsnListenerStatus) stream->configuration->status_info.listener_status;
+            UA_Variant_setScalarCopy(variant, &listenerStatus, &UA_TYPES[UA_TYPES_TSNLISTENERSTATUS]);  
+            ret = UA_Client_writeValueAttribute(client, resNodeId, variant);
+            if (ret != UA_STATUSCODE_GOOD) {
+                printf("[CUC][ERROR] Could not write to node 'ListenerStatus'!\n");
+            }
+
+        } else {
+            printf("[CUC][ERROR] Could not find node 'ListenerStatus' in the stream object in the endpoint!\n");
+        }
+
+        // Failure System Identifier
+        // --> TODO ...
+    }
+
+
+    // ------------------------------
+    // InterfaceConfiguration
+    // ------------------------------
+    UA_NodeId interfaceConfigurationNodeObject = UA_NODEID_NUMERIC(2, UA_NODEID_ENDPOINT_INTERFACE_CONFIGURATION);
+    ret = _findChildNodeID(client, streamNodeObject, interfaceConfigurationNodeObject, &resNodeId);
+    if (ret == UA_STATUSCODE_GOOD) {
+        // Found InterfaceConfiguration Object as child of the created Stream root object
+        UA_NodeId_copy(&resNodeId, &interfaceConfigurationNodeObject);
+
+        // Create Object for each interface
+        if (!is_listener) {
+            // Talker interfaces
+            for (int i=0; i<stream->configuration->talker.interface_configuration.count_interface_list_entries; ++i) {
+                IEEE_InterfaceList *iface = &stream->configuration->talker.interface_configuration.interface_list[i];
+                _deploy_bnm_interface_configuration(client, 
+                                                    interfaceConfigurationNodeObject, 
+                                                    UA_NODEID_NUMERIC(2, UA_NODEID_ENDPOINT_INTERFACE_CONFIGURATION_TYPE), 
+                                                    UA_NODEID_NUMERIC(2, UA_NODEID_ENDPOINT_MAC_ADDRESS),
+                                                    UA_NODEID_NUMERIC(2, UA_NODEID_ENDPOINT_VLAN_TAG),
+                                                    iface,
+                                                    is_listener);
+            }
+
+        } else {
+            // Listener interfaces
+            for (int i=0; i<stream->configuration->listener_list[listener_nr].interface_configuration.count_interface_list_entries; ++i) {
+                IEEE_InterfaceList *iface = &stream->configuration->listener_list[listener_nr].interface_configuration.interface_list[i];
+                _deploy_bnm_interface_configuration(client, 
+                                                    interfaceConfigurationNodeObject, 
+                                                    UA_NODEID_NUMERIC(2, UA_NODEID_ENDPOINT_INTERFACE_CONFIGURATION_TYPE), 
+                                                    UA_NODEID_NUMERIC(2, UA_NODEID_ENDPOINT_MAC_ADDRESS),
+                                                    UA_NODEID_NUMERIC(2, UA_NODEID_ENDPOINT_VLAN_TAG),
+                                                    iface,
+                                                    is_listener);
+            }
+
+        }
+    }
 
 
 
