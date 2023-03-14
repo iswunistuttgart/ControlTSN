@@ -11,33 +11,30 @@ const char *MODULE_DATA_IDENTIFIER_CNC = "cnc_url";
 
 // ------------------------------------
 // CNC Interface
+// TODO: Currently implemented as REST but needs to be NETCONF or RESTCONF (802.1Qdj)
 // ------------------------------------
 const char *CNC_INTERFACE_DISCOVER_TOPOLOGY = "/topology/discover_topology";
 const char *CNC_INTERFACE_COMPUTE_REQUESTS  = "/streams/compute_requests";
 
+// UNI uris
+const char *CNC_INTERFACE_JOIN_LISTENER = "/streams/join_listener";
+const char *CNC_INTERFACE_LEAVE_LISTENER = "/streams/leave_listener";
+const char *CNC_INTERFACE_REMOVE_STREAM = "/streams/remove_stream";
+const char *CNC_INTERFACE_UPDATE_STREAM = "/streams/update_stream";
+
+
 void cnc_discover_topology();
 void cnc_compute_requests(TSN_Streams *streams);
 
+// UNI methods
+void cnc_join_listener(char *stream_id, TSN_Listener *listener);
+void cnc_leave_listener(char *stream_id, TSN_StatusListener *listener);
+void cnc_remove_stream(char *stream_id);
+void cnc_update_stream(char *stream_id, TSN_Stream *stream);
 
 // ------------------------------------
 // Endpoints Interface
 // ------------------------------------
-
-/*
-const char *APP_PARAMETER_IDENTIFIER_OPCUA_ENDPOINT = "opcua_endpoint";
-/**
- * @brief Deploys the calculated stream configuration to a specific application.\n.
- * 
- * At this point, I assume that the stream configuration is sent directly to the individual apps.
- * This means that each app provides a receiver for this. In the ControlTSN project,
- * this corresponds to an OPC UA server on which the configurations are written.
- * 
- * @param app The app the confoiguration belongs to
- * @param stream_configuration The calculated stream configuration from the CNC.
- * 
- */
-//void deploy_configuration(TSN_App *app, TSN_Configuration *stream_configuration);
-
 
 /**
  * @brief Deploys the calculated stream configuration to the endpoint where the corresponding application is deployed.
@@ -51,11 +48,13 @@ const char *APP_PARAMETER_IDENTIFIER_OPCUA_ENDPOINT = "opcua_endpoint";
  * the application-specific parameters (e.g. axes count for a vPLC) running on the end device.
  * 
  * @param enddevice The enddevice the configuration will be deployed to
- * @param stream_configuration The calculated stream configuration from the CNC
+ * @param is_listener Whether the given enddevice is a listener of the stream or not
+ * @param listener_nr If the configuration is for a listener, then this is the index of the listener in the array
+ * @param stream The calculated stream from the CNC containing the request as well as the configuration
  * @param app_id The ID of the corresponding app to distinguish them in the datastore of the enddevice.
  * @return Success (0) or failure (1)
  */
-int deploy_configuration(TSN_Enddevice *enddevice, TSN_Configuration *stream_configuration, char *app_id);
+int deploy_configuration(TSN_Enddevice *enddevice, bool is_listener, uint16_t listener_nr, TSN_Stream *stream, char *app_id);
 
 
 #endif // __MODULE_CUC_H__

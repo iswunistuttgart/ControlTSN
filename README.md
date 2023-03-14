@@ -21,7 +21,7 @@ Development repo for the framework of the project ControlTSN.<br>
 
 ## Architecture
 <figure>
-<img src="images/Architecture_Framework_v4.png" width="800" id="fig1">
+<img src="images/Architecture_Framework_v7_en.png" width="800" id="fig1">
 <figcaption><b>Fig. 1 - Overview of the architecture of the framework</b></figcaption>
 </figure>
 
@@ -207,6 +207,8 @@ The `RESTModule` starts a webserver which can be used to interact with the frame
 The following list only serves to store all open items and does not include any prioritization.
 - The [sysrepo plugin](src/sysrepo/plugin/controltsn_plugin.c) must be adapted to the new events and data models.
 - The [common interface](src/common.c) implements many functions that simply call another function of the [sysrepo client](src/sysrepo/sysrepo_client.c) . There could be removed for the sake of clarity.
+- CUC module currently uses REST as interface to CNC. According to IEEE 802.1Qdj NETCONF or RESTCONF is provided for this purpose. Accordingly, this must be implemented.
+- Also currently only the method to compute a set of stream requests from the CUC to the CNC is implemented [cnc_compute_requests](src/modules/CUC/module_cuc.h). According to the standard, several methods are provided for the User Network Interface (UNI), such as addListener. The CUC module must be extended accordingly by these methods
 
 
 ## Engineering Overview 

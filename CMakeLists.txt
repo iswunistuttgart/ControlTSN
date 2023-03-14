@@ -24,6 +24,20 @@ target_link_libraries(RESTModule common ulfius json_serializer)
 # MODULE CUC
 add_executable(CUCModule src/modules/CUC/module_cuc.c)
 target_link_libraries(CUCModule common ulfius open62541 json_serializer)
+#find_package(open62541 REQUIRED)
+#set(GENERATED_SERVER_OUTPUT ${PROJECT_SOURCE_DIR}/src_generated/bnm_test)
+#set(FILE_NS_DIRPREFIX ${PROJECT_SOURCE_DIR}/nodeset/bnm_test)
+
+#ua_generate_nodeset_and_datatypes(
+#  NAME "bnm_test"
+#  FILE_NS "${FILE_NS_DIRPREFIX}/endpointbnm.xml"
+#  OUTPUT_DIR "${GENERATED_SERVER_OUTPUT}"
+#  INTERNAL
+#)
+
+#add_executable(CUCModule src/modules/CUC/module_cuc.c src_generated/bnm_test/namespace_bnm_test_generated.c)
+#add_dependencies(CUCModule open62541-generator-ns-bnm_test)
+#target_link_libraries(CUCModule common ulfius open62541 json_serializer)
 
 # MODULE MONITOR
 add_executable(MonitorModule src/modules/monitor/module_monitor.c)

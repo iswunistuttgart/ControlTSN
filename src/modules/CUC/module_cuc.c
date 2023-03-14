@@ -15,7 +15,7 @@
 #include "../../helper/json_serializer.h"
 
 
-#define EMULATE_OPENCNC      true
+#define EMULATE_OPENCNC      false
 
 
 static int rc;
@@ -133,6 +133,30 @@ cnc_compute_requests(TSN_Streams *streams)
     return;
 }
 
+void 
+cnc_join_listener(char *stream_id, TSN_Listener *listener)
+{
+    // TODO
+}
+
+void 
+cnc_leave_listener(char *stream_id, TSN_StatusListener *listener)
+{
+    // TODO
+}
+
+void 
+cnc_remove_stream(char *stream_id)
+{
+    // TODO
+}
+
+void 
+cnc_update_stream(char *stream_id, TSN_Stream *stream)
+{
+    // TODO
+}
+
 
 TSN_App *
 _find_app_for_mac(char *mac, TSN_Apps *apps)
@@ -159,33 +183,178 @@ _find_app_parameter(TSN_App *app, const char *parameter_name)
     return NULL;
 }
 
-/*
-void 
-deploy_configuration(TSN_App *app, TSN_Configuration *stream_configuration)
-{
-    // TODO!...
+static UA_StatusCode
+_findChildNodeID(UA_Client *client, UA_NodeId rootNodeId, UA_NodeId searchNS0NodeId, UA_NodeId *resultNodeId) {
+    UA_StatusCode ret;
+    UA_QualifiedName searchBrowseName;
+    UA_BrowseRequest bReq;
+    UA_BrowseResponse bResp;
 
-    // Get the OPC UA Endpoint from the app parameters
-    TSN_App_Parameter *param_opcua_endpoint = _find_app_parameter(app, APP_PARAMETER_IDENTIFIER_OPCUA_ENDPOINT);
-    if (param_opcua_endpoint == NULL) {
-        printf("[CUC] Could not deploy configuration to app '%s' because of missing opc ua endpoint parameter!\n", app->name);
-        return;
+    ret = UA_Client_readBrowseNameAttribute(client, searchNS0NodeId, &searchBrowseName);
+    if (ret != UA_STATUSCODE_GOOD) {
+        goto cleanup;
+    } 
+    
+    UA_BrowseRequest_init(&bReq);
+    bReq.requestedMaxReferencesPerNode = 0;
+    bReq.nodesToBrowse = UA_BrowseDescription_new();
+    bReq.nodesToBrowseSize = 1;
+    bReq.nodesToBrowse[0].nodeId = rootNodeId;
+    bReq.nodesToBrowse[0].resultMask = UA_BROWSERESULTMASK_ALL;
+    bResp = UA_Client_Service_browse(client, bReq);
+    for(size_t i = 0; i < bResp.resultsSize; ++i) {
+        for(size_t j = 0; j < bResp.results[i].referencesSize; ++j) {
+            UA_ReferenceDescription *ref = &(bResp.results[i].references[j]);
+            if (strcmp(ref->browseName.name.data, searchBrowseName.name.data) == 0) {
+                UA_NodeId_copy(&ref->nodeId.nodeId, resultNodeId);
+                goto cleanup;
+            }  
+        }
+    }
+    
+
+cleanup:
+    UA_QualifiedName_clear(&searchBrowseName);
+    UA_BrowseRequest_clear(&bReq);
+    UA_BrowseResponse_clear(&bResp);
+
+    return ret;
+}
+
+
+static void 
+deploy_bnm(UA_Client *client, bool is_listener, uint16_t listener_nr, TSN_Stream *stream)
+{
+    #define UA_NODEID_ENDPOINT_STREAMS_FOLDER   5002
+    #define UA_NODEID_ENDPOINT_TSN_STREAM_TYPE  1003
+    #define UA_NODEID_ENDPOINT_TRAFFIC_SPECIFICATION  5004
+
+    UA_StatusCode ret;
+    UA_Variant *variant;
+
+    // Add Stream object
+    UA_NodeId streamNodeObject;
+    UA_ObjectAttributes oAttr = UA_ObjectAttributes_default;
+    oAttr.writeMask = 4194303;
+    oAttr.displayName = UA_LOCALIZEDTEXT("en-US", "TSNStream");
+    ret = UA_Client_addObjectNode(client, 
+                            UA_NODEID_NULL, 
+                            UA_NODEID_NUMERIC(2, UA_NODEID_ENDPOINT_STREAMS_FOLDER),
+                            UA_NODEID_NUMERIC(0, UA_NS0ID_ORGANIZES),
+                            UA_QUALIFIEDNAME(2, "TSNStream"), 
+                            UA_NODEID_NUMERIC(2, UA_NODEID_ENDPOINT_TSN_STREAM_TYPE), 
+                            oAttr, 
+                            &streamNodeObject);
+
+    variant = UA_Variant_new();
+    UA_NodeId resNodeId;
+
+
+    // ------------------------------
+    // StreamType
+    // ------------------------------
+
+    // Get StreamName based on the NS0 NodeID defined by BNM
+    UA_NodeId ns0StreamName = UA_NODEID_NUMERIC(0, UA_NS0ID_IIEEEBASETSNSTREAMTYPE_STREAMNAME);
+    ret = _findChildNodeID(client, streamNodeObject, ns0StreamName, &resNodeId);
+    if (ret == UA_STATUSCODE_GOOD) {
+        // Write StreamName
+        char *sn = malloc(sizeof("Stream_") + sizeof(stream->stream_id) + 1);
+        sprintf(sn, "Stream_%s", stream->stream_id);
+        UA_String streamName = UA_STRING(sn);
+        UA_Variant_setScalarCopy(variant, &streamName, &UA_TYPES[UA_TYPES_STRING]);  
+        free(sn);
+        ret = UA_Client_writeValueAttribute(client, resNodeId, variant);
+        if (ret != UA_STATUSCODE_GOOD) {
+            printf("[CUC][ERROR] Could not write to node 'StreamName'!\n");
+        }
+    } else {
+        printf("[CUC][ERROR] Could not find node 'StreamName' in the stream object in the endpoint!\n");
+    }  
+
+    // StreamId
+    UA_NodeId ns0StreamId = UA_NODEID_NUMERIC(0, UA_NS0ID_IIEEEBASETSNSTREAMTYPE_STREAMID);
+    ret = _findChildNodeID(client, streamNodeObject, ns0StreamId, &resNodeId);
+    if (ret == UA_STATUSCODE_GOOD) {
+        // Write Stream ID
+        UA_Byte streamId[8];
+        if (8 == sscanf(stream->stream_id, "%hhx-%hhx-%hhx-%hhx-%hhx-%hhx:%hhx-%hhx", &streamId[0], &streamId[1], &streamId[2], &streamId[3], &streamId[4], &streamId[5], &streamId[6], &streamId[7])) {
+            UA_Variant_setArrayCopy(variant, &streamId, 8, &UA_TYPES[UA_TYPES_BYTE]);
+            ret = UA_Client_writeValueAttribute(client, resNodeId, variant);
+            if (ret != UA_STATUSCODE_GOOD) {
+                printf("[CUC][ERROR] Could not write to node 'StreamId'!\n");
+            }
+        } else {
+            printf("[CUC][ERROR] Could not parse StreamID!\n");
+        }
+
+    } else {
+        printf("[CUC][ERROR] Could not find node 'StreamId' in the stream object in the endpoint!\n");
+    }    
+
+    // State
+    UA_NodeId ns0State = UA_NODEID_NUMERIC(0, UA_NS0ID_IIEEEBASETSNSTREAMTYPE_STATE);
+    ret = _findChildNodeID(client, streamNodeObject, ns0State, &resNodeId);
+    if (ret == UA_STATUSCODE_GOOD) {
+        // Write State
+        UA_TsnStreamState state = UA_TSNSTREAMSTATE_READY;
+        UA_Variant_setScalarCopy(variant, &state, &UA_TYPES[UA_TYPES_TSNSTREAMSTATE]);  
+        ret = UA_Client_writeValueAttribute(client, resNodeId, variant);
+        if (ret != UA_STATUSCODE_GOOD) {
+            printf("[CUC][ERROR] Could not write to node 'State'!\n");
+        }
+
+    } else {
+        printf("[CUC][ERROR] Could not find node 'State' in the stream object in the endpoint!\n");
+    }            
+
+    // Accumulated Latency
+    UA_NodeId ns0AccumulatedLatency = UA_NODEID_NUMERIC(0, UA_NS0ID_IIEEEBASETSNSTREAMTYPE_ACCUMULATEDLATENCY);
+    ret = _findChildNodeID(client, streamNodeObject, ns0AccumulatedLatency, &resNodeId);
+    if (ret == UA_STATUSCODE_GOOD) {
+        UA_UInt32 accumulatedLatency;
+        if (!is_listener) {
+            accumulatedLatency = stream->configuration->talker.accumulated_latency;
+        } else {
+            accumulatedLatency = stream->configuration->listener_list[listener_nr].accumulated_latency;
+        }
+    } else {
+        printf("[CUC][ERROR] Could not find node 'AccumulatedLatency' in the stream object in the endpoint!\n");
+    }  
+
+
+
+    // ------------------------------
+    // TrafficSpecification
+    // ------------------------------
+    UA_NodeId trafficSpecificationObjectNode = UA_NODEID_NUMERIC(2, UA_NODEID_ENDPOINT_TRAFFIC_SPECIFICATION);
+    ret = _findChildNodeID(client, streamNodeObject, trafficSpecificationObjectNode, &resNodeId);
+    if (ret == UA_STATUSCODE_GOOD) {
+        // Found TrafficSpecification Object as child of the created Stream root object
+
+
     }
 
-    // Write the stream configuration to the OPC UA server of the app
-    // ...
-    
+
+
+
+cleanup:
+    UA_Variant_delete(variant);
+    //UA_Client_delete(client);
+
+    return;
 }
-*/
+
+
 
 int 
-deploy_configuration(TSN_Enddevice *enddevice, TSN_Configuration *stream_configuration, char *app_id)
+deploy_configuration(TSN_Enddevice *enddevice, bool is_listener, uint16_t listener_nr, TSN_Stream *stream, char *app_id)
 {
     printf("--- Deploying configuration to: \n");
     print_enddevice(*enddevice);
     
 
-    UA_Variant *my_variant;
+    //UA_Variant *my_variant;
     UA_NodeId nodeID;
     UA_StatusCode retval;
     UA_Client *client;
@@ -197,7 +366,9 @@ deploy_configuration(TSN_Enddevice *enddevice, TSN_Configuration *stream_configu
 
     // Connect to the server
     client = UA_Client_new();
-    UA_ClientConfig_setDefault(UA_Client_getConfig(client));
+    UA_ClientConfig *config = UA_Client_getConfig(client);
+    UA_ClientConfig_setDefault(config);
+    
     retval = UA_Client_connect(client, enddevice->interface_uri);
     if (retval != UA_STATUSCODE_GOOD) {
         printf("[CUC][ERROR] Could not connect to OPC UA Server '%s'\n", enddevice->interface_uri);
@@ -205,28 +376,85 @@ deploy_configuration(TSN_Enddevice *enddevice, TSN_Configuration *stream_configu
         return EXIT_FAILURE;
     }
 
+    /*
+    // ---------------------------------------------------------
     // Write configuration to the OPC UA Server of the enddevice
+    //
+    // IMPORTANT NOTE:
+    // The actual data model is defined in the Part 22 Base Network Model (BNM). 
+    // In the current implementation, a simplified data model is used to 
+    // primarily demonstrate and validate how it works. 
+    // The following configurations are currently transmitted to the endpoint:
+    // - Stream ID
+    // - VLAN ID
+    // - Qbv Offset
+    //
+    // The plan for the further development is to switch to the actual BNM.
+    //
+    // ---------------------------------------------------------
     my_variant = UA_Variant_new();
-    // (currently just a test)
+
     //UA_String string_value = UA_STRING((char *) stream_configuration->talker.interface_configuration.interface_list[0].mac_address);
+    
+    // Stream ID
+    nodeID = UA_NODEID_STRING(1, "Stream ID");
+    UA_String streamID = UA_STRING((char *) stream_id);
+    UA_Variant_setScalarCopy(my_variant, &streamID, &UA_TYPES[UA_TYPES_STRING]);
+    retval = UA_Client_writeValueAttribute(client, nodeID, my_variant);
+    if (retval != UA_STATUSCODE_GOOD) {
+        printf("[CUC][OPCUA][ERROR] Failed to write 'Stream ID' to %s!\n", enddevice->interface_uri);
+        //goto cleanup;
+    } else {
+        printf("[CUC][OPCUA] Successfully written 'Stream ID' to enddevice!\n");
+    }
+
+    // Here we assume following config_list (see: /src/CNC/cnc_prototype.c, from line 112)
+    // [0] --> ieee802_mac_addresses
+    // [1] --> ieee802_vlan_tag
+    // [2] --> time_aware_offset
+    // TODO:  --> Implement a function to find the correct entries for the endpoint variables
+
+    // VLAN ID
+    nodeID = UA_NODEID_STRING(1, "VLAN ID");
+    UA_UInt16 vlanID = (UA_UInt16) stream_configuration->talker.interface_configuration.interface_list[0].config_list[1].ieee802_vlan_tag->vlan_id;
+    UA_Variant_setScalarCopy(my_variant, &vlanID, &UA_TYPES[UA_TYPES_UINT16]);
+    retval = UA_Client_writeValueAttribute(client, nodeID, my_variant);
+    if (retval != UA_STATUSCODE_GOOD) {
+        printf("[CUC][OPCUA][ERROR] Failed to write 'VLAN ID' to %s!\n", enddevice->interface_uri);
+        //goto cleanup;
+    } else {
+        printf("[CUC][OPCUA] Successfully written 'VLAN ID' to enddevice!\n");
+    }
+
+    // Qbv Offset
     nodeID = UA_NODEID_STRING(1, "Qbv Offset");
-    UA_Int32 qbvOffset = (UA_Int32) stream_configuration->talker.interface_configuration.interface_list[0].config_list[2].time_aware_offset;
-    UA_Variant_setScalarCopy(my_variant, &qbvOffset, &UA_TYPES[UA_TYPES_INT32]);
+    UA_UInt32 qbvOffset = (UA_UInt32) stream_configuration->talker.interface_configuration.interface_list[0].config_list[2].time_aware_offset;
+    UA_Variant_setScalarCopy(my_variant, &qbvOffset, &UA_TYPES[UA_TYPES_UINT32]);
     retval = UA_Client_writeValueAttribute(client, nodeID, my_variant);
     if (retval != UA_STATUSCODE_GOOD) {
         printf("[CUC][OPCUA][ERROR] Failed to write 'Qbv Offset' to %s!\n", enddevice->interface_uri);
-        goto cleanup;
+        //goto cleanup;
+    } else {
+        printf("[CUC][OPCUA] Successfully written 'Qbv Offset' to enddevice!\n");
     }
+    */
 
-    printf("[CUC][OPCUA] Successfully written the stream configuration to enddevice %s!\n", enddevice->interface_uri);
+    // ------------------------------------------------------------------
+    // Deploy Configuration based on the BNM of OPC UA (Part 22)
+
+    deploy_bnm(client, is_listener, listener_nr, stream);
+    // ------------------------------------------------------------------
 
 
 cleanup:
-    UA_Variant_delete(my_variant);
+    //UA_Variant_delete(my_variant);
+
     UA_Client_delete(client);
 
     return EXIT_SUCCESS;
 }
+
+
 
 
 // ------------------------------------
@@ -316,8 +544,7 @@ _cb_event(TSN_Event_CB_Data data)
 
     else if (data.event_id == EVENT_STREAM_CONFIGURED) {
         printf("[CUC][CB] Stream '%s' configured! Deploying the configuration to the enddevices...\n", data.entry_id);
-    
-    
+        
         TSN_Stream *configured_stream = malloc(sizeof(TSN_Stream));
         rc = sysrepo_get_stream(data.entry_id, &configured_stream);
         if (rc == EXIT_SUCCESS) {
@@ -332,7 +559,7 @@ _cb_event(TSN_Event_CB_Data data)
 
             // TODO: When requesting a stream, the associated app should already be linked using the AppID. 
             // Otherwise, the assignment of stream and app is awkward afterwards (via the Talker/Listener MACs).
-            rc = deploy_configuration(talker, configured_stream->configuration, "N/A");
+            rc = deploy_configuration(talker, false, 0, configured_stream, "N/A");
             if (rc != EXIT_SUCCESS) {
                 printf("[CUC][CB][ERROR] Could not deploy stream configuration to enddevice (talker, %s)!\n", configured_stream->configuration->talker.interface_configuration.interface_list[0].mac_address);
             }
@@ -346,7 +573,7 @@ _cb_event(TSN_Event_CB_Data data)
                     printf("[CUC][CB][ERROR] Could not read enddevice (listener #%d) with MAC '%s' from the datastore!\n", i, configured_stream->configuration->listener_list[i].interface_configuration.interface_list[0].mac_address);
                 }
 
-                rc = deploy_configuration(listener, configured_stream->configuration, "N/A");
+                rc = deploy_configuration(listener, true, i, configured_stream, "N/A");
                 if (rc != EXIT_SUCCESS) {
                     printf("[CUC][CB][ERROR] Could not deploy stream configuration to enddevice (listener #%d, %s)!\n", i, configured_stream->configuration->listener_list[i].interface_configuration.interface_list[0].mac_address);
                 }
@@ -428,6 +655,27 @@ main(void)
     }
 
     printf("[CUC] CUC module successfully started and running\n");
+
+
+
+    // ------------------------------------------------------------------------------------------
+    /*
+    printf("----------> TEST:\n");
+    // Connect to the server
+    UA_Client *client;
+    UA_StatusCode retval;
+    client = UA_Client_new();
+    UA_ClientConfig_setDefault(UA_Client_getConfig(client));
+    retval = UA_Client_connect(client, "opc.tcp://localhost:62541");
+    if (retval != UA_STATUSCODE_GOOD) {
+        printf("ERROR!!!!!!!!!!\n");
+        UA_Client_delete(client);
+        return EXIT_FAILURE;
+    }
+    
+    deploy_bnm_test(client, true, NULL, "00-00-00-00-00-00:00-01");
+    */
+
 
     // Keep running
     while (is_running) {

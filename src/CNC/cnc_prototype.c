@@ -8,7 +8,7 @@
 #include "../helper/json_serializer.h" // Just for the emulated topology discovering
 
 
-#define EMULATE_OPENCNC      true
+#define EMULATE_OPENCNC      false
 
 
 
