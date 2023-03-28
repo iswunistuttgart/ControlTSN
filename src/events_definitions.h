@@ -1,5 +1,12 @@
+/*
+ * Copyright (C) 2023 Institute for Control Engineering of Machine Tools and Manufacturing Units at the University of Stuttgart
+ * Author Stefan Oechsle <stefan.oechsle@isw.uni-stuttgart.de>
+ */
+
 #ifndef __EVENTS_DEFINITIONS_H__
 #define __EVENTS_DEFINITIONS_H__
+
+#include <stdint.h>
 
 // ----------------------------------------------
 //      EVENTS

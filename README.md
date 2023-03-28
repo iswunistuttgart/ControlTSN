@@ -1,7 +1,13 @@
-# ControlTSN (WiP)
-Development repo for the framework of the project ControlTSN.<br>
-**The development is still ongoing.** Therefore, bugs and similar can not be excluded. <br>
-**Missing but important points in this README and other errors are welcome to be reported.**
+# ControlTSN
+Repository of the project: <br>
+Development of a modular management framework for distributed real-time applications based on TSN and OPC UA (**ControlTSN**).<br>
+
+> Missing but important points in this README and other errors are welcome to be reported.
+
+## Brief
+The framework has a modular architecture in which various tasks and functions are integrated in the form of modules. These are thereby connected to a central data and function interface, providing basic organizational functionalities. In addition, Sysrepo, a YANG-based data store, is used as a central datastore. The modules can communicate with the datastore via a client. An additional running plugin in the data store continuously monitors the stored data and sends a notification in case of certain events. The modules can subscribe to these events as required. The modules in turn implement a generic callback function, which is triggered when a subscribed event occurs. In this way, generic inter-module communication is implemented in the framework.
+
+
 
 ## Table of Contents
 1. [Architecture](#architecture)
@@ -29,8 +35,8 @@ Development repo for the framework of the project ControlTSN.<br>
 The data model is represented as a YANG module [(src/sysrepo/control-tsn-uni.yang)](src/sysrepo/control-tsn-uni.yang). It is roughly divided into the four aspects Stream, Modules, Application and Topology. The currently used data structure is shown in [Fig. 2](#fig2). For the sake of clarity, the structure of the streams has not been mapped in full. No claim is made to completeness, but rather the current structure is seen as a basis for discussion and as a starting point for initial development (especially "application" and "topology").
 
 <figure>
-<img src="images/YANG_Modell.png" width="800" id="fig2">
-<figcaption><b>Fig. 2 - Current structure of the data model</b></figcaption>
+<img src="images/YANG_Modell_4.png" id="fig2">
+<figcaption><b>Fig. 2 - Structure of the data model (slightly simplified)</b></figcaption>
 </figure>
 
 
@@ -56,6 +62,7 @@ The following table gives an overview of the currently implemented (or subscriba
 | EVENT_MODULE_UNREGISTERED | 0x00000800 | 2048 | The registered flag of a module was set to FALSE  |
 | EVENT_MODULE_DELETED | 0x00001000 | 4096 | A module was deleted |
 | EVENT_MODULE_... | ... | ... | ... |
+| EVENT_MODULE_EXPORT_DATA | 0x00008000 | 32768 | The export of all stored data was requested |
 | **Topology specific** | | | |
 | EVENT_TOPOLOGY_DISCOVERY_REQUESTED | 0x00010000 | 65536 | The discovery of the topology was requested |
 | EVENT_TOPOLOGY_DISCOVERED | 0x00020000 | 131072 | The toplogy was updated in the datastore  |
@@ -66,6 +73,11 @@ The following table gives an overview of the currently implemented (or subscriba
 | EVENT_APPLICATION_APP_START_REQUESTED | 0x04000000 | 67108864 | The start of an app was requested |
 | EVENT_APPLICATION_APP_STOP_REQUESTED | 0x08000000 | 134217728 | The stop of an app was requested |
 | EVENT_APPLICATION_... | 0x10000000 | ... | ... |
+| **Configuration specific** | | | |
+| EVENT_CONFIGURATION_DEPLOY | 0x10000000 | 268435456 | Deploy the app configuration to the corresponding enddevice |
+| EVENT_CONFIGURATION_CHANGED | 0x20000000 | 268435456 | The stored app configuration changed |
+| EVENT_CONFIGURATION_REQUEST_RUN_STATE | 0x40000000 | 268435456 | Request the state "RUN" of a application |
+| EVENT_CONFIGURATION_TOGGLE_APP_SEND_RECEIVE | 0x80000000 | 2147483648 | Toggle whether the application should send (and/or receive) or not |
 
 
 ### **Module structure**
@@ -124,40 +136,32 @@ static void cb_event (TSN_Event_CB_Data data)
 }
 ```
 
-To get data from the datastore see [the sysrepo client header](src/sysrepo/sysrepo_client.h) to get a overview over exposed functions. As already mentioned at the beginning, the data models for application and topology are not yet sufficiently elaborated. Accordingly, the corresponding functions are missing for the most part.
-
+To get data from the datastore see [the sysrepo client header](src/sysrepo/sysrepo_client.h) to get a overview over exposed functions. 
 
 
 ### **Sequences**
 The following figures represent the flows for the respective actions using the framework:
 
 <details><summary><b>Starting all modules</b></summary><p>
-<p align="center"><img src="images/sequences/1_Starten_der_Module.png" width="800"></p>
+<p align="center"><img src="images/sequences/1_Start_Modules.png"></p>
 </p></details>
 
 <details><summary><b>Topology identification</b></summary><p>
-<p align="center"><img src="images/sequences/2_Topologie_Ermittlung.png" width="800"></p>
+<p align="center"><img src="images/sequences/2_Topology_Discovery.png"></p>
 </p></details>
 
 <details><summary><b>Distribute the application</b></summary><p>
-<p align="center"><img src="images/sequences/3_Verteilen_der_Anwendung.png" width="800"></p>
+<p align="center"><img src="images/sequences/3_Distribute_Application.png"></p>
 </p></details>
 
 <details><summary><b>Stream creation</b></summary><p>
-<p align="center"><img src="images/sequences/4_Stream_Erstellung.png" width="800"></p>
+<p align="center"><img src="images/sequences/4_Stream_Creation.png"></p>
 </p></details>
 
 <details><summary><b>Starting a (user) application</b></summary><p>
-<p align="center"><img src="images/sequences/5_Starten_der_Anwendung.png" width="800"></p>
+<p align="center"><img src="images/sequences/5_Start_Application.png"></p>
 </p></details>
 
-<details><summary><b>Monitoring of the latency</b></summary><p>
-<p align="center"><img src="images/sequences/6_Monitoring_der_Latenz.png" width="800"></p>
-</p></details>
-
-<details><summary><b>Stopping a application</b></summary><p>
-<p align="center"><img src="images/sequences/7_Stoppen_der_Anwendung.png" width="800"></p>
-</p></details>
 
 <br>
 
@@ -176,13 +180,14 @@ The following figures represent the flows for the respective actions using the f
 - sysrepo
 - jansson
 - ulfius
+- open62541
 
 In addition to the packages, the necessary sysrepo YANG modules( [ieee802-dot1q-tsn-types.yang](src/sysrepo/ieee802-dot1q-tsn-types.yang) & [control-tsn-uni.yang](src/sysrepo/control-tsn-uni.yang)) must be installed. This can be done by the following commands (assuming we are in the folder `src/sysrepo`):
 - `sysrepoctl -i ieee802-dot1q-tsn-types.yang`
 - `sysrepoctl -i control-tsn-uni.yang`
 
-After that a [initial configuration](src/sysrepo/initial2.xml) can be loaded into the datastore:
-- `sysrepocfg --import=initial2.xml -d running -m control-tsn-uni`
+After that a [initial configuration](src/sysrepo/example.xml) can be loaded into the datastore:
+- `sysrepocfg --import=example.xml -d running -m control-tsn-uni`
 
 See [HELPERS.md](src/sysrepo/HELPERS.md) for more sysrepo commands.
 
@@ -205,11 +210,8 @@ The `RESTModule` starts a webserver which can be used to interact with the frame
 
 ## Todos
 The following list only serves to store all open items and does not include any prioritization.
-- The [sysrepo plugin](src/sysrepo/plugin/controltsn_plugin.c) must be adapted to the new events and data models.
 - The [common interface](src/common.c) implements many functions that simply call another function of the [sysrepo client](src/sysrepo/sysrepo_client.c) . There could be removed for the sake of clarity.
 - CUC module currently uses REST as interface to CNC. According to IEEE 802.1Qdj NETCONF or RESTCONF is provided for this purpose. Accordingly, this must be implemented.
-- Also currently only the method to compute a set of stream requests from the CUC to the CNC is implemented [cnc_compute_requests](src/modules/CUC/module_cuc.h). According to the standard, several methods are provided for the User Network Interface (UNI), such as addListener. The CUC module must be extended accordingly by these methods
+- Also currently only the method to compute a set of stream requests from the CUC to the CNC is implemented [cnc_compute_requests](src/modules/CUC/module_cuc.h). According to the standard, several methods are provided for the User Network Interface (UNI), such as joinListener. The CUC module must be extended accordingly by these methods.
 
-
-## Engineering Overview 
-<img src="images/EngineeringOverview.svg">
+> **Feel free to report other open points**

@@ -1,3 +1,8 @@
+/*
+ * Copyright (C) 2023 Institute for Control Engineering of Machine Tools and Manufacturing Units at the University of Stuttgart
+ * Author Stefan Oechsle <stefan.oechsle@isw.uni-stuttgart.de>
+ */
+
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>

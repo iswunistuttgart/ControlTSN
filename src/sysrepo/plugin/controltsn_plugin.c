@@ -1,7 +1,6 @@
-/**
- * @file controltsn.c
- * @author Stefan Oechsle <stefan.oechsle@isw.uni-stuttgart.de>
- * @brief ControlTSN Sysrepo plugin. 
+/*
+ * Copyright (C) 2023 Institute for Control Engineering of Machine Tools and Manufacturing Units at the University of Stuttgart
+ * Author Stefan Oechsle <stefan.oechsle@isw.uni-stuttgart.de>
  * 
  * This plugin monitors the changes in the sysrepo configuration for the ControlTSN module.
  * If certain changes occur, such as the request for a new stream, corresponding notifications are sent.

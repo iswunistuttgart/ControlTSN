@@ -1,3 +1,8 @@
+/*
+ * Copyright (C) 2023 Institute for Control Engineering of Machine Tools and Manufacturing Units at the University of Stuttgart
+ * Author Stefan Oechsle <stefan.oechsle@isw.uni-stuttgart.de>
+ */
+
 #include <unistd.h>
 #include <signal.h>
 #include <string.h>
@@ -697,74 +702,8 @@ deploy_configuration(TSN_Enddevice *enddevice, bool is_listener, uint16_t listen
         return EXIT_FAILURE;
     }
 
-    /*
-    // ---------------------------------------------------------
-    // Write configuration to the OPC UA Server of the enddevice
-    //
-    // IMPORTANT NOTE:
-    // The actual data model is defined in the Part 22 Base Network Model (BNM). 
-    // In the current implementation, a simplified data model is used to 
-    // primarily demonstrate and validate how it works. 
-    // The following configurations are currently transmitted to the endpoint:
-    // - Stream ID
-    // - VLAN ID
-    // - Qbv Offset
-    //
-    // The plan for the further development is to switch to the actual BNM.
-    //
-    // ---------------------------------------------------------
-    my_variant = UA_Variant_new();
-
-    //UA_String string_value = UA_STRING((char *) stream_configuration->talker.interface_configuration.interface_list[0].mac_address);
-    
-    // Stream ID
-    nodeID = UA_NODEID_STRING(1, "Stream ID");
-    UA_String streamID = UA_STRING((char *) stream_id);
-    UA_Variant_setScalarCopy(my_variant, &streamID, &UA_TYPES[UA_TYPES_STRING]);
-    retval = UA_Client_writeValueAttribute(client, nodeID, my_variant);
-    if (retval != UA_STATUSCODE_GOOD) {
-        printf("[CUC][OPCUA][ERROR] Failed to write 'Stream ID' to %s!\n", enddevice->interface_uri);
-        //goto cleanup;
-    } else {
-        printf("[CUC][OPCUA] Successfully written 'Stream ID' to enddevice!\n");
-    }
-
-    // Here we assume following config_list (see: /src/CNC/cnc_prototype.c, from line 112)
-    // [0] --> ieee802_mac_addresses
-    // [1] --> ieee802_vlan_tag
-    // [2] --> time_aware_offset
-    // TODO:  --> Implement a function to find the correct entries for the endpoint variables
-
-    // VLAN ID
-    nodeID = UA_NODEID_STRING(1, "VLAN ID");
-    UA_UInt16 vlanID = (UA_UInt16) stream_configuration->talker.interface_configuration.interface_list[0].config_list[1].ieee802_vlan_tag->vlan_id;
-    UA_Variant_setScalarCopy(my_variant, &vlanID, &UA_TYPES[UA_TYPES_UINT16]);
-    retval = UA_Client_writeValueAttribute(client, nodeID, my_variant);
-    if (retval != UA_STATUSCODE_GOOD) {
-        printf("[CUC][OPCUA][ERROR] Failed to write 'VLAN ID' to %s!\n", enddevice->interface_uri);
-        //goto cleanup;
-    } else {
-        printf("[CUC][OPCUA] Successfully written 'VLAN ID' to enddevice!\n");
-    }
-
-    // Qbv Offset
-    nodeID = UA_NODEID_STRING(1, "Qbv Offset");
-    UA_UInt32 qbvOffset = (UA_UInt32) stream_configuration->talker.interface_configuration.interface_list[0].config_list[2].time_aware_offset;
-    UA_Variant_setScalarCopy(my_variant, &qbvOffset, &UA_TYPES[UA_TYPES_UINT32]);
-    retval = UA_Client_writeValueAttribute(client, nodeID, my_variant);
-    if (retval != UA_STATUSCODE_GOOD) {
-        printf("[CUC][OPCUA][ERROR] Failed to write 'Qbv Offset' to %s!\n", enddevice->interface_uri);
-        //goto cleanup;
-    } else {
-        printf("[CUC][OPCUA] Successfully written 'Qbv Offset' to enddevice!\n");
-    }
-    */
-
-    // ------------------------------------------------------------------
     // Deploy Configuration based on the BNM of OPC UA (Part 22)
-
     deploy_bnm(client, is_listener, listener_nr, stream);
-    // ------------------------------------------------------------------
 
 
 cleanup:

@@ -2,3 +2,6 @@ build
 .vscode
 src/testing
 src/sysrepo/plugin/controltsn_plugin.so
+src/sysrepo/testdata
+
+src_generated/bnm_test

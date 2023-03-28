@@ -1,3 +1,8 @@
+/*
+ * Copyright (C) 2023 Institute for Control Engineering of Machine Tools and Manufacturing Units at the University of Stuttgart
+ * Author Stefan Oechsle <stefan.oechsle@isw.uni-stuttgart.de>
+ */
+
 #include <stdio.h>
 #include <ulfius.h>
 #include <signal.h>
@@ -76,6 +81,7 @@ _cb_event(TSN_Event_CB_Data data)
             goto cleanup_export;
         }
 
+        
         struct _u_response response;
         struct _u_request request;
         ulfius_init_request(&request);
@@ -85,18 +91,17 @@ _cb_event(TSN_Event_CB_Data data)
         json_t *json_body = NULL;
         json_body = serialize_uni(uni);
         ulfius_set_json_body_request(&request, json_body);
-
         int ret = ulfius_send_http_request(&request, &response);
         if (ret == U_OK && response.status == 200) {
             printf("[REST][CB] Successfully exported data to '%s'!\n", request.http_url);
         } else {
             printf("[REST][CB][ERROR]: Failure sending data to API '%s'!\n", request.http_url);
         }
+        ulfius_clean_response(&response);
+        ulfius_clean_request(&request);
 
 cleanup_export:
         free(uni);
-        ulfius_clean_response(&response);
-        ulfius_clean_request(&request);
     }
 
     return;
@@ -1329,9 +1334,7 @@ main(void)
     rc = module_get_data(this_module->id, &module_data);
     if (module_data) {
 
-        // To this URL the saved data will be exported to Sysrepo. 
-        // The reason is the fulfillment of the technical parameters 
-        // from the proposal (several protocols --> here JSON; up to 10000 data).
+        // To this URL the saved data from Sysrepo will be exported. 
         TSN_Module_Data_Entry *export_api_entry = module_get_data_entry(module_data, MODULE_DATA_EXPORT_REST_API_URL);
         if (export_api_entry) {
             export_rest_api = strdup(export_api_entry->value.string_val);
