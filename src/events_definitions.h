@@ -19,7 +19,7 @@
 #define EVENT_STREAM_DELETED                0x00000008
 #define EVENT_STREAM_MODIFIED               0x00000010
 #define EVENT_STREAM_COMPUTATION_REQUESTED  0x00000020
-//#define ...                               0x00000040
+#define EVENT_STREAM_DEPLOY                 0x00000040
 //#define ...                               0x00000080
 
 // Modules related

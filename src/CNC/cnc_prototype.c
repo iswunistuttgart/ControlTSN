@@ -261,7 +261,7 @@ _api_streams_compute_requests(const struct _u_request *request, struct _u_respon
     // Compute the configuration for the requests
     printf("[CNC] Computing stream requests ... \n");
     // TODO this is just a placeholder and should be replaced by the real cnc functionality 
-    sleep(1);
+    sleep(2);
     printf("[CNC] Finished! Sending back stream configurations\n");
 
     json_t *body = _test_emulate_stream_computation(streams);

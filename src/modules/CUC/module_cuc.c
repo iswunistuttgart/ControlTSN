@@ -74,7 +74,7 @@ cnc_discover_topology()
         }
 
     } else {
-        printf("[CUC] Failure sending request to CNC at '%s'\n", cnc_url);
+        printf("[CUC] Failure sending request to CNC at '%s'\n", cnc_url); 
     }
 
     ulfius_clean_response(&response);
@@ -130,6 +130,10 @@ cnc_compute_requests(TSN_Streams *streams)
         }
     } else {
         printf("[CUC] Failure sending request to CNC at '%s'\n", request.http_url);
+        // Send an error notification
+        char *notif_msg = (char *) malloc(strlen("[CUC] Failure sending request to CNC at ''") + strlen(cnc_url));
+        sprintf(notif_msg, "[CUC] Failure sending request to CNC at '%s'", cnc_url);
+        rc = sysrepo_send_notification(EVENT_ERROR, NULL, notif_msg);
     }
 
     ulfius_clean_response(&response);
@@ -688,6 +692,10 @@ deploy_configuration(TSN_Enddevice *enddevice, bool is_listener, uint16_t listen
     // Check if the enddevice has a interface URI
     if (!enddevice || !enddevice->interface_uri) {
         printf("[CUC][ERROR] Could not deploy stream configuration to enddevice (%s) because of missing interface URI!\n", enddevice->mac);
+        // Send an error notification
+        char *notif_msg = (char *) malloc(strlen("[CUC] Could not deploy stream configuration to enddevice () because of missing interface URI!") + strlen(enddevice->mac));
+        sprintf(notif_msg, "[CUC] Could not deploy stream configuration to enddevice (%s) because of missing interface URI!", enddevice->mac);
+        rc = sysrepo_send_notification(EVENT_ERROR, NULL, notif_msg);
     }
 
     // Connect to the server
@@ -698,6 +706,11 @@ deploy_configuration(TSN_Enddevice *enddevice, bool is_listener, uint16_t listen
     retval = UA_Client_connect(client, enddevice->interface_uri);
     if (retval != UA_STATUSCODE_GOOD) {
         printf("[CUC][ERROR] Could not connect to OPC UA Server '%s'\n", enddevice->interface_uri);
+        // Send an error notification
+        char *notif_msg = (char *) malloc(strlen("[CUC] Could not connect to OPC UA Server ''") + strlen(enddevice->interface_uri));
+        sprintf(notif_msg, "[CUC] Could not connect to OPC UA Server '%s'", enddevice->interface_uri);
+        rc = sysrepo_send_notification(EVENT_ERROR, NULL, notif_msg);
+        
         UA_Client_delete(client);
         return EXIT_FAILURE;
     }
@@ -753,6 +766,11 @@ _cb_event(TSN_Event_CB_Data data)
         free(streams);
     }
 
+    else if (data.event_id == EVENT_STREAM_DELETED) {
+        printf("[CUC][CB] Stream was deleted!\n");
+        // TODO: Handle deleted stream --> inform CNC?
+    }
+
     /*
     else if (data.event_id == EVENT_STREAM_CONFIGURED) {
         printf("[CUC][CB] Stream '%s' configured!\n", data.entry_id);
@@ -802,8 +820,12 @@ _cb_event(TSN_Event_CB_Data data)
     }
     */
 
-    else if (data.event_id == EVENT_STREAM_CONFIGURED) {
-        printf("[CUC][CB] Stream '%s' configured! Deploying the configuration to the enddevices...\n", data.entry_id);
+    else if ((data.event_id == EVENT_STREAM_CONFIGURED) || (data.event_id == EVENT_STREAM_DEPLOY)) {
+        if (data.event_id == EVENT_STREAM_CONFIGURED) {
+            printf("[CUC][CB] Stream '%s' configured! Deploying the configuration to the enddevices...\n", data.entry_id);
+        } else {
+            printf("[CUC][CB] Deploy configuration of stream '%s' to the enddevices \n", data.entry_id);
+        }
         
         TSN_Stream *configured_stream = malloc(sizeof(TSN_Stream));
         rc = sysrepo_get_stream(data.entry_id, &configured_stream);

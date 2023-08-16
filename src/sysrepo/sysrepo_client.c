@@ -38,10 +38,20 @@ sysrepo_connect()
         return EXIT_SUCCESS;
     }
 
-    // Trigger the sysrepo plugin daemon
-    // the plugin itself checks if an instance is already runnning to prevent starting multiple instances
+    // Check if the plugin is already running to prevent starting multiple instances
     // and thus sending the same events multiple times
-    system("sysrepo-plugind");
+    char buf[512];
+    FILE *cmd_pipe = popen("pidof sysrepo-plugind", "r");
+    fgets(buf, 512, cmd_pipe);
+    pid_t plugin_pid = strtoul(buf, NULL, 10);
+    pclose(cmd_pipe);
+    if (plugin_pid > 0) {
+        printf("[SYSREPO] A instance of the plugin with PID '%d' is already running!\n", plugin_pid);
+    } else {
+        // Trigger the sysrepo plugin daemon
+        system("sysrepo-plugind");
+    }
+
 
     // Turn sysrepo logging on
     sr_log_stderr(SR_LL_WRN);
@@ -5302,6 +5312,36 @@ cleanup:
 int
 sysrepo_delete_stream(char *stream_id)
 {
+    // Remove stream ref from stream-mapping of apps
+    TSN_Apps *apps = NULL;
+    apps = malloc(sizeof(TSN_Apps));
+    rc = _read_apps("/control-tsn-uni:tsn-uni/application/apps", &apps);
+    char *xpath_mapping_entry = NULL;
+    for (int i=0; i<apps->count_apps; ++i) {
+        // egress
+        for (int j=0; j<apps->apps[i].stream_mapping.count_egress; ++j) {
+            if (strcmp(stream_id, apps->apps[i].stream_mapping.egress[j]) == 0) {
+                // Remove mapping entry
+                _create_xpath_key_multi("/control-tsn-uni:tsn-uni/application/apps/app[id='%s']/stream-mapping/egress[.='%s']", apps->apps[i].id, apps->apps[i].stream_mapping.egress[j], &xpath_mapping_entry);
+                rc = sr_delete_item(session, xpath_mapping_entry, 0);
+                if (rc != SR_ERR_OK) {
+                    goto cleanup;
+                }
+            }
+        }
+        // ingress
+        for (int j=0; j<apps->apps[i].stream_mapping.count_ingress; ++j) {
+            if (strcmp(stream_id, apps->apps[i].stream_mapping.ingress[j]) == 0) {
+                // Remove mapping entry
+                _create_xpath_key_multi("/control-tsn-uni:tsn-uni/application/apps/app[id='%s']/stream-mapping/ingress[.='%s']", apps->apps[i].id, apps->apps[i].stream_mapping.ingress[j], &xpath_mapping_entry);
+                rc = sr_delete_item(session, xpath_mapping_entry, 0);
+                if (rc != SR_ERR_OK) {
+                    goto cleanup;
+                }
+            }
+        }
+    }
+    
     char *xpath_stream = NULL;
     _create_xpath_key("/control-tsn-uni:tsn-uni/streams/stream[stream-id='%s']", stream_id, &xpath_stream);
 
@@ -5316,6 +5356,8 @@ sysrepo_delete_stream(char *stream_id)
     }
 
 cleanup:
+    free(apps);
+    free(xpath_mapping_entry);
     free(xpath_stream);
 
     return rc ? EXIT_FAILURE : EXIT_SUCCESS;

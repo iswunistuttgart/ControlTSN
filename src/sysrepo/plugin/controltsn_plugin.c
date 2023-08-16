@@ -8,6 +8,7 @@
 
 #include <sysrepo.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "../../events_definitions.h"
 
@@ -202,7 +203,7 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
 
                 if ((already_send_mask & EVENT_STREAM_CONFIGURED) == 0) {
                     char *key = _extract_key(val->xpath, "stream-id");
-                    rc = _send_notification(session, EVENT_STREAM_CONFIGURED, key, "stream configured");
+                    rc = _send_notification(session, EVENT_STREAM_CONFIGURED, key, "stream configuration completed");
                     if (rc == EXIT_FAILURE) {
                         printf("[PLUGIN] Failed to send notification 'EVENT_STREAM_CONFIGURED'!\n");
                     } else {
@@ -363,6 +364,7 @@ sr_plugin_init_cb(sr_session_ctx_t *session, void **private_data)
 
     (void) private_data;
 
+    /*
     // Check if the plugin is already running
     rc = sr_get_item(session, "/control-tsn-uni:tsn-uni/plugin-running", 0, &val_plugin_running);
     if (rc != SR_ERR_OK) {
@@ -387,6 +389,7 @@ sr_plugin_init_cb(sr_session_ctx_t *session, void **private_data)
         printf("[PLUGIN] A instance of the plugin is already running!\n");
         return SR_ERR_OPERATION_FAILED;
     }
+    */
     
 
     // Subscribe for module changes (also causes startup data to be copied into running and enabling the module)

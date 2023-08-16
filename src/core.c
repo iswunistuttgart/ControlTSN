@@ -92,6 +92,20 @@ int main(void)
         }
     }
 
+    // Stop the plugin
+    char buf[512];
+    FILE *cmd_pipe = popen("pidof sysrepo-plugind", "r");
+    fgets(buf, 512, cmd_pipe);
+    pid_t plugin_pid = strtoul(buf, NULL, 10);
+    pclose(cmd_pipe);
+    if (plugin_pid > 0) {
+        if (kill(plugin_pid, SIGTERM) != 0) {
+            printf("[MAIN] Error stopping the Sysrepo Plugin with PID '%d'!\n", plugin_pid);
+        } else {
+            printf("[MAIN] Successfully stopped the Sysrepo Plugin with PID '%d'!\n", plugin_pid);
+        }
+    }
+
 cleanup:
     free(modules);
     free(modules_after);

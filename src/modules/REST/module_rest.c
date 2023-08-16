@@ -150,6 +150,7 @@ _api_index_get(const struct _u_request *request, struct _u_response *response, v
                        "<tr><th>Streams</th></tr>" \
                        "<tr><td><a href='/streams'>/streams</a></td><td>GET</td><td>Get all streams</td></tr>" \
                        "<tr><td><a href='/streams/00-00-00-00-00-00:00-01/delete'>/streams/:stream-id/delete</a></td><td>POST</td><td>Delete a specific stream</td></tr>" \
+                       "<tr><td><a href='/streams/00-00-00-00-00-00:00-01/deploy'>/streams/:stream-id/deploy</a></td><td>POST</td><td>Deploy a specific stream configuration to the enddevices</td></tr>" \
                        "<tr><td><a href='/streams/request'>/streams/request</a></td><td>POST</td><td>Request a new stream</td><td>request (TSN_Request)</td></tr>" \
                        "<tr><td><a href='/streams/compute'>/streams/compute</a></td><td>POST</td><td>Trigger the computation of all stream requests</td><td></td></tr>" \
                        // Applications
@@ -656,6 +657,22 @@ _api_streams_delete(const struct _u_request *request, struct _u_response *respon
 }
 
 static int
+_api_streams_deploy(const struct _u_request *request, struct _u_response *response, void *user_data)
+{
+    const char *url_id = u_map_get(request->map_url, "stream-id");
+    if (url_id == NULL) {
+        return U_CALLBACK_ERROR;
+    }
+    char *stream_id = strdup(url_id);
+    rc = sysrepo_send_notification(EVENT_STREAM_DEPLOY, stream_id, "deploy stream configuration");
+    if (rc == EXIT_FAILURE) {
+        return U_CALLBACK_ERROR;
+    }
+
+    return U_CALLBACK_COMPLETE;
+}
+
+static int
 _api_streams_compute(const struct _u_request *request, struct _u_response *response, void *user_data)
 {
     rc =sysrepo_send_notification(EVENT_STREAM_COMPUTATION_REQUESTED, NULL, "stream computation requested via REST module");
@@ -916,6 +933,7 @@ _api_application_app_update(const struct _u_request *request, struct _u_response
     json_t *json_post_body;
     TSN_App *app;
     int ret;
+
 
     if (!app_id)
         return U_CALLBACK_ERROR;
@@ -1259,11 +1277,12 @@ _init_server()
     ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_MODULES_ID_DATA,        0, &_api_modules_set_data_id,       NULL);
     ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_MODULES_ID_UPDATE,      0, &_api_modules_update,            NULL);
     // Streams
-    ulfius_add_endpoint_by_val(&server_instance, "GET",     API_PREFIX, API_STREAMS,                    0, &_api_streams_get,               NULL);
-    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_STREAMS_REQUEST,            0, &_api_streams_request,           NULL);
-    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_STREAMS_REQUEST_SIMPLIFIED, 0, &_api_streams_request_simplified, NULL);
-    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_STREAMS_ID_DELETE,          0, &_api_streams_delete,            NULL);
-    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_STREAMS_COMPUTE,            0, &_api_streams_compute,           NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "GET",     API_PREFIX, API_STREAMS,                    0, &_api_streams_get,                   NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_STREAMS_REQUEST,            0, &_api_streams_request,               NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_STREAMS_REQUEST_SIMPLIFIED, 0, &_api_streams_request_simplified,    NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_STREAMS_ID_DELETE,          0, &_api_streams_delete,                NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_STREAMS_COMPUTE,            0, &_api_streams_compute,               NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_STREAMS_ID_DEPLOY,          0, &_api_streams_deploy,                NULL);
 
     // Topology
     ulfius_add_endpoint_by_val(&server_instance, "GET",     API_PREFIX, API_TOPOLOGY,           0, &_api_topology_get,          NULL);

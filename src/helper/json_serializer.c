@@ -1132,7 +1132,6 @@ deserialize_stream_rank(json_t *obj)
     IEEE_StreamRank *x = malloc(sizeof(IEEE_StreamRank));
 
     x->rank = json_integer_value(json_object_get(obj, "rank"));
-
     return x;
 }
 
@@ -2078,6 +2077,7 @@ TSN_App *deserialize_app(json_t *obj)
     json_t *has_image = json_object_get(obj, "has-image");
     json_t *image = json_object_get(obj, "image-ref");
     json_t *params = json_object_get(obj, "parameters");
+    json_t *stream_mapping = json_object_get(obj, "stream-mapping");
     TSN_App *app;
 
     // Invalid request
@@ -2154,7 +2154,6 @@ TSN_App *deserialize_app(json_t *obj)
     }
 
     // Stream Mapping
-    json_t *stream_mapping = json_object_get(obj, "stream-mapping");
     app->stream_mapping = *deserialize_app_stream_mapping(stream_mapping);
 
     return app;

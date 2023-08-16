@@ -257,4 +257,9 @@ int sysrepo_remove_application_app(const char *id);
 // -------------------------------------------------------- //
 int sysrepo_get_uni(TSN_Uni **uni);
 
+// -------------------------------------------------------- //
+// Plugin handling
+// -------------------------------------------------------- //
+int sysrepo_shutdown_plugin();
+
 #endif // __SYSREPO_CLIENT_H__
