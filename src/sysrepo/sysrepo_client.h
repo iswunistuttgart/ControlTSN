@@ -191,6 +191,12 @@ int sysrepo_get_all_devices(TSN_Devices **devices);
  */
 int sysrepo_get_enddevice(char *mac, TSN_Enddevice **enddevice);
 
+/**
+ * @brief Updates the attributes of a specific enddevice
+ * @param enddevice The updated enddevice struct
+*/
+int sysrepo_update_enddevice(TSN_Enddevice *enddevice);
+
 int sysrepo_get_topology_graph(TSN_Graph **graph);
 /**
  * @brief Triggers the discovery of the topology by setting the corresponding flag in the datastore.

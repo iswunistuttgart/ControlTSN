@@ -42,13 +42,15 @@ const char *API_MODULES_ID_DATA         = "/modules/:id/data";
 const char *API_MODULES_ID_UPDATE       = "/modules/:id/update";
 
 // Topology
-const char *API_TOPOLOGY            = "/topology";
-const char *API_TOPOLOGY_DEVICES    = "/topology/devices";
-const char *API_TOPOLOGY_GRAPH      = "/topology/graph";
-const char *API_TOPOLOGY_DISCOVER   = "/topology/discover";
+const char *API_TOPOLOGY                    = "/topology";
+const char *API_TOPOLOGY_DEVICES            = "/topology/devices";
+const char* API_TOPOLOGY_DEVICES_ID_UPDATE  = "/topology/devices/:mac/update";
+const char *API_TOPOLOGY_GRAPH              = "/topology/graph";
+const char *API_TOPOLOGY_DISCOVER           = "/topology/discover";
 
 // Streams
 const char *API_STREAMS                     = "/streams";
+const char *API_STREAMS_ID                  = "/streams/:stream-id";
 const char *API_STREAMS_ID_DELETE           = "/streams/:stream-id/delete";
 const char *API_STREAMS_REQUEST             = "/streams/request";
 const char *API_STREAMS_REQUEST_SIMPLIFIED  = "/streams/request-simplified";

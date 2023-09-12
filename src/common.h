@@ -143,6 +143,14 @@ TSN_Module_Data_Entry *module_get_data_entry(TSN_Module_Data *module_data, const
 int streams_get_all(TSN_Streams **streams, uint8_t without_configured_ones);
 
 /**
+ * @brief Get a specific stream based on the streamId
+ * @param stream_id The ID of the stream
+ * @param stream The TSN_Stream strcut to write on
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+*/
+int streams_get(char *stream_id, TSN_Stream **stream);
+
+/**
  * @brief Converts the user (or app) requirements to the request model that the CUC expects.
  * NOTICE: I am not sure if this function should be part of the CUC (i.e. the CUC would only get the user requirements as input)
  * or if a middleware like this engineering framework can/should handle it.

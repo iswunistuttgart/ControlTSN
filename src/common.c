@@ -245,6 +245,13 @@ streams_get_all(TSN_Streams **streams, uint8_t without_configured_ones)
     return ret;
 }
 
+int 
+streams_get(char *stream_id, TSN_Stream **stream)
+{
+    ret = sysrepo_get_stream(stream_id, stream);
+    return ret;
+}
+
 TSN_Request
 create_stream_request(TSN_Enddevice *talker_device,
                       uint16_t count_listeners,
