@@ -1502,19 +1502,21 @@ serialize_enddevice(TSN_Enddevice *enddevice)
 
     json_object_set_new(root, "name", json_string(enddevice->name));
     json_object_set_new(root, "mac", json_string(enddevice->mac));
+    json_object_set_new(root, "iface", json_string(enddevice->iface));
+    json_object_set_new(root, "num-cores", json_integer(enddevice->num_cores));
     json_object_set_new(root, "interface-uri", json_string(enddevice->interface_uri));
     json_object_set_new(root, "has-app", json_integer(enddevice->has_app));
+    
+    json_t *array_apps = NULL;
+    array_apps = json_array();
     if (enddevice->has_app) {
-        //json_object_set_new(root, "app-ref", json_string(enddevice->app_ref));
-        json_t *array_apps = NULL;
-        array_apps = json_array();
         for (int i=0; i<enddevice->count_apps; ++i) {
             json_t *ar = NULL;
             ar = serialize_enddevice_app_ref(&enddevice->apps[i]);
             json_array_append_new(array_apps, ar);
         }
-        json_object_set_new(root, "apps", array_apps);
     }
+    json_object_set_new(root, "apps", array_apps);
 
     return root;
 }
@@ -1637,6 +1639,8 @@ deserialize_enddevice(json_t *obj)
     TSN_Enddevice *enddevice = malloc(sizeof(TSN_Enddevice));
     json_t *name;
     json_t *mac;
+    json_t *num_cores;
+    json_t *iface;
     json_t *interface_uri;
     json_t *has_app;
 
@@ -1645,6 +1649,12 @@ deserialize_enddevice(json_t *obj)
 
     mac = json_object_get(obj, "mac");
     enddevice->mac = strdup(json_string_value(mac));
+
+    num_cores = json_object_get(obj, "num-cores");
+    enddevice->num_cores = json_integer_value(num_cores);
+
+    iface = json_object_get(obj, "iface");
+    enddevice->iface = strdup(json_string_value(iface));
 
     interface_uri = json_object_get(obj, "interface-uri");
     enddevice->interface_uri = strdup(json_string_value(interface_uri));
@@ -1827,10 +1837,15 @@ serialize_app(TSN_App *app)
     json_object_set_new(root, "name", json_string(app->name));
     json_object_set_new(root, "description", json_string(app->description));
     json_object_set_new(root, "has-mac", json_integer(app->has_mac));
-    json_object_set_new(root, "mac", json_string(app->mac));
+    if (app->has_mac) {
+        json_object_set_new(root, "mac", json_string(app->mac));
+    }
+    json_object_set_new(root, "iface", json_string(app->iface));
     json_object_set_new(root, "version", json_string(app->version));
     json_object_set_new(root, "has-image", json_integer(app->has_image));
-    json_object_set_new(root, "image-ref", json_string(app->image_ref));
+    if (app->has_image) {
+        json_object_set_new(root, "image-ref", json_string(app->image_ref));
+    }
 
     //json_object_set_new(root, "count-parameters", json_integer(app->count_parameters));
     // Parameters
@@ -2073,6 +2088,7 @@ TSN_App *deserialize_app(json_t *obj)
     json_t *desc = json_object_get(obj, "description");
     json_t *has_mac = json_object_get(obj, "has-mac");
     json_t *mac = json_object_get(obj, "mac");
+    json_t *iface = json_object_get(obj, "iface");
     json_t *version = json_object_get(obj, "version");
     json_t *has_image = json_object_get(obj, "has-image");
     json_t *image = json_object_get(obj, "image-ref");
@@ -2120,6 +2136,11 @@ TSN_App *deserialize_app(json_t *obj)
         }
     }
 
+    // Iface
+    app->iface = strdup(json_string_value(iface));
+    if (!app->iface) 
+        goto err3_3;
+
     // Description
     app->description = strdup(json_string_value(desc));
     if (!app->description)
@@ -2162,6 +2183,8 @@ err5:
     free(app->description);
 err4:
     free(app->version);
+err3_3:
+    free(app->iface);
 err3_2:
     free(app->mac);
 err3:

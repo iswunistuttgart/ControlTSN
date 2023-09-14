@@ -17,6 +17,7 @@ UA_NODEID_NUMERIC(ns[0], 45LU),
 UA_QUALIFIEDNAME(ns[1], "TSNApplicationParameter"),
  UA_NODEID_NULL,
 (const UA_NodeAttributes*)&attr, &UA_TYPES[UA_TYPES_DATATYPEATTRIBUTES],NULL, NULL);
+if (retVal != UA_STATUSCODE_GOOD) return retVal;
 return retVal;
 }
 
@@ -39,7 +40,9 @@ UA_NODEID_NUMERIC(ns[0], 0LU),
 UA_QUALIFIEDNAME(ns[0], "Default JSON"),
 UA_NODEID_NUMERIC(ns[0], 76LU),
 (const UA_NodeAttributes*)&attr, &UA_TYPES[UA_TYPES_OBJECTATTRIBUTES],NULL, NULL);
+if (retVal != UA_STATUSCODE_GOOD) return retVal;
 retVal |= UA_Server_addReference(server, UA_NODEID_NUMERIC(ns[1], 5006LU), UA_NODEID_NUMERIC(ns[0], 38LU), UA_EXPANDEDNODEID_NUMERIC(ns[1], 3008LU), false);
+if (retVal != UA_STATUSCODE_GOOD) return retVal;
 return retVal;
 }
 
@@ -62,7 +65,9 @@ UA_NODEID_NUMERIC(ns[0], 0LU),
 UA_QUALIFIEDNAME(ns[0], "Default XML"),
 UA_NODEID_NUMERIC(ns[0], 76LU),
 (const UA_NodeAttributes*)&attr, &UA_TYPES[UA_TYPES_OBJECTATTRIBUTES],NULL, NULL);
+if (retVal != UA_STATUSCODE_GOOD) return retVal;
 retVal |= UA_Server_addReference(server, UA_NODEID_NUMERIC(ns[1], 5005LU), UA_NODEID_NUMERIC(ns[0], 38LU), UA_EXPANDEDNODEID_NUMERIC(ns[1], 3008LU), false);
+if (retVal != UA_STATUSCODE_GOOD) return retVal;
 return retVal;
 }
 
@@ -85,7 +90,9 @@ UA_NODEID_NUMERIC(ns[0], 0LU),
 UA_QUALIFIEDNAME(ns[0], "Default Binary"),
 UA_NODEID_NUMERIC(ns[0], 76LU),
 (const UA_NodeAttributes*)&attr, &UA_TYPES[UA_TYPES_OBJECTATTRIBUTES],NULL, NULL);
+if (retVal != UA_STATUSCODE_GOOD) return retVal;
 retVal |= UA_Server_addReference(server, UA_NODEID_NUMERIC(ns[1], 5004LU), UA_NODEID_NUMERIC(ns[0], 38LU), UA_EXPANDEDNODEID_NUMERIC(ns[1], 3008LU), false);
+if (retVal != UA_STATUSCODE_GOOD) return retVal;
 return retVal;
 }
 
@@ -108,6 +115,7 @@ UA_NODEID_NUMERIC(ns[0], 45LU),
 UA_QUALIFIEDNAME(ns[1], "TSNApplicationEngineeringParameters"),
  UA_NODEID_NULL,
 (const UA_NodeAttributes*)&attr, &UA_TYPES[UA_TYPES_DATATYPEATTRIBUTES],NULL, NULL);
+if (retVal != UA_STATUSCODE_GOOD) return retVal;
 return retVal;
 }
 
@@ -130,7 +138,9 @@ UA_NODEID_NUMERIC(ns[0], 0LU),
 UA_QUALIFIEDNAME(ns[0], "Default JSON"),
 UA_NODEID_NUMERIC(ns[0], 76LU),
 (const UA_NodeAttributes*)&attr, &UA_TYPES[UA_TYPES_OBJECTATTRIBUTES],NULL, NULL);
+if (retVal != UA_STATUSCODE_GOOD) return retVal;
 retVal |= UA_Server_addReference(server, UA_NODEID_NUMERIC(ns[1], 5003LU), UA_NODEID_NUMERIC(ns[0], 38LU), UA_EXPANDEDNODEID_NUMERIC(ns[1], 3004LU), false);
+if (retVal != UA_STATUSCODE_GOOD) return retVal;
 return retVal;
 }
 
@@ -153,7 +163,9 @@ UA_NODEID_NUMERIC(ns[0], 0LU),
 UA_QUALIFIEDNAME(ns[0], "Default XML"),
 UA_NODEID_NUMERIC(ns[0], 76LU),
 (const UA_NodeAttributes*)&attr, &UA_TYPES[UA_TYPES_OBJECTATTRIBUTES],NULL, NULL);
+if (retVal != UA_STATUSCODE_GOOD) return retVal;
 retVal |= UA_Server_addReference(server, UA_NODEID_NUMERIC(ns[1], 5002LU), UA_NODEID_NUMERIC(ns[0], 38LU), UA_EXPANDEDNODEID_NUMERIC(ns[1], 3004LU), false);
+if (retVal != UA_STATUSCODE_GOOD) return retVal;
 return retVal;
 }
 
@@ -176,7 +188,9 @@ UA_NODEID_NUMERIC(ns[0], 0LU),
 UA_QUALIFIEDNAME(ns[0], "Default Binary"),
 UA_NODEID_NUMERIC(ns[0], 76LU),
 (const UA_NodeAttributes*)&attr, &UA_TYPES[UA_TYPES_OBJECTATTRIBUTES],NULL, NULL);
+if (retVal != UA_STATUSCODE_GOOD) return retVal;
 retVal |= UA_Server_addReference(server, UA_NODEID_NUMERIC(ns[1], 5001LU), UA_NODEID_NUMERIC(ns[0], 38LU), UA_EXPANDEDNODEID_NUMERIC(ns[1], 3004LU), false);
+if (retVal != UA_STATUSCODE_GOOD) return retVal;
 return retVal;
 }
 
@@ -199,6 +213,7 @@ UA_NODEID_NUMERIC(ns[0], 45LU),
 UA_QUALIFIEDNAME(ns[1], "TSNApplication"),
  UA_NODEID_NULL,
 (const UA_NodeAttributes*)&attr, &UA_TYPES[UA_TYPES_DATATYPEATTRIBUTES],NULL, NULL);
+if (retVal != UA_STATUSCODE_GOOD) return retVal;
 return retVal;
 }
 
@@ -221,7 +236,9 @@ UA_NODEID_NUMERIC(ns[0], 0LU),
 UA_QUALIFIEDNAME(ns[0], "Default JSON"),
 UA_NODEID_NUMERIC(ns[0], 76LU),
 (const UA_NodeAttributes*)&attr, &UA_TYPES[UA_TYPES_OBJECTATTRIBUTES],NULL, NULL);
+if (retVal != UA_STATUSCODE_GOOD) return retVal;
 retVal |= UA_Server_addReference(server, UA_NODEID_NUMERIC(ns[1], 5009LU), UA_NODEID_NUMERIC(ns[0], 38LU), UA_EXPANDEDNODEID_NUMERIC(ns[1], 3005LU), false);
+if (retVal != UA_STATUSCODE_GOOD) return retVal;
 return retVal;
 }
 
@@ -244,7 +261,9 @@ UA_NODEID_NUMERIC(ns[0], 0LU),
 UA_QUALIFIEDNAME(ns[0], "Default XML"),
 UA_NODEID_NUMERIC(ns[0], 76LU),
 (const UA_NodeAttributes*)&attr, &UA_TYPES[UA_TYPES_OBJECTATTRIBUTES],NULL, NULL);
+if (retVal != UA_STATUSCODE_GOOD) return retVal;
 retVal |= UA_Server_addReference(server, UA_NODEID_NUMERIC(ns[1], 5008LU), UA_NODEID_NUMERIC(ns[0], 38LU), UA_EXPANDEDNODEID_NUMERIC(ns[1], 3005LU), false);
+if (retVal != UA_STATUSCODE_GOOD) return retVal;
 return retVal;
 }
 
@@ -267,7 +286,9 @@ UA_NODEID_NUMERIC(ns[0], 0LU),
 UA_QUALIFIEDNAME(ns[0], "Default Binary"),
 UA_NODEID_NUMERIC(ns[0], 76LU),
 (const UA_NodeAttributes*)&attr, &UA_TYPES[UA_TYPES_OBJECTATTRIBUTES],NULL, NULL);
+if (retVal != UA_STATUSCODE_GOOD) return retVal;
 retVal |= UA_Server_addReference(server, UA_NODEID_NUMERIC(ns[1], 5007LU), UA_NODEID_NUMERIC(ns[0], 38LU), UA_EXPANDEDNODEID_NUMERIC(ns[1], 3005LU), false);
+if (retVal != UA_STATUSCODE_GOOD) return retVal;
 return retVal;
 }
 
@@ -290,6 +311,7 @@ UA_NODEID_NUMERIC(ns[0], 47LU),
 UA_QUALIFIEDNAME(ns[1], "https://isw.uni-stuttgart.de/TSNEndpointModel/"),
 UA_NODEID_NUMERIC(ns[0], 11616LU),
 (const UA_NodeAttributes*)&attr, &UA_TYPES[UA_TYPES_OBJECTATTRIBUTES],NULL, NULL);
+if (retVal != UA_STATUSCODE_GOOD) return retVal;
 return retVal;
 }
 
@@ -318,6 +340,7 @@ UA_NODEID_NUMERIC(ns[0], 46LU),
 UA_QUALIFIEDNAME(ns[0], "StaticStringNodeIdPattern"),
 UA_NODEID_NUMERIC(ns[0], 68LU),
 (const UA_NodeAttributes*)&attr, &UA_TYPES[UA_TYPES_VARIABLEATTRIBUTES],NULL, NULL);
+if (retVal != UA_STATUSCODE_GOOD) return retVal;
 return retVal;
 }
 
@@ -349,6 +372,7 @@ UA_NODEID_NUMERIC(ns[0], 46LU),
 UA_QUALIFIEDNAME(ns[0], "StaticNumericNodeIdRange"),
 UA_NODEID_NUMERIC(ns[0], 68LU),
 (const UA_NodeAttributes*)&attr, &UA_TYPES[UA_TYPES_VARIABLEATTRIBUTES],NULL, NULL);
+if (retVal != UA_STATUSCODE_GOOD) return retVal;
 return retVal;
 }
 
@@ -380,6 +404,7 @@ UA_NODEID_NUMERIC(ns[0], 46LU),
 UA_QUALIFIEDNAME(ns[0], "StaticNodeIdTypes"),
 UA_NODEID_NUMERIC(ns[0], 68LU),
 (const UA_NodeAttributes*)&attr, &UA_TYPES[UA_TYPES_VARIABLEATTRIBUTES],NULL, NULL);
+if (retVal != UA_STATUSCODE_GOOD) return retVal;
 return retVal;
 }
 
@@ -413,6 +438,7 @@ UA_NODEID_NUMERIC(ns[0], 46LU),
 UA_QUALIFIEDNAME(ns[0], "NamespaceVersion"),
 UA_NODEID_NUMERIC(ns[0], 68LU),
 (const UA_NodeAttributes*)&attr, &UA_TYPES[UA_TYPES_VARIABLEATTRIBUTES],NULL, NULL);
+if (retVal != UA_STATUSCODE_GOOD) return retVal;
 UA_String_delete(variablenode_ns_1_i_6015_variant_DataContents);
 return retVal;
 }
@@ -447,6 +473,7 @@ UA_NODEID_NUMERIC(ns[0], 46LU),
 UA_QUALIFIEDNAME(ns[0], "NamespaceUri"),
 UA_NODEID_NUMERIC(ns[0], 68LU),
 (const UA_NodeAttributes*)&attr, &UA_TYPES[UA_TYPES_VARIABLEATTRIBUTES],NULL, NULL);
+if (retVal != UA_STATUSCODE_GOOD) return retVal;
 UA_String_delete(variablenode_ns_1_i_6014_variant_DataContents);
 return retVal;
 }
@@ -481,6 +508,7 @@ UA_NODEID_NUMERIC(ns[0], 46LU),
 UA_QUALIFIEDNAME(ns[0], "NamespacePublicationDate"),
 UA_NODEID_NUMERIC(ns[0], 68LU),
 (const UA_NodeAttributes*)&attr, &UA_TYPES[UA_TYPES_VARIABLEATTRIBUTES],NULL, NULL);
+if (retVal != UA_STATUSCODE_GOOD) return retVal;
 UA_DateTime_delete(variablenode_ns_1_i_6013_variant_DataContents);
 return retVal;
 }
@@ -515,6 +543,7 @@ UA_NODEID_NUMERIC(ns[0], 46LU),
 UA_QUALIFIEDNAME(ns[0], "IsNamespaceSubset"),
 UA_NODEID_NUMERIC(ns[0], 68LU),
 (const UA_NodeAttributes*)&attr, &UA_TYPES[UA_TYPES_VARIABLEATTRIBUTES],NULL, NULL);
+if (retVal != UA_STATUSCODE_GOOD) return retVal;
 UA_Boolean_delete(variablenode_ns_1_i_6012_variant_DataContents);
 return retVal;
 }
@@ -538,6 +567,7 @@ UA_NODEID_NUMERIC(ns[0], 35LU),
 UA_QUALIFIEDNAME(ns[1], "Endpoint"),
 UA_NODEID_NUMERIC(ns[0], 58LU),
 (const UA_NodeAttributes*)&attr, &UA_TYPES[UA_TYPES_OBJECTATTRIBUTES],NULL, NULL);
+if (retVal != UA_STATUSCODE_GOOD) return retVal;
 return retVal;
 }
 
@@ -569,6 +599,7 @@ UA_NODEID_NUMERIC(ns[0], 47LU),
 UA_QUALIFIEDNAME(ns[1], "applications"),
 UA_NODEID_NUMERIC(ns[0], 63LU),
 (const UA_NodeAttributes*)&attr, &UA_TYPES[UA_TYPES_VARIABLEATTRIBUTES],NULL, NULL);
+if (retVal != UA_STATUSCODE_GOOD) return retVal;
 return retVal;
 }
 
@@ -591,6 +622,7 @@ UA_NODEID_NUMERIC(ns[0], 47LU),
 UA_QUALIFIEDNAME(ns[1], "system"),
 UA_NODEID_NUMERIC(ns[0], 58LU),
 (const UA_NodeAttributes*)&attr, &UA_TYPES[UA_TYPES_OBJECTATTRIBUTES],NULL, NULL);
+if (retVal != UA_STATUSCODE_GOOD) return retVal;
 return retVal;
 }
 
@@ -613,6 +645,7 @@ UA_NODEID_NUMERIC(ns[0], 47LU),
 UA_QUALIFIEDNAME(ns[1], "network"),
 UA_NODEID_NUMERIC(ns[0], 58LU),
 (const UA_NodeAttributes*)&attr, &UA_TYPES[UA_TYPES_OBJECTATTRIBUTES],NULL, NULL);
+if (retVal != UA_STATUSCODE_GOOD) return retVal;
 return retVal;
 }
 
@@ -653,6 +686,7 @@ UA_NODEID_NUMERIC(ns[0], 47LU),
 UA_QUALIFIEDNAME(ns[1], "TypeDictionary"),
 UA_NODEID_NUMERIC(ns[0], 72LU),
 (const UA_NodeAttributes*)&attr, &UA_TYPES[UA_TYPES_VARIABLEATTRIBUTES],NULL, NULL);
+if (retVal != UA_STATUSCODE_GOOD) return retVal;
 variablenode_ns_1_i_6003_variant_DataContents->data = NULL;
 variablenode_ns_1_i_6003_variant_DataContents->length = 0;
 UA_ByteString_delete(variablenode_ns_1_i_6003_variant_DataContents);
@@ -689,8 +723,10 @@ UA_NODEID_NUMERIC(ns[0], 47LU),
 UA_QUALIFIEDNAME(ns[1], "TSNApplication"),
 UA_NODEID_NUMERIC(ns[0], 69LU),
 (const UA_NodeAttributes*)&attr, &UA_TYPES[UA_TYPES_VARIABLEATTRIBUTES],NULL, NULL);
+if (retVal != UA_STATUSCODE_GOOD) return retVal;
 UA_String_delete(variablenode_ns_1_i_6011_variant_DataContents);
 retVal |= UA_Server_addReference(server, UA_NODEID_NUMERIC(ns[1], 6011LU), UA_NODEID_NUMERIC(ns[0], 39LU), UA_EXPANDEDNODEID_NUMERIC(ns[1], 5008LU), false);
+if (retVal != UA_STATUSCODE_GOOD) return retVal;
 return retVal;
 }
 
@@ -724,8 +760,10 @@ UA_NODEID_NUMERIC(ns[0], 47LU),
 UA_QUALIFIEDNAME(ns[1], "TSNApplicationParameter"),
 UA_NODEID_NUMERIC(ns[0], 69LU),
 (const UA_NodeAttributes*)&attr, &UA_TYPES[UA_TYPES_VARIABLEATTRIBUTES],NULL, NULL);
+if (retVal != UA_STATUSCODE_GOOD) return retVal;
 UA_String_delete(variablenode_ns_1_i_6008_variant_DataContents);
 retVal |= UA_Server_addReference(server, UA_NODEID_NUMERIC(ns[1], 6008LU), UA_NODEID_NUMERIC(ns[0], 39LU), UA_EXPANDEDNODEID_NUMERIC(ns[1], 5005LU), false);
+if (retVal != UA_STATUSCODE_GOOD) return retVal;
 return retVal;
 }
 
@@ -759,8 +797,10 @@ UA_NODEID_NUMERIC(ns[0], 47LU),
 UA_QUALIFIEDNAME(ns[1], "TSNApplicationEngineeringParameters"),
 UA_NODEID_NUMERIC(ns[0], 69LU),
 (const UA_NodeAttributes*)&attr, &UA_TYPES[UA_TYPES_VARIABLEATTRIBUTES],NULL, NULL);
+if (retVal != UA_STATUSCODE_GOOD) return retVal;
 UA_String_delete(variablenode_ns_1_i_6006_variant_DataContents);
 retVal |= UA_Server_addReference(server, UA_NODEID_NUMERIC(ns[1], 6006LU), UA_NODEID_NUMERIC(ns[0], 39LU), UA_EXPANDEDNODEID_NUMERIC(ns[1], 5002LU), false);
+if (retVal != UA_STATUSCODE_GOOD) return retVal;
 return retVal;
 }
 
@@ -794,6 +834,7 @@ UA_NODEID_NUMERIC(ns[0], 46LU),
 UA_QUALIFIEDNAME(ns[0], "NamespaceUri"),
 UA_NODEID_NUMERIC(ns[0], 68LU),
 (const UA_NodeAttributes*)&attr, &UA_TYPES[UA_TYPES_VARIABLEATTRIBUTES],NULL, NULL);
+if (retVal != UA_STATUSCODE_GOOD) return retVal;
 UA_String_delete(variablenode_ns_1_i_6004_variant_DataContents);
 return retVal;
 }
@@ -835,6 +876,7 @@ UA_NODEID_NUMERIC(ns[0], 47LU),
 UA_QUALIFIEDNAME(ns[1], "TypeDictionary"),
 UA_NODEID_NUMERIC(ns[0], 72LU),
 (const UA_NodeAttributes*)&attr, &UA_TYPES[UA_TYPES_VARIABLEATTRIBUTES],NULL, NULL);
+if (retVal != UA_STATUSCODE_GOOD) return retVal;
 variablenode_ns_1_i_6001_variant_DataContents->data = NULL;
 variablenode_ns_1_i_6001_variant_DataContents->length = 0;
 UA_ByteString_delete(variablenode_ns_1_i_6001_variant_DataContents);
@@ -871,8 +913,10 @@ UA_NODEID_NUMERIC(ns[0], 47LU),
 UA_QUALIFIEDNAME(ns[1], "TSNApplication"),
 UA_NODEID_NUMERIC(ns[0], 69LU),
 (const UA_NodeAttributes*)&attr, &UA_TYPES[UA_TYPES_VARIABLEATTRIBUTES],NULL, NULL);
+if (retVal != UA_STATUSCODE_GOOD) return retVal;
 UA_String_delete(variablenode_ns_1_i_6010_variant_DataContents);
 retVal |= UA_Server_addReference(server, UA_NODEID_NUMERIC(ns[1], 6010LU), UA_NODEID_NUMERIC(ns[0], 39LU), UA_EXPANDEDNODEID_NUMERIC(ns[1], 5007LU), false);
+if (retVal != UA_STATUSCODE_GOOD) return retVal;
 return retVal;
 }
 
@@ -906,8 +950,10 @@ UA_NODEID_NUMERIC(ns[0], 47LU),
 UA_QUALIFIEDNAME(ns[1], "TSNApplicationParameter"),
 UA_NODEID_NUMERIC(ns[0], 69LU),
 (const UA_NodeAttributes*)&attr, &UA_TYPES[UA_TYPES_VARIABLEATTRIBUTES],NULL, NULL);
+if (retVal != UA_STATUSCODE_GOOD) return retVal;
 UA_String_delete(variablenode_ns_1_i_6007_variant_DataContents);
 retVal |= UA_Server_addReference(server, UA_NODEID_NUMERIC(ns[1], 6007LU), UA_NODEID_NUMERIC(ns[0], 39LU), UA_EXPANDEDNODEID_NUMERIC(ns[1], 5004LU), false);
+if (retVal != UA_STATUSCODE_GOOD) return retVal;
 return retVal;
 }
 
@@ -941,8 +987,10 @@ UA_NODEID_NUMERIC(ns[0], 47LU),
 UA_QUALIFIEDNAME(ns[1], "TSNApplicationEngineeringParameters"),
 UA_NODEID_NUMERIC(ns[0], 69LU),
 (const UA_NodeAttributes*)&attr, &UA_TYPES[UA_TYPES_VARIABLEATTRIBUTES],NULL, NULL);
+if (retVal != UA_STATUSCODE_GOOD) return retVal;
 UA_String_delete(variablenode_ns_1_i_6005_variant_DataContents);
 retVal |= UA_Server_addReference(server, UA_NODEID_NUMERIC(ns[1], 6005LU), UA_NODEID_NUMERIC(ns[0], 39LU), UA_EXPANDEDNODEID_NUMERIC(ns[1], 5001LU), false);
+if (retVal != UA_STATUSCODE_GOOD) return retVal;
 return retVal;
 }
 
@@ -976,6 +1024,7 @@ UA_NODEID_NUMERIC(ns[0], 46LU),
 UA_QUALIFIEDNAME(ns[0], "NamespaceUri"),
 UA_NODEID_NUMERIC(ns[0], 68LU),
 (const UA_NodeAttributes*)&attr, &UA_TYPES[UA_TYPES_VARIABLEATTRIBUTES],NULL, NULL);
+if (retVal != UA_STATUSCODE_GOOD) return retVal;
 UA_String_delete(variablenode_ns_1_i_6002_variant_DataContents);
 return retVal;
 }

@@ -3,6 +3,31 @@ cmake_minimum_required(VERSION 3.16)
 project(ControlTSN_2)
 
 
+# TSN DEP open62541 generation
+find_package(open62541 REQUIRED)
+
+set(GENERATED_SERVER_OUTPUT ${PROJECT_SOURCE_DIR}/src_generated)
+set(FILE_NS_DIRPREFIX ${PROJECT_SOURCE_DIR}/nodeset)
+#set(TMP_NSURI "http://isw.uni-stuttgart.de/UA/TSN_DEP")
+#configure_file("${PROJECT_SOURCE_DIR}/cmake/empty.bsd.template" "${CMAKE_BINARY_DIR}/model/Opc.Ua.TSN_DEP.Types.bsd")
+
+ua_generate_nodeset_and_datatypes(
+  NAME "tsndep"
+  FILE_NS "${FILE_NS_DIRPREFIX}/TSN_DEP/tsn_dep.xml"
+  OUTPUT_DIR "${GENERATED_SERVER_OUTPUT}"
+  INTERNAL
+)
+
+ua_generate_nodeid_header(
+  NAME "tsndep_nodeids" 
+  FILE_CSV "${FILE_NS_DIRPREFIX}/TSN_DEP/tsn_dep.csv"
+  OUTPUT_DIR "${GENERATED_SERVER_OUTPUT}"
+  TARGET_SUFFIX "ids-tsndep"
+  ID_PREFIX "TSNDEP_"
+)
+
+
+
 ## The Common lib
 add_library(common SHARED src/common.c src/sysrepo/sysrepo_client.c src/type_definitions.c src/logger.c)
 target_link_libraries(common sysrepo)
@@ -16,28 +41,14 @@ add_executable(MainModule src/core.c)
 target_link_libraries(MainModule common)
 
 # MODULE REST
-#add_executable(RESTModule src/modules/REST/module_rest.c src/modules/REST/json_serializer.c)
-#target_link_libraries(RESTModule common ulfius jansson)
 add_executable(RESTModule src/modules/REST/module_rest.c)
 target_link_libraries(RESTModule common ulfius json_serializer)
 
 # MODULE CUC
-add_executable(CUCModule src/modules/CUC/module_cuc.c)
+add_executable(CUCModule src/modules/CUC/module_cuc.c
+                         src_generated/namespace_tsndep_generated.c)
+add_dependencies(CUCModule open62541-generator-ns-tsndep open62541-generator-ids-tsndep)
 target_link_libraries(CUCModule common ulfius open62541 json_serializer)
-#find_package(open62541 REQUIRED)
-#set(GENERATED_SERVER_OUTPUT ${PROJECT_SOURCE_DIR}/src_generated/bnm_test)
-#set(FILE_NS_DIRPREFIX ${PROJECT_SOURCE_DIR}/nodeset/bnm_test)
-
-#ua_generate_nodeset_and_datatypes(
-#  NAME "bnm_test"
-#  FILE_NS "${FILE_NS_DIRPREFIX}/endpointbnm.xml"
-#  OUTPUT_DIR "${GENERATED_SERVER_OUTPUT}"
-#  INTERNAL
-#)
-
-#add_executable(CUCModule src/modules/CUC/module_cuc.c src_generated/bnm_test/namespace_bnm_test_generated.c)
-#add_dependencies(CUCModule open62541-generator-ns-bnm_test)
-#target_link_libraries(CUCModule common ulfius open62541 json_serializer)
 
 # MODULE MONITOR
 add_executable(MonitorModule src/modules/monitor/module_monitor.c)
@@ -49,11 +60,6 @@ target_link_libraries(ContainerModule common ulfius json_serializer)
 target_compile_options(ContainerModule PRIVATE -Wall -Wextra -pedantic)
 
 # MODULE CONFIGURATION
-find_package(open62541 REQUIRED)
-
-set(GENERATED_SERVER_OUTPUT ${PROJECT_SOURCE_DIR}/src_generated)
-set(FILE_NS_DIRPREFIX ${PROJECT_SOURCE_DIR}/nodeset)
-
 ua_generate_nodeset_and_datatypes(
   NAME "endpoint"
   FILE_NS "${FILE_NS_DIRPREFIX}/tsnendpointmodel.xml"

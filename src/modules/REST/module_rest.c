@@ -161,7 +161,7 @@ _api_index_get(const struct _u_request *request, struct _u_response *response, v
                        "<tr><td><a href='/application'>/application</a></td><td>GET</td><td>Get the application containing all apps and images</td></tr>" \
                        "<tr><td><a href='/application/apps'>/application/apps</a></td><td>GET</td><td>Get all stored apps</td></tr>" \
                        "<tr><td><a href='/application/images'>/application/images</a></td><td>GET</td><td>Get all stored images</td></tr>" \
-                       "<tr><td><a href='/application/apps/:id/create'>/application/apps/:id/create</a></td><td>POST</td><td>Create a specific app</td></tr>" \
+                       "<tr><td><a href='/application/apps/create'>/application/apps/create</a></td><td>POST</td><td>Create a specific app</td></tr>" \
                        "<tr><td><a href='/application/apps/:id/delete'>/application/apps/:id/delete</a></td><td>POST</td><td>Delete a specific app</td></tr>" \
                        "<tr><td><a href='/application/apps/:id/start'>/application/apps/:id/start</a></td><td>POST</td><td>Start a specific app</td></tr>" \
                        "<tr><td><a href='/application/apps/:id/stop'>/application/apps/:id/stop</a></td><td>POST</td><td>Stop a specific app</td></tr>" \

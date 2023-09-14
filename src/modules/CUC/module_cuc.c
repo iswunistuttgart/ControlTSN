@@ -19,6 +19,8 @@
 
 #include "../../helper/json_serializer.h"
 
+#include "../../../src_generated/tsndep_nodeids.h"
+
 
 #define EMULATE_OPENCNC      false
 
@@ -675,7 +677,94 @@ cleanup:
     return;
 }
 
+/**
+ * @brief Deploys the configuration for the communication to the endpoint. 
+ * The concept is to use the endpoint architecture (e.g. IEEE CAMAD 2023) in the future. 
+ * There to configuration is splittet into communication, application and deployment.
+ * The endpoint has one interface to receive that configuration (here e.g. OPC UA). 
+ * All configuration data is stored centraly and the deployed applications on the endpoint can get their configuration by an provided interface.
+ *  
+*/
+static void
+deploy_communication_engineering(UA_Client *client, bool is_listener, uint16_t listener_nr, TSN_Stream *stream)
+{
+    int rc;
+    UA_StatusCode ret;
+    UA_Variant *variant;
+    UA_NodeId nodeId;
 
+    variant = UA_Variant_new();
+
+    // BaseTime
+    // ...
+
+    // CycleTime
+    nodeId = UA_NODEID_NUMERIC(7, UA_TSNDEP_ID_PUBSUBENGINEERING_CYCLETIME);
+    UA_Double interval = (UA_Double)stream->request.talker.traffic_specification.interval.numerator / (UA_Double)stream->request.talker.traffic_specification.interval.denominator;
+    UA_UInt32 cycleTimeMicroSeconds = interval * 1000 * 1000;
+    UA_Variant_setScalarCopy(variant, &cycleTimeMicroSeconds, &UA_TYPES[UA_TYPES_UINT32]);
+    ret = UA_Client_writeValueAttribute(client, nodeId, variant);
+    if (ret != UA_STATUSCODE_GOOD) {
+        printf("[CUC][ERROR] Could not write CycleTime to Node ns=%d;i=%d!\n", nodeId.namespaceIndex, nodeId.identifier.numeric);
+    }
+    
+    if (!is_listener) {
+        // Interface
+        nodeId = UA_NODEID_NUMERIC(7, UA_TSNDEP_ID_PUBSUBENGINEERING_INTERFACE);
+        UA_String interface;
+        // Find the Talker App to get the specified interface
+        TSN_App *app_talker = NULL;
+        TSN_Apps *all_apps = malloc(sizeof(TSN_Apps));
+        rc = sysrepo_get_application_apps(&all_apps);
+        if (rc == EXIT_SUCCESS) { 
+            for (int i=0; i<all_apps->count_apps; ++i) {
+                for (int j=0; j<all_apps->apps[i].stream_mapping.count_egress; ++j) {
+                    if (strcmp(all_apps->apps[i].stream_mapping.egress[j], stream->stream_id) == 0) {
+                        app_talker = &all_apps->apps[i];
+                        interface = UA_String_fromChars(app_talker->iface);
+                    }
+                }
+            }
+        }
+        free(app_talker);
+        free(all_apps);
+        if (app_talker == NULL) {
+            // Use the physical interface specified in the stream as a backup
+            interface = UA_String_fromChars(stream->request.talker.end_station_interfaces[0].interface_name);
+        }
+        UA_Variant_setScalarCopy(variant, &interface, &UA_TYPES[UA_TYPES_STRING]);
+        ret = UA_Client_writeValueAttribute(client, nodeId, variant);
+        if (ret != UA_STATUSCODE_GOOD) {
+            printf("[CUC][ERROR] Could not write Interface to Node ns=%d;i=%d!\n", nodeId.namespaceIndex, nodeId.identifier.numeric);
+        } 
+
+
+        // QbvOffset
+        // DestinationMAC
+        // SocketPriority
+    } else {
+        // Interface
+        // SourceMAC
+        // SocketPriority
+    }
+
+    // SendReceiveEnabled   --> Set to FALSE initially 
+    nodeId = UA_NODEID_NUMERIC(7, UA_TSNDEP_ID_PUBSUBENGINEERING_SENDRECEIVEENABLED);
+    UA_Boolean sendReceiveEnabled = UA_FALSE;
+    UA_Variant_setScalarCopy(variant, &sendReceiveEnabled, &UA_TYPES[UA_TYPES_BOOLEAN]);
+    ret = UA_Client_writeValueAttribute(client, nodeId, variant);
+    if (ret != UA_STATUSCODE_GOOD) {
+        printf("[CUC][ERROR] Could not write SendReceiveEnabled to Node ns=%d;i=%d!\n", nodeId.namespaceIndex, nodeId.identifier.numeric);
+    }
+
+
+    // Trigger the re-configuration of the PubSub connection
+
+
+cleanup:
+    UA_Variant_delete(variant);
+    return;
+}
 
 int 
 deploy_configuration(TSN_Enddevice *enddevice, bool is_listener, uint16_t listener_nr, TSN_Stream *stream, char *app_id)
@@ -712,17 +801,23 @@ deploy_configuration(TSN_Enddevice *enddevice, bool is_listener, uint16_t listen
         rc = sysrepo_send_notification(EVENT_ERROR, NULL, notif_msg);
         
         UA_Client_delete(client);
+        printf("[CUC] OPC UA client closed\n");
         return EXIT_FAILURE;
     }
 
     // Deploy Configuration based on the BNM of OPC UA (Part 22)
-    deploy_bnm(client, is_listener, listener_nr, stream);
+    // deploy_bnm(client, is_listener, listener_nr, stream);
+
+    // Deploy Engineering configuration base on Endpoint concept (spliited into Configuration for communication, application and deployment)
+    // see e.g. conference Paper IEEE CAMAD
+    deploy_communication_engineering(client, is_listener, listener_nr, stream);
 
 
 cleanup:
     //UA_Variant_delete(my_variant);
 
     UA_Client_delete(client);
+    printf("[CUC] OPC UA client closed\n");
 
     return EXIT_SUCCESS;
 }
@@ -820,7 +915,8 @@ _cb_event(TSN_Event_CB_Data data)
     }
     */
 
-    else if ((data.event_id == EVENT_STREAM_CONFIGURED) || (data.event_id == EVENT_STREAM_DEPLOY)) {
+    // (data.event_id == EVENT_STREAM_CONFIGURED) removed so that the stream isn't automatically deployed!
+    else if (data.event_id == EVENT_STREAM_DEPLOY) {  
         if (data.event_id == EVENT_STREAM_CONFIGURED) {
             printf("[CUC][CB] Stream '%s' configured! Deploying the configuration to the enddevices...\n", data.entry_id);
         } else {

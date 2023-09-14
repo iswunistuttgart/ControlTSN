@@ -21,7 +21,7 @@
       <name>CUC</name>
       <desc>Represents the Central User Controller in the network based on the central configuration approach of TSN</desc>
       <executable-path>./CUCModule</executable-path>
-      <subscribed-events-mask>203567</subscribed-events-mask>
+      <subscribed-events-mask>203631</subscribed-events-mask>
       <registered>1</registered>
       <pid>0</pid>
       <data>
@@ -148,7 +148,9 @@
       <enddevices>
         <enddevice>
           <mac>48-21-0b-26-3d-8a</mac>
+          <iface>enp88s0</iface>
           <name>NUC 1</name>
+          <num-cores>2</num-cores>
           <interface-uri>opc.tcp://localhost:62541</interface-uri>
           <has-app>1</has-app>
           <apps>
@@ -159,8 +161,10 @@
         </enddevice>
         <enddevice>
           <mac>48-21-0b-26-3f-ed</mac>
+          <iface>enp88s0</iface>
           <name>NUC 2</name>
-          <interface-uri>opc.tcp://10.200.9.102:62542</interface-uri>
+          <num-cores>2</num-cores>
+          <interface-uri>opc.tcp://localhost:62541</interface-uri>
           <has-app>1</has-app>
           <apps>
             <app>
@@ -170,8 +174,10 @@
         </enddevice>
         <enddevice>
           <mac>48-21-0b-26-3f-42</mac>
+          <iface>enp88s0</iface>
           <name>NUC 3</name>
-          <interface-uri>opc.tcp://10.200.9.103:62543</interface-uri>
+          <num-cores>2</num-cores>
+          <interface-uri>opc.tcp://localhost:62541</interface-uri>
           <has-app>1</has-app>
           <apps>
             <app>

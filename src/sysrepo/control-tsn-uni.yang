@@ -168,6 +168,11 @@ module control-tsn-uni {
             }
         }
 
+        leaf iface {
+            type string;
+            default "";
+        }
+
         leaf name {
             type string;
         }
@@ -180,24 +185,8 @@ module control-tsn-uni {
             type uint8;
             default 0;
         }
-        
-        /*
-        leaf app-ref {
-            type leafref {
-                path "/control-tsn-uni:tsn-uni/application/apps/app/id";
-                require-instance "false";
-            }
-        }
-        */
+
         container apps {
-            /*
-            leaf-list app-ref {
-                type leafref {
-                    path "/control-tsn-uni:tsn-uni/application/apps/app/id";
-                    require-instance "false";
-                }
-            }
-            */
             list app {
                 key "app-ref";
                 leaf app-ref {
@@ -207,6 +196,11 @@ module control-tsn-uni {
                     }
                 }
             }
+        }
+
+        leaf num-cores {
+            type uint16;
+            default 1;
         }
     }
 
@@ -313,7 +307,12 @@ module control-tsn-uni {
                 pattern '[0-9a-fA-F]{2}(-[0-9a-fA-F]{2}){5}';
             }
             description "The (virtual) MAC of this app or container in case multiple containers are running on one (physical) enddevice";
-        }        
+        }  
+        leaf iface {
+            type string;
+            default "";
+            description "The interface of enddevice this app should use";
+        }      
         leaf version {
             type string;
         }
