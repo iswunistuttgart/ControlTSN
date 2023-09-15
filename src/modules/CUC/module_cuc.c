@@ -688,15 +688,25 @@ cleanup:
 static void
 deploy_communication_engineering(UA_Client *client, bool is_listener, uint16_t listener_nr, TSN_Stream *stream)
 {
+    
     int rc;
     UA_StatusCode ret;
     UA_Variant *variant;
     UA_NodeId nodeId;
+    TSN_Apps *all_apps = malloc(sizeof(TSN_Apps));
+    TSN_App *app_talker = NULL;
+    TSN_App *app_listener = NULL;
+    rc = sysrepo_get_application_apps(&all_apps);
+    if (rc != EXIT_SUCCESS) {
+        printf("[CUC][ERROR] Could not read Apps from datastore. Abort!\n");
+        free(all_apps);
+        return;
+    }
 
     variant = UA_Variant_new();
 
     // BaseTime
-    // ...
+    // ... (currently not used as part of the engineering)
 
     // CycleTime
     nodeId = UA_NODEID_NUMERIC(7, UA_TSNDEP_ID_PUBSUBENGINEERING_CYCLETIME);
@@ -709,28 +719,26 @@ deploy_communication_engineering(UA_Client *client, bool is_listener, uint16_t l
     }
     
     if (!is_listener) {
+        // ----------------
+        // Is Talker
+        // ----------------
+
         // Interface
         nodeId = UA_NODEID_NUMERIC(7, UA_TSNDEP_ID_PUBSUBENGINEERING_INTERFACE);
         UA_String interface;
         // Find the Talker App to get the specified interface
-        TSN_App *app_talker = NULL;
-        TSN_Apps *all_apps = malloc(sizeof(TSN_Apps));
-        rc = sysrepo_get_application_apps(&all_apps);
-        if (rc == EXIT_SUCCESS) { 
-            for (int i=0; i<all_apps->count_apps; ++i) {
-                for (int j=0; j<all_apps->apps[i].stream_mapping.count_egress; ++j) {
-                    if (strcmp(all_apps->apps[i].stream_mapping.egress[j], stream->stream_id) == 0) {
-                        app_talker = &all_apps->apps[i];
-                        interface = UA_String_fromChars(app_talker->iface);
-                    }
+        for (int i=0; i<all_apps->count_apps; ++i) {
+            for (int j=0; j<all_apps->apps[i].stream_mapping.count_egress; ++j) {
+                if (strcmp(all_apps->apps[i].stream_mapping.egress[j], stream->stream_id) == 0) {
+                    app_talker = &all_apps->apps[i];
+                    interface = UA_String_fromChars(app_talker->iface);
                 }
             }
         }
-        free(app_talker);
-        free(all_apps);
         if (app_talker == NULL) {
             // Use the physical interface specified in the stream as a backup
-            interface = UA_String_fromChars(stream->request.talker.end_station_interfaces[0].interface_name);
+            //interface = UA_String_fromChars(stream->request.talker.end_station_interfaces[0].interface_name);
+            interface = UA_String_fromChars(stream->configuration->talker.interface_configuration.interface_list[0].interface_name);
         }
         UA_Variant_setScalarCopy(variant, &interface, &UA_TYPES[UA_TYPES_STRING]);
         ret = UA_Client_writeValueAttribute(client, nodeId, variant);
@@ -738,14 +746,104 @@ deploy_communication_engineering(UA_Client *client, bool is_listener, uint16_t l
             printf("[CUC][ERROR] Could not write Interface to Node ns=%d;i=%d!\n", nodeId.namespaceIndex, nodeId.identifier.numeric);
         } 
 
-
         // QbvOffset
+        nodeId = UA_NODEID_NUMERIC(7, UA_TSNDEP_ID_PUBSUBENGINEERING_QBVOFFSET);
+        UA_UInt32 qbvOffset = 0;
+        for (int i=0; i<stream->configuration->talker.interface_configuration.interface_list[0].count_config_list_entries; ++i) {
+            if (stream->configuration->talker.interface_configuration.interface_list[0].config_list[i].field_type == CONFIG_LIST_TIME_AWARE_OFFSET) {
+                qbvOffset = stream->configuration->talker.interface_configuration.interface_list[0].config_list[i].time_aware_offset;
+            }
+        }
+        UA_UInt32 qbvOffsetMicroSeconds = qbvOffset / 1000; // qbvOffset in stream config is in nanoseconds
+        UA_Variant_setScalarCopy(variant, &qbvOffsetMicroSeconds, &UA_TYPES[UA_TYPES_UINT32]);
+        ret = UA_Client_writeValueAttribute(client, nodeId, variant);
+        if (ret != UA_STATUSCODE_GOOD) {
+            printf("[CUC][ERROR] Could not write QbvOffset to Node ns=%d;i=%d!\n", nodeId.namespaceIndex, nodeId.identifier.numeric);
+        }
+
         // DestinationMAC
+        nodeId = UA_NODEID_NUMERIC(7, UA_TSNDEP_ID_PUBSUBENGINEERING_DESTINATIONMAC);
+        UA_String destinationMAC;
+        for (int i=0; i<stream->configuration->talker.interface_configuration.interface_list[0].count_config_list_entries; ++i) {
+            if (stream->configuration->talker.interface_configuration.interface_list[0].config_list[i].field_type == CONFIG_LIST_MAC_ADDRESSES) {
+                destinationMAC = UA_String_fromChars(stream->configuration->talker.interface_configuration.interface_list[0].config_list[i].ieee802_mac_addresses->destination_mac_address);
+            }
+        }
+        UA_Variant_setScalarCopy(variant, &destinationMAC, &UA_TYPES[UA_TYPES_STRING]);
+        ret = UA_Client_writeValueAttribute(client, nodeId, variant);
+        if (ret != UA_STATUSCODE_GOOD) {
+            printf("[CUC][ERROR] Could not write DestinationMAC to Node ns=%d;i=%d!\n", nodeId.namespaceIndex, nodeId.identifier.numeric);
+        }
+
         // SocketPriority
+        nodeId = UA_NODEID_NUMERIC(7, UA_TSNDEP_ID_PUBSUBENGINEERING_SOCKETPRIORITY);
+        UA_Byte socketPriority;
+        for (int i=0; i<stream->configuration->talker.interface_configuration.interface_list[0].count_config_list_entries; ++i) {
+            if (stream->configuration->talker.interface_configuration.interface_list[0].config_list[i].field_type == CONFIG_LIST_VLAN_TAG) {
+                socketPriority = stream->configuration->talker.interface_configuration.interface_list[0].config_list[i].ieee802_vlan_tag->priority_code_point;
+            }
+        }
+        UA_Variant_setScalarCopy(variant, &socketPriority, &UA_TYPES[UA_TYPES_BYTE]);
+        ret = UA_Client_writeValueAttribute(client, nodeId, variant);
+        if (ret != UA_STATUSCODE_GOOD) {
+            printf("[CUC][ERROR] Could not write SocketPriority to Node ns=%d;i=%d!\n", nodeId.namespaceIndex, nodeId.identifier.numeric);
+        }
+
     } else {
+        // ----------------
+        // Is Listener 
+        // ----------------
+
         // Interface
+        nodeId = UA_NODEID_NUMERIC(7, UA_TSNDEP_ID_PUBSUBENGINEERING_INTERFACE);
+        UA_String interface;
+        // Find the Talker App to get the specified interface
+        for (int i=0; i<all_apps->count_apps; ++i) {
+            for (int j=0; j<all_apps->apps[i].stream_mapping.count_ingress; ++j) {
+                if (strcmp(all_apps->apps[i].stream_mapping.ingress[j], stream->stream_id) == 0) {
+                    app_listener = &all_apps->apps[i];
+                    interface = UA_String_fromChars(app_listener->iface);
+                }
+            }
+        }
+        if (app_listener == NULL) {
+            // Use the physical interface specified in the stream as a backup
+            //interface = UA_String_fromChars(stream->request.talker.end_station_interfaces[0].interface_name);
+            interface = UA_String_fromChars(stream->configuration->listener_list[listener_nr].interface_configuration.interface_list[0].interface_name);
+        }
+        UA_Variant_setScalarCopy(variant, &interface, &UA_TYPES[UA_TYPES_STRING]);
+        ret = UA_Client_writeValueAttribute(client, nodeId, variant);
+        if (ret != UA_STATUSCODE_GOOD) {
+            printf("[CUC][ERROR] Could not write Interface to Node ns=%d;i=%d!\n", nodeId.namespaceIndex, nodeId.identifier.numeric);
+        } 
+
         // SourceMAC
+        nodeId = UA_NODEID_NUMERIC(7, UA_TSNDEP_ID_PUBSUBENGINEERING_SOURCEMAC);
+        UA_String sourceMAC;
+        for (int i=0; i<stream->configuration->listener_list[listener_nr].interface_configuration.interface_list[0].count_config_list_entries; ++i) {
+            if (stream->configuration->listener_list[listener_nr].interface_configuration.interface_list[0].config_list[i].field_type == CONFIG_LIST_MAC_ADDRESSES) {
+                sourceMAC = UA_String_fromChars(stream->configuration->listener_list[listener_nr].interface_configuration.interface_list[0].config_list[i].ieee802_mac_addresses->source_mac_address);
+            }
+        }
+        UA_Variant_setScalarCopy(variant, &sourceMAC, &UA_TYPES[UA_TYPES_STRING]);
+        ret = UA_Client_writeValueAttribute(client, nodeId, variant);
+        if (ret != UA_STATUSCODE_GOOD) {
+            printf("[CUC][ERROR] Could not write SourceMAC to Node ns=%d;i=%d!\n", nodeId.namespaceIndex, nodeId.identifier.numeric);
+        }
+
         // SocketPriority
+        nodeId = UA_NODEID_NUMERIC(7, UA_TSNDEP_ID_PUBSUBENGINEERING_SOCKETPRIORITY);
+        UA_Byte socketPriority;
+        for (int i=0; i<stream->configuration->listener_list[listener_nr].interface_configuration.interface_list[0].count_config_list_entries; ++i) {
+            if (stream->configuration->listener_list[listener_nr].interface_configuration.interface_list[0].config_list[i].field_type == CONFIG_LIST_VLAN_TAG) {
+                socketPriority = stream->configuration->listener_list[listener_nr].interface_configuration.interface_list[0].config_list[i].ieee802_vlan_tag->priority_code_point;
+            }
+        }
+        UA_Variant_setScalarCopy(variant, &socketPriority, &UA_TYPES[UA_TYPES_BYTE]);
+        ret = UA_Client_writeValueAttribute(client, nodeId, variant);
+        if (ret != UA_STATUSCODE_GOOD) {
+            printf("[CUC][ERROR] Could not write SocketPriority to Node ns=%d;i=%d!\n", nodeId.namespaceIndex, nodeId.identifier.numeric);
+        }
     }
 
     // SendReceiveEnabled   --> Set to FALSE initially 
@@ -757,23 +855,25 @@ deploy_communication_engineering(UA_Client *client, bool is_listener, uint16_t l
         printf("[CUC][ERROR] Could not write SendReceiveEnabled to Node ns=%d;i=%d!\n", nodeId.namespaceIndex, nodeId.identifier.numeric);
     }
 
-
     // Trigger the re-configuration of the PubSub connection
+    nodeId = UA_NODEID_NUMERIC(7, UA_TSNDEP_ID_PUBSUBENGINEERING_TRIGGERCONFIGURATION);
+    ret = UA_Client_call(client, UA_NODEID_NUMERIC(7, UA_TSNDEP_ID_PUBSUBENGINEERING), nodeId, 0, NULL, 0, NULL);
+    if (ret != UA_STATUSCODE_GOOD) {
+        printf("[CUC][ERROR] Could not trigger re-configuration!\n");
+    }
 
+    printf("[CUC] Engineering parameters written to app '%s' [%s]. Waiting for START signal...\n\n", !is_listener ? app_talker->name : app_listener->name, !is_listener ? "TALKER" : "LISTENER");
 
 cleanup:
     UA_Variant_delete(variant);
+    free(all_apps);
+    
     return;
 }
 
 int 
 deploy_configuration(TSN_Enddevice *enddevice, bool is_listener, uint16_t listener_nr, TSN_Stream *stream, char *app_id)
 {
-    printf("--- Deploying configuration to: \n");
-    print_enddevice(*enddevice);
-    
-
-    //UA_Variant *my_variant;
     UA_NodeId nodeID;
     UA_StatusCode retval;
     UA_Client *client;
@@ -812,12 +912,13 @@ deploy_configuration(TSN_Enddevice *enddevice, bool is_listener, uint16_t listen
     // see e.g. conference Paper IEEE CAMAD
     deploy_communication_engineering(client, is_listener, listener_nr, stream);
 
-
 cleanup:
-    //UA_Variant_delete(my_variant);
 
     UA_Client_delete(client);
     printf("[CUC] OPC UA client closed\n");
+
+    // Send out an event to indicate the deployed stream
+    rc = sysrepo_send_notification(EVENT_STREAM_DEPLOYED, stream->stream_id, "stream configuration deployed!");
 
     return EXIT_SUCCESS;
 }

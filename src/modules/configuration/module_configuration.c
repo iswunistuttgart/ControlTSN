@@ -24,6 +24,8 @@
 #include "../../../src_generated/types_endpoint_generated_handling.h"
 #include "../../../src_generated/endpoint_nodeids.h"
 
+#include "../../../src_generated/tsndep_nodeids.h"
+
 #include "module_configuration.h"
 
 //---------------------------------------
@@ -571,6 +573,57 @@ out:
 }
 
 static void
+toggle_app_sendreceive(const char *app_id, const TSN_Enddevice *enddevice)
+{
+    int rc;
+    UA_NodeId nodeID;
+    UA_StatusCode retval;
+    UA_Variant *variant;
+    UA_Client *client;
+
+    // Check if the enddevice has a interface URI
+    if (!enddevice || !enddevice->interface_uri) {
+        printf("[CONFIG][ERROR] Could not connect to enddevice (%s) because of missing interface URI!\n", enddevice->mac);
+        // Send an error notification
+        char *notif_msg = (char *) malloc(strlen("[CONFIG] Could not connect to enddevice () because of missing interface URI!") + strlen(enddevice->mac));
+        sprintf(notif_msg, "[CONFIG] Could not connect to enddevice (%s) because of missing interface URI!", enddevice->mac);
+        rc = sysrepo_send_notification(EVENT_ERROR, NULL, notif_msg);
+    }
+
+    // Connect to the server
+    client = UA_Client_new();
+    UA_ClientConfig *config = UA_Client_getConfig(client);
+    UA_ClientConfig_setDefault(config);
+    
+    retval = UA_Client_connect(client, enddevice->interface_uri);
+    if (retval != UA_STATUSCODE_GOOD) {
+        printf("[CONFIG][ERROR] Could not connect to OPC UA Server '%s'\n", enddevice->interface_uri);
+        // Send an error notification
+        char *notif_msg = (char *) malloc(strlen("[CONFIG] Could not connect to OPC UA Server ''") + strlen(enddevice->interface_uri));
+        sprintf(notif_msg, "[CONFIG] Could not connect to OPC UA Server '%s'", enddevice->interface_uri);
+        rc = sysrepo_send_notification(EVENT_ERROR, NULL, notif_msg);
+        
+        UA_Client_delete(client);
+        printf("[CONFIG] OPC UA client closed\n");
+        return EXIT_FAILURE;
+    }
+
+    variant = UA_Variant_new();
+    nodeID = UA_NODEID_NUMERIC(7, UA_TSNDEP_ID_PUBSUBENGINEERING_SENDRECEIVEENABLED);
+    UA_Boolean sendReceiveEnabled = UA_FALSE;
+    UA_Variant_setScalarCopy(variant, &sendReceiveEnabled, &UA_TYPES[UA_TYPES_BOOLEAN]);
+    retval = UA_Client_writeValueAttribute(client, nodeID, variant);
+    if (retval != UA_STATUSCODE_GOOD) {
+        printf("[CONFIG][ERROR] Could not write SendReceiveEnabled to Node ns=%d;i=%d!\n", nodeID.namespaceIndex, nodeID.identifier.numeric);
+    }
+
+    UA_Variant_delete(variant);
+    UA_Client_delete(client);
+    return;
+
+}
+
+static void
 configuration_toggle_app_send_receive(const char *app_id,
                                       const TSN_Enddevice *enddevice)
 {
@@ -771,7 +824,8 @@ static void _cb_event(TSN_Event_CB_Data data)
             goto out;
 
         // Toggle the flag
-        configuration_toggle_app_send_receive(data.entry_id, enddev);
+        //configuration_toggle_app_send_receive(data.entry_id, enddev);
+        toggle_app_sendreceive(data.entry_id, enddev);
     }
 
 out:

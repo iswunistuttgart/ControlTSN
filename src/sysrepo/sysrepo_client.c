@@ -1138,6 +1138,8 @@ _read_interval(char *xpath, IEEE_Interval **in)
     }
     (*in)->numerator = val_numerator->data.uint32_val;
 
+    printf("NUMERATOR:    %d\n",val_numerator->data.uint32_val);
+
     // Read Denominator
     _create_xpath(xpath, "/denominator", &xpath_denominator);
     rc = sr_get_item(session, xpath_denominator, 0, &val_denominator);
@@ -1145,6 +1147,7 @@ _read_interval(char *xpath, IEEE_Interval **in)
         goto cleanup;
     }
     (*in)->denominator = val_denominator->data.uint32_val;
+    printf("DENUMERATOR:  %d\n",val_denominator->data.uint32_val);
 
 cleanup:
     sr_free_val(val_numerator);

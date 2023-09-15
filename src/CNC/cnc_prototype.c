@@ -131,7 +131,7 @@ _test_emulate_stream_computation(TSN_Streams *streams)
         IEEE_ConfigList *config_list_3 = malloc(sizeof(IEEE_ConfigList));
         config_list_3->index = 2;
         config_list_3->field_type = CONFIG_LIST_TIME_AWARE_OFFSET;
-        config_list_3->time_aware_offset = 100;
+        config_list_3->time_aware_offset = 100 * 1000;  // [ns]
         interface_list->config_list[2] = *config_list_3;
 
         interface_configuration.interface_list = interface_list;
