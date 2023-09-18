@@ -98,6 +98,7 @@ static void *x_realloc(void *ptr, size_t size)
     return p;
 }
 
+/*
 static const TSN_Enddevice *
 configuration_find_enddevice_of_app(char *app_id, const TSN_Enddevice *enddevices,
                                     uint16_t count_enddevices)
@@ -116,6 +117,7 @@ configuration_find_enddevice_of_app(char *app_id, const TSN_Enddevice *enddevice
 
     return NULL;
 }
+*/
 
 static void configuration_fill_app_param(struct configuration_parameter *parameter,
                                          const TSN_App *app, const TSN_Enddevice *device)
@@ -458,6 +460,7 @@ out:
     UA_Client_delete(client);
 }
 
+/*
 static void
 configuration_request_app_run_state(const char *app_id,
                                     const TSN_Enddevice *enddevice)
@@ -571,23 +574,23 @@ out:
     UA_Variant_clear(&out);
     UA_Client_delete(client);
 }
+*/
 
-static void
-toggle_app_sendreceive(const char *app_id, const TSN_Enddevice *enddevice)
+/*
+static int
+_write_stream_sendreceive_flag(const TSN_Enddevice *enddevice, bool enable)
 {
-    int rc;
-    UA_NodeId nodeID;
-    UA_StatusCode retval;
-    UA_Variant *variant;
+    int rc = EXIT_FAILURE;
+    UA_NodeId nodeId;
+    UA_StatusCode ret;
     UA_Client *client;
+    UA_Variant *variant;
 
-    // Check if the enddevice has a interface URI
-    if (!enddevice || !enddevice->interface_uri) {
-        printf("[CONFIG][ERROR] Could not connect to enddevice (%s) because of missing interface URI!\n", enddevice->mac);
-        // Send an error notification
-        char *notif_msg = (char *) malloc(strlen("[CONFIG] Could not connect to enddevice () because of missing interface URI!") + strlen(enddevice->mac));
-        sprintf(notif_msg, "[CONFIG] Could not connect to enddevice (%s) because of missing interface URI!", enddevice->mac);
-        rc = sysrepo_send_notification(EVENT_ERROR, NULL, notif_msg);
+    variant = UA_Variant_new();
+
+    if (!enddevice->interface_uri) {
+        printf("[CONFIG][ERROR] No configuration interface specified for enddevice %s!\n", enddevice->name);
+        goto cleanup;
     }
 
     // Connect to the server
@@ -595,34 +598,150 @@ toggle_app_sendreceive(const char *app_id, const TSN_Enddevice *enddevice)
     UA_ClientConfig *config = UA_Client_getConfig(client);
     UA_ClientConfig_setDefault(config);
     
-    retval = UA_Client_connect(client, enddevice->interface_uri);
-    if (retval != UA_STATUSCODE_GOOD) {
+    ret = UA_Client_connect(client, enddevice->interface_uri);
+    if (ret != UA_STATUSCODE_GOOD) {
         printf("[CONFIG][ERROR] Could not connect to OPC UA Server '%s'\n", enddevice->interface_uri);
-        // Send an error notification
-        char *notif_msg = (char *) malloc(strlen("[CONFIG] Could not connect to OPC UA Server ''") + strlen(enddevice->interface_uri));
-        sprintf(notif_msg, "[CONFIG] Could not connect to OPC UA Server '%s'", enddevice->interface_uri);
-        rc = sysrepo_send_notification(EVENT_ERROR, NULL, notif_msg);
-        
-        UA_Client_delete(client);
-        printf("[CONFIG] OPC UA client closed\n");
-        return EXIT_FAILURE;
+        goto cleanup;
     }
 
-    variant = UA_Variant_new();
-    nodeID = UA_NODEID_NUMERIC(7, UA_TSNDEP_ID_PUBSUBENGINEERING_SENDRECEIVEENABLED);
-    UA_Boolean sendReceiveEnabled = UA_FALSE;
+    nodeId = UA_NODEID_NUMERIC(7, UA_TSNDEP_ID_PUBSUBENGINEERING_SENDRECEIVEENABLED);
+    UA_Boolean sendReceiveEnabled = (UA_Boolean) enable;
     UA_Variant_setScalarCopy(variant, &sendReceiveEnabled, &UA_TYPES[UA_TYPES_BOOLEAN]);
-    retval = UA_Client_writeValueAttribute(client, nodeID, variant);
-    if (retval != UA_STATUSCODE_GOOD) {
-        printf("[CONFIG][ERROR] Could not write SendReceiveEnabled to Node ns=%d;i=%d!\n", nodeID.namespaceIndex, nodeID.identifier.numeric);
+    ret = UA_Client_writeValueAttribute(client, nodeId, variant);
+    if (ret != UA_STATUSCODE_GOOD) {
+        printf("[CONFIG][ERROR] Could not write SendReceiveEnabled to Node ns=%d;i=%d!\n", nodeId.namespaceIndex, nodeId.identifier.numeric);
+        goto cleanup;
     }
 
+    rc = EXIT_SUCCESS;
+
+cleanup:
     UA_Variant_delete(variant);
     UA_Client_delete(client);
-    return;
 
+    return rc;
 }
 
+static void
+set_stream_sendreceive(const char *stream_id, bool enable)
+{
+    // --------------------------------------------------------------
+    // TODO/Info: 
+    // In the future the send/receive enabled flag will be per communication flow.
+    // There will be one OPC UA Server receiving the configurations ('Endpoint Daemon').
+    // The datamodel will be splitted into communication, application and deployment.
+    // Under each of them we have the parameters specific for each application on the enddevice.
+    // e.g.:
+
+    // - ROOT
+    // --- Communication
+    // ------ App_1
+    // --------- CycleTime
+    // --------- Interface
+    // --------- SocketPrio
+    // --------- SendReceiveEnabled     <<<<<<<<< Here ???
+    // --------- ...
+    // ------ App_N
+    // --------- ...
+    // --- Application
+    // ------ App_1
+    // --------- CurrentState
+    // --------- SendReceiveEnabled     <<<<<<<<< OR here ???
+    // --------- ...
+    // --- Deployment
+    // ------ App_1
+    // --------- ThreadPriority
+    // --------- ...
+    //
+    // -------------------------------------------------------------- 
+
+    int rc;
+    TSN_Apps *apps = malloc(sizeof(TSN_Apps));
+    TSN_Devices *devices = malloc(sizeof(TSN_Devices));
+    TSN_App **listenerApps = NULL;
+    const TSN_Enddevice **listenerDevices = NULL;
+
+    // First we make sure to find all participating apps and their enddevices 
+    // before setting the flag for one of them
+
+    // Get the talker and listener apps
+    rc = sysrepo_get_application_apps(&apps);
+    if (rc != EXIT_SUCCESS) {
+        printf("[CONFIG][ERROR] Error reading applications from datastore!");
+        goto cleanup;
+    }
+    // Find the talker
+    TSN_App *talkerApp;
+    for (int i=0; i<apps->count_apps; ++i) {
+        for (int j=0; j<apps->apps[i].stream_mapping.count_egress; j++) {
+            if (strcmp(apps->apps[i].stream_mapping.egress[j], stream_id) == 0) {
+                talkerApp = &apps->apps[i];
+            }
+        }
+    }
+    // Find the listener(s)
+    listenerApps = (TSN_App **)malloc(apps->count_apps * sizeof(TSN_App *));
+    int count_listeners = 0;
+    for (int i=0; i<apps->count_apps; ++i) {
+        for (int j=0; j<apps->apps[i].stream_mapping.count_ingress; j++) {
+            if (strcmp(apps->apps[i].stream_mapping.ingress[j], stream_id) == 0) {
+                listenerApps[count_listeners] = &apps->apps[i];
+                count_listeners++;
+            }
+        }
+    }
+    // Find the enddevices
+    rc = sysrepo_get_all_devices(&devices);
+    if (rc != EXIT_SUCCESS) {
+        printf("[CONFIG][ERROR] Error reading devices from datastore!");
+        goto cleanup;
+    }
+    const TSN_Enddevice *talkerDevice = configuration_find_enddevice_of_app(talkerApp->id, devices->enddevices, devices->count_enddevices);
+    if (!talkerDevice) {
+        printf("[CONFIG][ERROR] Error finding enddevice for app id %s!", talkerApp->id);
+        goto cleanup;
+    }
+
+    listenerDevices = (const TSN_Enddevice **)malloc(count_listeners * sizeof(TSN_Enddevice *));
+    for (int i=0; i<count_listeners; ++i) {
+        listenerDevices[i] = configuration_find_enddevice_of_app(listenerApps[i]->id, devices->enddevices, devices->count_enddevices);
+        if (!listenerDevices[i]) {
+            printf("[CONFIG][ERROR] Error finding enddevice for app id %s!", listenerApps[i]->id);
+            goto cleanup;
+        }
+    }
+
+    // Now that we have all enddevices we can start setting the stream flag
+    // First the listeners to prevent missing data from the talker
+    int success_counter = 0;
+    for (int i=0; i<count_listeners; ++i) {
+        rc = _write_stream_sendreceive_flag(listenerDevices[i], enable);
+        if (rc == EXIT_SUCCESS) {
+            success_counter++;
+        }
+    }
+    // Finally the talker
+    rc = _write_stream_sendreceive_flag(talkerDevice, enable);
+    if (rc == EXIT_SUCCESS) {
+        success_counter++;
+    }
+
+    // Indicate a success if all listeners and the talker are set to enabled
+    if (success_counter == (count_listeners + 1)) {
+        printf("[CONFIG] Successfully set Stream (%s) to %s\n", stream_id, enable ? "ENABLED" : "DISABLED");
+    }
+
+cleanup:
+    free(apps);
+    free(devices);
+    free(listenerApps);
+    free(listenerDevices);
+    return;
+}
+*/
+
+
+/*
 static void
 configuration_toggle_app_send_receive(const char *app_id,
                                       const TSN_Enddevice *enddevice)
@@ -733,6 +852,7 @@ out:
     UA_Variant_clear(&out);
     UA_Client_delete(client);
 }
+*/
 
 // ------------------------------------
 // Callback handler
@@ -790,6 +910,7 @@ static void _cb_event(TSN_Event_CB_Data data)
     }
 
     // Request App Run mode
+    /*
     if (data.event_id & EVENT_CONFIGURATION_REQUEST_RUN_STATE) {
         event_name = "EVENT_CONFIGURATION_REQUEST_RUN_STATE";
 
@@ -807,8 +928,10 @@ static void _cb_event(TSN_Event_CB_Data data)
         // Set app state to Config in order to trigger tghe app to apply the configuration and create the PubSub connection
         configuration_request_app_run_state(data.entry_id, enddev);
     }
+    */
 
     // Toggle app send & receive flag
+    /*
     if (data.event_id & EVENT_CONFIGURATION_TOGGLE_APP_SEND_RECEIVE) {
         event_name = "EVENT_CONFIGURATION_TOGGLE_APP_SEND_RECEIVE";
 
@@ -825,8 +948,35 @@ static void _cb_event(TSN_Event_CB_Data data)
 
         // Toggle the flag
         //configuration_toggle_app_send_receive(data.entry_id, enddev);
-        toggle_app_sendreceive(data.entry_id, enddev);
     }
+    */
+
+    // Set the send receive flag for a specific stream
+    if (data.event_id & EVENT_CONFIGURATION_ENABLE_STREAM_SEND_RECEIVE 
+        || data.event_id & EVENT_CONFIGURATION_DISABLE_STREAM_SEND_RECEIVE) {
+        
+        bool enable = data.event_id & EVENT_CONFIGURATION_ENABLE_STREAM_SEND_RECEIVE;
+
+        // Get the participating apps
+        TSN_Apps *apps = malloc(sizeof(TSN_Apps));
+        ret = sysrepo_get_application_apps(&apps);
+        if (ret == EXIT_FAILURE) {
+            printf("[CONFIG][ERROR] Error reading apps from sysrepo!");
+        } else {
+            //set_stream_sendreceive(data.entry_id, enable);
+
+            // Moved logic to common lib
+            ret = configuration_stream_set_sendreceive(data.entry_id, enable);
+            if (ret == EXIT_SUCCESS) {
+                printf("[CONFIG] Successfully set Stream (%s) to %s\n", data.entry_id, enable ? "ENABLED" : "DISABLED");
+            } else {
+                printf("[CONFIG][ERROR] Error setting Stream (%s) to %s!\n", data.entry_id, enable ? "ENABLED" : "DISABLED");
+            }
+
+        }
+        free(apps);
+    }
+
 
 out:
     log("Event '%s' (%s, %s)", event_name, data.entry_id, data.msg);
@@ -850,10 +1000,11 @@ int main(void)
 
     // Init this module
     rc = module_init("AppConfiguration", &this_module,
-                     (EVENT_CONFIGURATION_DEPLOY |
-                     EVENT_CONFIGURATION_CHANGED |
-                     EVENT_CONFIGURATION_REQUEST_RUN_STATE |
-                     EVENT_CONFIGURATION_TOGGLE_APP_SEND_RECEIVE),
+                     //(EVENT_CONFIGURATION_DEPLOY |
+                     //EVENT_CONFIGURATION_CHANGED |
+                     //EVENT_CONFIGURATION_REQUEST_RUN_STATE |
+                     //EVENT_CONFIGURATION_TOGGLE_APP_SEND_RECEIVE),
+                     -1,
                      _cb_event);
     if (rc == EXIT_FAILURE) {
         log("Error initializing module!");

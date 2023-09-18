@@ -244,4 +244,30 @@ int application_get_images(TSN_Images **images);
  */
 void application_put_images(TSN_Images *images);
 
+/**
+ * @brief Find the enddevice for a specific App
+ * @param app_id The id of the app
+ * @param enddevices The list of enddevices to search through
+ * @param count_enddevices The length of the list of enddevices
+ * @return The enddevice the app is running on if found
+*/
+const TSN_Enddevice *
+configuration_find_enddevice_of_app(char *app_id, const TSN_Enddevice *enddevices,
+                                    uint16_t count_enddevices);
+
+/**
+ * @brief Set the SendReceive flag of a specific stream
+ * @param stream_id The ID of the stream
+ * @param enable Whether the stream should send/receive or not
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+*/
+int configuration_stream_set_sendreceive(char *stream_id, bool enable);
+
+/**
+ * @brief Get the SendReceive flag of a specific stream
+ * @param stream_id The ID of the stream
+ * @return True or False
+*/
+bool configuration_stream_get_sendreceive(char *stream_id);
+
 #endif // __COMMON_H__

@@ -115,7 +115,7 @@ cleanup_export:
 static int
 _api_index_get(const struct _u_request *request, struct _u_response *response, void *user_data)
 {
-    const char *resp = "<style>td {padding-right: 20px;} th {text-align: left;}</style><html><b>This is the ControlTSN REST Server.</b></br>" \
+    const char *resp = "<style>td {padding-right: 20px; } th {text-align: left;} tr td:first-child {width: 350px;}</style><html><b>This is the ControlTSN REST Server.</b></br>" \
                        "Following endpoints are provided:</br></br>" \
                        "<table>" \
                        "<tr><th>URI</th><th>Type</th><th>Description</th><th>POST Body</th></tr>" \
@@ -169,7 +169,9 @@ _api_index_get(const struct _u_request *request, struct _u_response *response, v
                        "<tr><td><a href='/configuration/apps/:id/deploy'>/configuration/apps/:id/deploy</a></td><td>POST</td><td>Deploy initial parameters to specific app</td></tr>" \
                        "<tr><td><a href='/configuration/apps/:id/update'>/configuration/apps/:id/update</a></td><td>POST</td><td>Update parameters of specific app</td></tr>" \
                        "<tr><td><a href='/configuration/apps/:id/state'>/configuration/apps/:id/state</a></td><td>POST</td><td>Request App run state</td></tr>" \
-                       "<tr><td><a href='/configuration/apps/:id/toggle_txrx'>/configuration/apps/:id/toggle_txrx</a></td><td>POST</td><td>Toggle Send and Receive flag</td></tr>" \
+                       //"<tr><td><a href='/configuration/apps/:id/toggle_txrx'>/configuration/apps/:id/toggle_txrx</a></td><td>POST</td><td>Toggle Send and Receive flag</td></tr>"
+                       "<tr><td><a href='/configuration/stream/00-00-00-00-00-00:00-01/set_sendreceive'>/configuration/stream/:stream-id/set_sendreceive</a></td><td>POST</td><td>Set Send and Receive flag for a specific stream</td></tr>" \
+                       "<tr><td><a href='/configuration/stream/00-00-00-00-00-00:00-01/get_sendreceive'>/configuration/stream/:stream-id/get_sendreceive</a></td><td>GET</td><td>Get the current Send and Receive flag for a specific stream</td></tr>" \
                        // Debug
                        "<tr><th>Debug</th></tr>" \
                        "<tr><td><a href='/debug/set_topology'>/debug/set_topology</a></td><td>GET</td><td>Set the topology</td></tr>" \
@@ -1052,6 +1054,7 @@ _api_configuration_app_update(const struct _u_request *request, struct _u_respon
     return U_CALLBACK_COMPLETE;
 }
 
+/*
 static int
 _api_configuration_app_run_state(const struct _u_request *request, struct _u_response *response, void *user_data)
 {
@@ -1068,7 +1071,10 @@ _api_configuration_app_run_state(const struct _u_request *request, struct _u_res
 
     return U_CALLBACK_COMPLETE;
 }
+*/
 
+
+/*
 static int
 _api_configuration_app_toggle_txrx(const struct _u_request *request, struct _u_response *response, void *user_data)
 {
@@ -1084,6 +1090,72 @@ _api_configuration_app_toggle_txrx(const struct _u_request *request, struct _u_r
         return U_CALLBACK_ERROR;
 
     return U_CALLBACK_COMPLETE;
+}
+*/
+
+static int
+_api_configuration_set_stream_sendreceive(const struct _u_request *request, struct _u_response *response, void *user_data)
+{
+    //const char *app_id = u_map_get(request->map_url, "id");
+    //int ret;
+//
+    //if (!app_id)
+    //    return U_CALLBACK_ERROR;
+//
+    //// Notify configuration module to toggle send and receive of the app
+    //ret = sysrepo_send_notification(EVENT_CONFIGURATION_TOGGLE_APP_SEND_RECEIVE, NULL, (char *)app_id);
+    //if (ret == EXIT_FAILURE)
+    //    return U_CALLBACK_ERROR;
+
+    
+    const char *url_id = u_map_get(request->map_url, "stream-id");
+    if (url_id == NULL) {
+        return U_CALLBACK_ERROR;
+    }
+    char *stream_id = strdup(url_id);
+
+    // Get the flag in the post body
+    json_t *json_post_body = ulfius_get_json_body_request(request, NULL);
+    if (json_post_body == NULL) {
+        return U_CALLBACK_ERROR;
+    }
+    bool flag = json_boolean_value(json_object_get(json_post_body, "flag"));
+    
+    // Set event to ENABLE / DISABLE a specific stream
+    if (flag) {
+        rc = sysrepo_send_notification(EVENT_CONFIGURATION_ENABLE_STREAM_SEND_RECEIVE, stream_id, "Enable SendReceive of stream");
+    } else {
+        rc = sysrepo_send_notification(EVENT_CONFIGURATION_DISABLE_STREAM_SEND_RECEIVE, stream_id, "Disable SendReceive of stream");
+    }
+    if (rc == EXIT_FAILURE) {
+        return U_CALLBACK_ERROR;
+    }
+
+    return U_CALLBACK_COMPLETE;
+}
+
+static int
+_api_configuration_get_stream_sendreceive(const struct _u_request *request, struct _u_response *response, void *user_data)
+{
+    const char *url_id = u_map_get(request->map_url, "stream-id");
+    if (url_id == NULL) {
+        return U_CALLBACK_ERROR;
+    }
+    char *stream_id = strdup(url_id);
+
+    // TODO: Should this be in the Configuration Module or is it fine to have it here?
+    // The call should return a value therefore it isn't that easy to have the logic 
+    // in the configuration module and communicate with them via events
+    // --> Therefore we read the value directly from here
+    bool enabled = configuration_stream_get_sendreceive(stream_id);
+
+    json_t *json_body = json_object();
+    json_object_set_new(json_body, "flag", json_boolean(enabled));
+    ulfius_set_json_body_response(response, 200, json_body);
+
+
+    return U_CALLBACK_COMPLETE;
+
 }
 
 // ------------------------------------
@@ -1357,8 +1429,10 @@ _init_server()
     // Configuration
     ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_CONFIGURATION_DEPLOY, 0, &_api_configuration_app_deploy,    NULL);
     ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_CONFIGURATION_UPDATE, 0, &_api_configuration_app_update,    NULL);
-    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_CONFIGURATION_RUN_STATE, 0, &_api_configuration_app_run_state,    NULL);
-    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_CONFIGURATION_TOGGLE_TXRX, 0, &_api_configuration_app_toggle_txrx,    NULL);
+    //ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_CONFIGURATION_RUN_STATE, 0, &_api_configuration_app_run_state,    NULL);
+    //ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_CONFIGURATION_TOGGLE_TXRX, 0, &_api_configuration_app_toggle_txrx,    NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_CONFIGURATION_SET_STREAM_SENDRECEIVE, 0, &_api_configuration_set_stream_sendreceive,    NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "GET",     API_PREFIX, API_CONFIGURATION_GET_STREAM_SENDRECEIVE, 0, &_api_configuration_get_stream_sendreceive,    NULL);
 
     // Debug
     ulfius_add_endpoint_by_val(&server_instance, "GET",  API_PREFIX, "/debug/set_topology",    0, &_api_debug_set_topology,    NULL);

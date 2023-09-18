@@ -29,8 +29,13 @@ ua_generate_nodeid_header(
 
 
 ## The Common lib
-add_library(common SHARED src/common.c src/sysrepo/sysrepo_client.c src/type_definitions.c src/logger.c)
-target_link_libraries(common sysrepo)
+add_library(common SHARED src/common.c 
+                          src/sysrepo/sysrepo_client.c 
+                          src/type_definitions.c 
+                          src/logger.c
+                          src_generated/namespace_tsndep_generated.c)
+add_dependencies(common open62541-generator-ns-tsndep open62541-generator-ids-tsndep)
+target_link_libraries(common sysrepo open62541)
 
 ## JSON Serializer
 add_library(json_serializer SHARED src/helper/json_serializer.c src/type_definitions.c)
