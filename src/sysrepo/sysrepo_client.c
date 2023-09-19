@@ -5715,6 +5715,29 @@ cleanup:
     return ret ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
+int
+sysrepo_update_app(TSN_App *app)
+{
+    char *xpath_app = NULL;
+
+    _create_xpath_key("/control-tsn-uni:tsn-uni/application/apps/app[id='%s']", app->id, &xpath_app);
+    rc = _write_app(xpath_app, app);
+
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+    rc = sr_apply_changes(session, 0, 1);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+cleanup:
+    free(xpath_app);
+
+    return rc ? EXIT_FAILURE : EXIT_SUCCESS;
+}
+
 
 // -------------------------------------------------------- //
 // ROOT / UNI

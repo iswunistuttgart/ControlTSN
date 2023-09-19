@@ -165,6 +165,7 @@ _api_index_get(const struct _u_request *request, struct _u_response *response, v
                        "<tr><td><a href='/application/apps/:id/delete'>/application/apps/:id/delete</a></td><td>POST</td><td>Delete a specific app</td></tr>" \
                        "<tr><td><a href='/application/apps/:id/start'>/application/apps/:id/start</a></td><td>POST</td><td>Start a specific app</td></tr>" \
                        "<tr><td><a href='/application/apps/:id/stop'>/application/apps/:id/stop</a></td><td>POST</td><td>Stop a specific app</td></tr>" \
+                       "<tr><td><a href='/application/apps/:id/update'>/application/apps/:id/update</a></td><td>POST</td><td>Update a specific app</td></tr>" \
                        // Configuration
                        "<tr><td><a href='/configuration/apps/:id/deploy'>/configuration/apps/:id/deploy</a></td><td>POST</td><td>Deploy initial parameters to specific app</td></tr>" \
                        "<tr><td><a href='/configuration/apps/:id/update'>/configuration/apps/:id/update</a></td><td>POST</td><td>Update parameters of specific app</td></tr>" \
@@ -675,6 +676,7 @@ _api_streams_delete(const struct _u_request *request, struct _u_response *respon
     }
     char *stream_id = strdup(url_id);
     rc = streams_delete(stream_id);
+
     if (rc == EXIT_FAILURE) {
         return U_CALLBACK_ERROR;
     }
@@ -984,6 +986,7 @@ _api_application_app_stop(const struct _u_request *request, struct _u_response *
 static int
 _api_application_app_update(const struct _u_request *request, struct _u_response *response, void *user_data)
 {
+    /*
     const char *app_id = u_map_get(request->map_url, "id");
     json_t *json_post_body;
     TSN_App *app;
@@ -1014,6 +1017,31 @@ out:
     application_app_put(app);
 
     return ret;
+    */
+
+    const char *app_id = u_map_get(request->map_url, "id");
+    json_t *json_post_body;
+    TSN_App *app;
+    if (app_id == NULL) {
+        return U_CALLBACK_ERROR;
+    }
+
+    json_post_body = ulfius_get_json_body_request(request, NULL);
+    if (!json_post_body) {
+        return U_CALLBACK_ERROR;
+    }
+    app = deserialize_app(json_post_body);
+    if (!app) {
+        return U_CALLBACK_ERROR;
+    }
+
+    rc = sysrepo_update_app(app);
+    json_decref(json_post_body);
+    if (rc == EXIT_FAILURE) {
+        return U_CALLBACK_ERROR;
+    }
+
+    return U_CALLBACK_COMPLETE;
 }
 
 // ------------------------------------

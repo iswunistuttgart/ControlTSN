@@ -257,6 +257,13 @@ int sysrepo_get_application_app(const char *id, TSN_App **app);
  */
 int sysrepo_remove_application_app(const char *id);
 
+/**
+ * @brief Updates a specific app
+ * @param app the struct containing the updated app
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+*/
+int sysrepo_update_app(TSN_App *app);
+
 
 // -------------------------------------------------------- //
 // ROOT / UNI
