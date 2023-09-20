@@ -94,91 +94,131 @@ _test_emulate_discovered_topology()
 static json_t *
 _test_emulate_stream_computation(TSN_Streams *streams)
 {
-    for (int i=0; i<streams->count_streams; ++i) {
+    for (int s=0; s<streams->count_streams; ++s) {
 
         TSN_Configuration *conf = malloc(sizeof(TSN_Configuration));
+        TSN_Stream *stream = &streams->streams[s];
 
-        conf->status_info.talker_status = 1;
-        conf->status_info.listener_status = 1;
-        conf->status_info.failure_code = 0;
+        // Stream Status
+        conf->status_info.talker_status     = 1;
+        conf->status_info.listener_status   = 1;
+        conf->status_info.failure_code      = 0;
+
+        // Failed Interface
         conf->count_failed_interfaces = 0;
-        conf->failed_interfaces = NULL;
         
+        // Talker
         TSN_StatusTalker status_talker;
-        status_talker.accumulated_latency = 60400;
-        IEEE_InterfaceConfiguration interface_configuration;
-        interface_configuration.count_interface_list_entries = 1;
-        interface_configuration.interface_list = malloc(sizeof(IEEE_InterfaceList) * interface_configuration.count_interface_list_entries);
-        IEEE_InterfaceList *interface_list = malloc(sizeof(IEEE_InterfaceList));
-        interface_list->mac_address = strdup(streams->streams[i].request.talker.end_station_interfaces[0].mac_address);
-        interface_list->interface_name = strdup(streams->streams[i].request.talker.end_station_interfaces[0].interface_name);
-        interface_list->count_config_list_entries = 3;
-        interface_list->config_list = malloc(sizeof(IEEE_ConfigList) * interface_list->count_config_list_entries);
-        IEEE_ConfigList *config_list_1 = malloc(sizeof(IEEE_ConfigList));
-        config_list_1->index = 0;
-        config_list_1->field_type = CONFIG_LIST_MAC_ADDRESSES;
-        config_list_1->ieee802_mac_addresses = malloc(sizeof(IEEE_MacAddresses));
-        config_list_1->ieee802_mac_addresses->destination_mac_address = strdup(streams->streams[i].request.listener_list[0].end_station_interfaces[0].mac_address);
-        config_list_1->ieee802_mac_addresses->source_mac_address = strdup(streams->streams[i].request.talker.end_station_interfaces[0].mac_address);
-        interface_list->config_list[0] = *config_list_1;
-        IEEE_ConfigList *config_list_2 = malloc(sizeof(IEEE_ConfigList));
-        config_list_2->index = 1;
-        config_list_2->field_type = CONFIG_LIST_VLAN_TAG;
-        config_list_2->ieee802_vlan_tag = malloc(sizeof(IEEE_VlanTag));
-        config_list_2->ieee802_vlan_tag->priority_code_point = 6;
-        config_list_2->ieee802_vlan_tag->vlan_id = 3000;
-        interface_list->config_list[1] = *config_list_2;
-        IEEE_ConfigList *config_list_3 = malloc(sizeof(IEEE_ConfigList));
-        config_list_3->index = 2;
-        config_list_3->field_type = CONFIG_LIST_TIME_AWARE_OFFSET;
-        config_list_3->time_aware_offset = 100 * 1000;  // [ns]
-        interface_list->config_list[2] = *config_list_3;
+        status_talker.accumulated_latency   = stream->request.talker.user_to_network_requirements.max_latency;  // Set to users max latency requirement
+        IEEE_InterfaceConfiguration interface_configuration_talker;
+        // Assuming only one interface per device for now
+        interface_configuration_talker.count_interface_list_entries = 1;
+        interface_configuration_talker.interface_list = malloc(sizeof(IEEE_InterfaceConfiguration) * interface_configuration_talker.count_interface_list_entries);
+        IEEE_InterfaceList *interface_list_talker = malloc(sizeof(IEEE_InterfaceList));
+        interface_list_talker->mac_address = strdup(stream->request.talker.end_station_interfaces[0].mac_address);
+        interface_list_talker->interface_name = strdup(stream->request.talker.end_station_interfaces[0].interface_name);
+        
+        // Assuming fixed config list containing container 'VLAN tag (in data-frame-specification)' and 'time aware (not user defined --> +1)'
+        interface_list_talker->count_config_list_entries = stream->request.talker.count_data_frame_specifications + 1;
+        interface_list_talker->config_list = malloc(sizeof(IEEE_ConfigList) * interface_list_talker->count_config_list_entries);
+        // Iterate over the data frame specifications on the request
+        for (int i=0; i<stream->request.talker.count_data_frame_specifications; ++i) {
+            if (stream->request.talker.data_frame_specification[i].field_type == CONFIG_LIST_MAC_ADDRESSES) {               
+                // Mac Addresses (in case of multiple listeners we use the boradcast address for now --> would be a multicast address)
+                IEEE_ConfigList *cl = malloc(sizeof(IEEE_ConfigList));
+                cl->index = i;
+                cl->field_type = CONFIG_LIST_MAC_ADDRESSES;
+                cl->ieee802_mac_addresses = malloc(sizeof(IEEE_MacAddresses));
+                cl->ieee802_mac_addresses->source_mac_address = strdup(stream->request.talker.data_frame_specification[i].ieee802_mac_addresses->source_mac_address);
+                cl->ieee802_mac_addresses->destination_mac_address = strdup(stream->request.talker.data_frame_specification[i].ieee802_mac_addresses->destination_mac_address);
+                interface_list_talker->config_list[i] = *cl;
+            }
+            else if (stream->request.talker.data_frame_specification[i].field_type == CONFIG_LIST_VLAN_TAG) {
+                // VLAN Tag
+                IEEE_ConfigList *cl = malloc(sizeof(IEEE_ConfigList));
+                cl->index = i;
+                cl->field_type = CONFIG_LIST_VLAN_TAG;
+                cl->ieee802_vlan_tag = malloc(sizeof(IEEE_VlanTag));
+                cl->ieee802_vlan_tag->priority_code_point = stream->request.talker.data_frame_specification[i].ieee802_vlan_tag->priority_code_point;
+                cl->ieee802_vlan_tag->vlan_id = stream->request.talker.data_frame_specification[i].ieee802_vlan_tag->vlan_id;
+                interface_list_talker->config_list[i] = *cl;
+            }
+        }
+        // Time Aware Offset is NOT in the request
+        // --> Therefore we add it manually with a fixed qbv offset for now
+        IEEE_ConfigList *cl = malloc(sizeof(IEEE_ConfigList));
+        cl->index = interface_list_talker->count_config_list_entries - 1;
+        cl->field_type = CONFIG_LIST_TIME_AWARE_OFFSET;
+        cl->time_aware_offset = 100 * 1000; // [ns]
+        interface_list_talker->config_list[cl->index] = *cl;
 
-        interface_configuration.interface_list = interface_list;
-        status_talker.interface_configuration = interface_configuration;
+        interface_configuration_talker.interface_list = interface_list_talker;
+        status_talker.interface_configuration = interface_configuration_talker;
         conf->talker = status_talker;
 
-        conf->count_listeners = 1;
+        // Listeners
+        conf->count_listeners = stream->request.count_listeners;
         TSN_StatusListener *listener_list = malloc(sizeof(TSN_StatusListener) * conf->count_listeners);
-        TSN_StatusListener *status_listener = malloc(sizeof(TSN_StatusListener));
-        status_listener->index = 0;
-        status_listener->accumulated_latency = 60400;
-
-        IEEE_InterfaceConfiguration interface_configuration_2;
-        interface_configuration_2.count_interface_list_entries = 1;
-        interface_configuration_2.interface_list = malloc(sizeof(IEEE_InterfaceList) * interface_configuration_2.count_interface_list_entries);
-        IEEE_InterfaceList *interface_list_2 = malloc(sizeof(IEEE_InterfaceList));
-        interface_list_2->mac_address = strdup(streams->streams[i].request.listener_list[0].end_station_interfaces[0].mac_address);
-        interface_list_2->interface_name = strdup(streams->streams[i].request.listener_list[0].end_station_interfaces[0].interface_name);
-        interface_list_2->count_config_list_entries = 2;
-        interface_list_2->config_list = malloc(sizeof(IEEE_ConfigList) * interface_list_2->count_config_list_entries);
+        for (int i=0; i<conf->count_listeners; ++i) {
+            TSN_Listener *listener = &stream->request.listener_list[i];
         
-        IEEE_ConfigList *config_list_2_1 = malloc(sizeof(IEEE_ConfigList));
-        config_list_2_1->index = 0;
-        config_list_2_1->field_type = CONFIG_LIST_MAC_ADDRESSES;
-        config_list_2_1->ieee802_mac_addresses = malloc(sizeof(IEEE_MacAddresses));
-        config_list_2_1->ieee802_mac_addresses->destination_mac_address = strdup(streams->streams[i].request.listener_list[0].end_station_interfaces[0].mac_address);
-        config_list_2_1->ieee802_mac_addresses->source_mac_address = strdup(streams->streams[i].request.talker.end_station_interfaces[0].mac_address);
-        interface_list_2->config_list[0] = *config_list_2_1;
-        IEEE_ConfigList *config_list_2_2 = malloc(sizeof(IEEE_ConfigList));
-        config_list_2_2->index = 1;
-        config_list_2_2->field_type = CONFIG_LIST_VLAN_TAG;
-        config_list_2_2->ieee802_vlan_tag = malloc(sizeof(IEEE_VlanTag));
-        config_list_2_2->ieee802_vlan_tag->priority_code_point = 6;
-        config_list_2_2->ieee802_vlan_tag->vlan_id = 3000;
-        interface_list_2->config_list[1] = *config_list_2_2;
+            TSN_StatusListener *status_listener = malloc(sizeof(TSN_StatusListener));
+            status_listener->index = i;
+            status_listener->accumulated_latency = status_talker.accumulated_latency;       // Assume the same
 
-        interface_configuration_2.interface_list = interface_list_2;
-        status_listener->interface_configuration = interface_configuration_2;
-        listener_list[0] = *status_listener;
+            IEEE_InterfaceConfiguration interface_configuration_listener;
+            interface_configuration_listener.count_interface_list_entries = 1;
+            interface_configuration_listener.interface_list = malloc(sizeof(IEEE_InterfaceList) * interface_configuration_listener.count_interface_list_entries);
+            IEEE_InterfaceList *interface_list_listener = malloc(sizeof(IEEE_InterfaceList));
+            interface_list_listener->mac_address = strdup(listener->end_station_interfaces[0].mac_address);
+            interface_list_listener->interface_name = strdup(listener->end_station_interfaces[0].interface_name);
+
+            interface_list_listener->count_config_list_entries = interface_list_talker->count_config_list_entries - 1;  // same as talker without the VLAN tag
+            interface_list_listener->config_list = malloc(sizeof(IEEE_ConfigList) * interface_list_listener->count_config_list_entries);
+
+            // Iterate over the config list of the talker to use the same for the listener
+            int index = 0;
+            for (int j=0; j<interface_list_talker->count_config_list_entries; ++j) {
+                if (interface_list_talker->config_list[j].field_type == CONFIG_LIST_MAC_ADDRESSES) {
+                    // Mac addresses
+                    IEEE_ConfigList *cl = malloc(sizeof(IEEE_ConfigList));
+                    cl->index = index;
+                    cl->field_type = CONFIG_LIST_MAC_ADDRESSES;
+                    cl->ieee802_mac_addresses = malloc(sizeof(IEEE_MacAddresses));
+                    cl->ieee802_mac_addresses->source_mac_address = strdup(interface_list_talker->config_list[j].ieee802_mac_addresses->source_mac_address);
+                    cl->ieee802_mac_addresses->destination_mac_address = strdup(interface_list_talker->config_list[j].ieee802_mac_addresses->destination_mac_address);
+                    interface_list_listener->config_list[index] = *cl;
+                    index++;
+                }
+                else if (interface_list_talker->config_list[j].field_type == CONFIG_LIST_VLAN_TAG) {
+                    // VLAN tag
+                    IEEE_ConfigList *cl = malloc(sizeof(IEEE_ConfigList));
+                    cl->index = index;
+                    cl->field_type = CONFIG_LIST_VLAN_TAG;
+                    cl->ieee802_vlan_tag = malloc(sizeof(IEEE_VlanTag));
+                    cl->ieee802_vlan_tag->priority_code_point = interface_list_talker->config_list[j].ieee802_vlan_tag->priority_code_point;
+                    cl->ieee802_vlan_tag->vlan_id = interface_list_talker->config_list[j].ieee802_vlan_tag->vlan_id;
+                    interface_list_listener->config_list[index] = *cl;
+                    index++;
+                }
+            }
+
+            interface_configuration_listener.interface_list = interface_list_listener;
+            status_listener->interface_configuration = interface_configuration_listener;
+            listener_list[i] = *status_listener;
+        }
+
         conf->listener_list = listener_list;
-        
-        streams->streams[i].configuration = conf;
-        streams->streams[i].configured = 1;
-
+        stream->configuration = conf;
+        // Set stream as configured
+        stream->configured = 1;
     }
 
-    return serialize_streams(streams);
+    json_t *result = serialize_streams(streams);
+    // Free memory ?!?!
+
+
+    return result;
 }
 
 static json_t *
@@ -260,11 +300,8 @@ _api_streams_compute_requests(const struct _u_request *request, struct _u_respon
     TSN_Streams *streams = deserialize_streams(json_post_body);
     // Compute the configuration for the requests
     printf("[CNC] Computing stream requests ... \n");
-    // TODO this is just a placeholder and should be replaced by the real cnc functionality 
-    sleep(2);
-    printf("[CNC] Finished! Sending back stream configurations\n");
-
     json_t *body = _test_emulate_stream_computation(streams);
+    printf("[CNC] Finished! Sending back stream configurations\n");
     ulfius_set_json_body_response(response, 200, body);
 #endif
     
@@ -289,7 +326,7 @@ _init_server()
     ulfius_add_endpoint_by_val(&server_instance, "GET", API_PREFIX, API_TOPOLOGY_DISCOVER_TOPOLOGY, 0, &_api_topology_discover_topology, NULL);
     // Streams
     ulfius_add_endpoint_by_val(&server_instance, "POST", API_PREFIX, API_STREAMS_COMPUTE_REQUESTS, 0, &_api_streams_compute_requests, NULL);
-
+    // Index
     ulfius_set_default_endpoint(&server_instance, &_api_index, NULL);
 
     return EXIT_SUCCESS;

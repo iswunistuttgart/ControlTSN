@@ -642,7 +642,6 @@ serialize_listener(TSN_Listener *listener)
     root = json_object();
 
     json_object_set_new(root, "index", json_integer(listener->index));
-
     //json_object_set_new(root, "count-end-station-interfaces", json_integer(listener->count_end_station_interfaces));
     json_t *array_end_station_interfaces = NULL;
     array_end_station_interfaces = json_array();
@@ -725,7 +724,6 @@ serialize_stream_configuration(TSN_Configuration *configuration)
     json_t *root = NULL;
     root = json_object();
 
-    //json_object_set_new(root, "count-listeners", json_integer(configuration->count_listeners));
     json_t *array_listener_list = NULL;
     array_listener_list = json_array();
     for (int i=0; i<configuration->count_listeners; ++i) {
@@ -736,6 +734,7 @@ serialize_stream_configuration(TSN_Configuration *configuration)
     json_object_set_new(root, "listener-list", array_listener_list);
 
     json_t *talker = NULL;
+
     talker = serialize_status_talker(&(configuration->talker));
     json_object_set_new(root, "talker", talker);
 
@@ -747,7 +746,6 @@ serialize_stream_configuration(TSN_Configuration *configuration)
     status_info = serialize_status_info(&(configuration->status_info));
     json_object_set_new(root, "status-info", status_info);
 
-    //json_object_set_new(root, "count-failed-interfaces", json_integer(configuration->count_failed_interfaces));
     json_t *array_failed_interfaces = NULL;
     array_failed_interfaces = json_array();
     for (int i=0; i<configuration->count_failed_interfaces; ++i) {
