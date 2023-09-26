@@ -28,7 +28,8 @@ int module_connect();
  * @param adjusted_subscribed_events_mask If > -1 this mask will be used instead of the stored one from the list of available modules
  * @param cb_event The events callback function of the module
  */
-int module_init(char *module_name, TSN_Module **module, uint32_t adjusted_subscribed_events_mask, void (*cb_event)(TSN_Event_CB_Data));
+int module_init(char *module_name, TSN_Module **module, uint64_t adjusted_subscribed_events_mask, void (*cb_event)(TSN_Event_CB_Data));
+//int module_init(char *module_name, TSN_Module **module, uint32_t adjusted_subscribed_events_mask, void (*cb_event)(TSN_Event_CB_Data));
 
 /**
  * @brief Shutdown the module by disconnecting from sysrepo and stopping the subscription of notification.

@@ -61,7 +61,7 @@ print_module(TSN_Module module) {
     printf("ID:             %d\n", module.id);
     printf("P_ID:           %d\n", module.p_id);
     printf("Path:           %s\n", module.path);
-    printf("Events Mask:    %d\n", module.subscribed_events_mask);
+    printf("Events Mask:    %ld\n", module.subscribed_events_mask);
     printf("Data:\n");
     print_module_data(module.data);
     printf("\n");

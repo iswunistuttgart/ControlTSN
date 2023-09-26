@@ -325,7 +325,8 @@ _api_modules_add(const struct _u_request *request, struct _u_response *response,
     const char *name = json_string_value(json_object_get(json_post_body, "name"));
     const char *description = json_string_value(json_object_get(json_post_body, "description"));
     const char *path = json_string_value(json_object_get(json_post_body, "path"));
-    const uint32_t subscribed_events_mask = json_number_value(json_object_get(json_post_body, "subscribed_events_mask"));
+    //const uint32_t subscribed_events_mask = json_number_value(json_object_get(json_post_body, "subscribed_events_mask"));
+    const uint64_t subscribed_events_mask = json_number_value(json_object_get(json_post_body, "subscribed_events_mask"));
     TSN_Module *module = malloc(sizeof(TSN_Module));
 
     if (name == NULL || strlen(name) <= 0
@@ -529,7 +530,8 @@ _api_modules_update(const struct _u_request *request, struct _u_response *respon
     const char *name = json_string_value(json_object_get(json_post_body, "name"));
     const char *description = json_string_value(json_object_get(json_post_body, "description"));
     const char *path = json_string_value(json_object_get(json_post_body, "path"));
-    const uint32_t subscribed_events_mask = json_number_value(json_object_get(json_post_body, "subscribed_events_mask"));
+    //const uint32_t subscribed_events_mask = json_number_value(json_object_get(json_post_body, "subscribed_events_mask"));
+    const uint64_t subscribed_events_mask = json_number_value(json_object_get(json_post_body, "subscribed_events_mask"));
 
 
     rc = sysrepo_update_module_attributes(module_id, name, description, path, subscribed_events_mask);
@@ -1377,7 +1379,8 @@ _api_debug_trigger_event(const struct _u_request *request, struct _u_response *r
         return U_CALLBACK_ERROR;
     }
 
-    uint32_t event_id = json_integer_value(json_object_get(json_post_body, "event_id"));
+    //uint32_t event_id = json_integer_value(json_object_get(json_post_body, "event_id"));
+    uint64_t event_id = json_integer_value(json_object_get(json_post_body, "event_id"));
     const char *entry_id_key = json_string_value(json_object_get(json_post_body, "entry_id"));
     char *entry_id = NULL;
     if (entry_id_key) {
@@ -1389,7 +1392,7 @@ _api_debug_trigger_event(const struct _u_request *request, struct _u_response *r
         goto cleanup;
     }
 
-    printf("[REST] Manual triggered event '%d' with entry id '%s'!\n", event_id, entry_id);
+    printf("[REST] Manual triggered event '%ld' with entry id '%s'!\n", event_id, entry_id);
 
 cleanup:
     json_decref(json_post_body);

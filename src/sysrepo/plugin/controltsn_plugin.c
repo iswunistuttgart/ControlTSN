@@ -51,12 +51,15 @@ _test_print_mask(uint32_t mask) {
 */
 
 static int
-_send_notification(sr_session_ctx_t *session, uint32_t event_id, char *entry_id, char *msg)
+//_send_notification(sr_session_ctx_t *session, uint32_t event_id, char *entry_id, char *msg)
+_send_notification(sr_session_ctx_t *session, uint64_t event_id, char *entry_id, char *msg)
 {
     sr_val_t notif_values[3];
     notif_values[0].xpath = strdup("/control-tsn-uni:notif-generic/event-id");
-    notif_values[0].type = SR_UINT32_T;
-    notif_values[0].data.uint32_val = event_id;
+    //notif_values[0].type = SR_UINT32_T;
+    //notif_values[0].data.uint32_val = event_id;
+    notif_values[0].type = SR_UINT64_T;
+    notif_values[0].data.uint64_val = event_id;
     notif_values[1].xpath = strdup("/control-tsn-uni:notif-generic/entry-id");
     notif_values[1].type = SR_STRING_T;
     notif_values[1].data.string_val = entry_id;
@@ -67,7 +70,7 @@ _send_notification(sr_session_ctx_t *session, uint32_t event_id, char *entry_id,
     int rc = sr_event_notif_send(session, "/control-tsn-uni:notif-generic", notif_values, 3);
     if (rc != SR_ERR_OK)
     {
-        printf("[SYSREPO] Failure while sending notification for event id %d!\n", event_id);
+        printf("[SYSREPO] Failure while sending notification for event id %ld!\n", event_id);
     }
 
     return rc ? EXIT_FAILURE : EXIT_SUCCESS;
@@ -141,8 +144,10 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
     sr_change_iter_t *iter = NULL;
     sr_change_oper_t op;
 
-    uint32_t occured_mask = 0;
-    uint32_t already_send_mask = 0;
+    //uint32_t occured_mask = 0;
+    uint64_t occured_mask = 0;
+    //uint32_t already_send_mask = 0;
+    uint64_t already_send_mask = 0;
 
     // TSN_Event_CB_Data notif_data;
     // char *notif_data_event_name = NULL;

@@ -17,7 +17,8 @@ sr_session_ctx_t *session = NULL;
 sr_subscription_ctx_t *subscription = NULL;
 
 // Subscribed events mask
-uint32_t _subscribed_mask = 0;
+//uint32_t _subscribed_mask = 0;
+uint64_t _subscribed_mask = 0;
 
 // Generic callback
 void (*_cb_event)(TSN_Event_CB_Data data);
@@ -90,19 +91,23 @@ sysrepo_disconnect()
 //  Callbacks
 // -------------------------------------------------------- //
 void
-sysrepo_init_callback(uint32_t subscribed_events_mask, void (*cb_event)(TSN_Event_CB_Data))
+//sysrepo_init_callback(uint32_t subscribed_events_mask, void (*cb_event)(TSN_Event_CB_Data))
+sysrepo_init_callback(uint64_t subscribed_events_mask, void (*cb_event)(TSN_Event_CB_Data))
 {
     _subscribed_mask = subscribed_events_mask;
     _cb_event = cb_event;
 }
 
 int
-sysrepo_send_notification(uint32_t event_id, char *entry_id, char *msg)
+//sysrepo_send_notification(uint32_t event_id, char *entry_id, char *msg)
+sysrepo_send_notification(uint64_t event_id, char *entry_id, char *msg)
 {
     sr_val_t notif_values[3];
     notif_values[0].xpath = strdup("/control-tsn-uni:notif-generic/event-id");
-    notif_values[0].type = SR_UINT32_T;
-    notif_values[0].data.uint32_val = event_id;
+    //notif_values[0].type = SR_UINT32_T;
+    //notif_values[0].data.uint32_val = event_id;
+    notif_values[0].type = SR_UINT64_T;
+    notif_values[0].data.uint64_val = event_id;
     notif_values[1].xpath = strdup("/control-tsn-uni:notif-generic/entry-id");
     notif_values[1].type = SR_STRING_T;
     notif_values[1].data.string_val = entry_id;
@@ -112,7 +117,7 @@ sysrepo_send_notification(uint32_t event_id, char *entry_id, char *msg)
 
     rc = sr_event_notif_send(session, "/control-tsn-uni:notif-generic", notif_values, 3);
     if (rc != SR_ERR_OK) {
-        printf("[SYSREPO] Failure while sending notification for event id %d!\n", event_id);
+        printf("[SYSREPO] Failure while sending notification for event id %ld!\n", event_id);
     }
 
     return rc ? EXIT_FAILURE : EXIT_SUCCESS;
@@ -147,7 +152,8 @@ _notif_listener_cb(sr_session_ctx_t *session, const sr_ev_notif_type_t notif_typ
         return;
     }
 
-    uint32_t _event_id = values[0].data.uint32_val;
+    //uint32_t _event_id = values[0].data.uint32_val;
+    uint64_t _event_id = values[0].data.uint64_val;
 
     // Check if the module subscribed to this event
     if ((_subscribed_mask & values[0].data.uint32_val) == 0) {
@@ -5139,7 +5145,8 @@ cleanup:
 */
 
 int
-sysrepo_update_module_attributes(int module_id, const char *name, const char *description, const char *path, const uint32_t subscribed_events_mask)
+//sysrepo_update_module_attributes(int module_id, const char *name, const char *description, const char *path, const uint32_t subscribed_events_mask)
+sysrepo_update_module_attributes(int module_id, const char *name, const char *description, const char *path, const uint64_t subscribed_events_mask)
 {
     char *xpath_name = NULL;
     char *xpath_name_reg = NULL;
@@ -5209,8 +5216,10 @@ sysrepo_update_module_attributes(int module_id, const char *name, const char *de
         //_create_xpath_id("/control-tsn-uni:tsn-uni/modules/available-modules/mod[id='%d']/subscribed-events-mask", module_id, &xpath_subscribed_events_mask);
         _create_xpath_id("/control-tsn-uni:tsn-uni/modules/mod[id='%d']/subscribed-events-mask", module_id, &xpath_subscribed_events_mask);
         sr_val_t val_mask;
-        val_mask.type = SR_UINT32_T;
-        val_mask.data.uint32_val = subscribed_events_mask;
+        //val_mask.type = SR_UINT32_T;
+        //val_mask.data.uint32_val = subscribed_events_mask;
+        val_mask.type = SR_UINT64_T;
+        val_mask.data.uint64_val = subscribed_events_mask;
         rc = sr_set_item(session, xpath_subscribed_events_mask, &val_mask, 0);
         if (rc != SR_ERR_OK) {
             goto cleanup;

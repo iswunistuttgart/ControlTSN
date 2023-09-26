@@ -138,7 +138,8 @@ module control-tsn-uni {
             type string;
         }
         leaf subscribed-events-mask {
-            type uint32;
+            //type uint32;
+            type uint64;
         }
 
         leaf registered {

@@ -24,8 +24,10 @@ int sysrepo_stop_listening();
 // -------------------------------------------------------- //
 //  Callbacks
 // -------------------------------------------------------- //
-void sysrepo_init_callback(uint32_t subscribed_events_mask, void (*cb_event)(TSN_Event_CB_Data));
-int sysrepo_send_notification(uint32_t event_id, char *entry_id, char *msg);
+//void sysrepo_init_callback(uint32_t subscribed_events_mask, void (*cb_event)(TSN_Event_CB_Data));
+void sysrepo_init_callback(uint64_t subscribed_events_mask, void (*cb_event)(TSN_Event_CB_Data));
+//int sysrepo_send_notification(uint32_t event_id, char *entry_id, char *msg);
+int sysrepo_send_notification(uint64_t event_id, char *entry_id, char *msg);
 
 
 // -------------------------------------------------------- //
@@ -111,7 +113,8 @@ int sysrepo_update_module_data(int module_id, TSN_Module_Data data);
  * @param subscribed_events_mask The new subscribed events mask or NULL
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
-int sysrepo_update_module_attributes(int module_id, const char *name, const char *description, const char *path, const uint32_t subscribed_events_mask);
+int sysrepo_update_module_attributes(int module_id, const char *name, const char *description, const char *path, const uint64_t subscribed_events_mask);
+//int sysrepo_update_module_attributes(int module_id, const char *name, const char *description, const char *path, const uint32_t subscribed_events_mask);
 
 
 // -------------------------------------------------------- //

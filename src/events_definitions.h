@@ -56,74 +56,10 @@
 #define EVENT_CONFIGURATION_ENABLE_STREAM_SEND_RECEIVE  0x40000000  // 1073741824
 #define EVENT_CONFIGURATION_DISABLE_STREAM_SEND_RECEIVE 0x80000000  // 2147483648
 
-// ----------------------------------------------
-// Error
-// ----------------------------------------------
-/**
- * @brief Data for the event of an occured error
- */
-/*
-typedef struct TSN_Event_Data_Error
-{
-    int error_code;
-    char *error_msg;
-} TSN_Event_Data_Error;
-*/
-
-// ----------------------------------------------
-// Streams
-// ----------------------------------------------
-/**
- * @brief Data for the event of a requested stream
- */
-/*
-typedef struct TSN_Event_Data_Stream_Requested
-{
-    char *stream_id;
-} TSN_Event_Data_Stream_Requested;
-*/
-
-/**
- * @brief Data for the event of a configured stream
- */
-/*
-typedef struct TSN_Event_Data_Stream_Configured
-{
-    char *stream_id;
-} TSN_Event_Data_Stream_Configured;
-*/
-
-// ----------------------------------------------
-// Modules
-// ----------------------------------------------
-
-// ----------------------------------------------
-// Topology
-// ----------------------------------------------
-
-// ----------------------------------------------
-// Application
-// ----------------------------------------------
-
-/**
- * @brief Union containing the data for the various events
- */
-/*
-typedef union TSN_Event_CB_Data
-{
-    // Error
-    TSN_Event_Data_Error error;
-    // Stream
-    TSN_Event_Data_Stream_Requested stream_requested;
-    TSN_Event_Data_Stream_Configured stream_configured;
-    // Modules
-    // Topology
-    // Application
-} TSN_Event_CB_Data;
-*/
 
 typedef struct TSN_Event_CB_Data {
-    uint32_t event_id;  // The ID of the occured event
+    //uint32_t event_id;  // The ID of the occured event
+    uint64_t event_id;  // The ID of the occured event
     char *entry_id;     // Might contain the sysrepo key of the corresponding element (e.g. the id)
     char *msg;          // Might contain a event specific message
 } TSN_Event_CB_Data;

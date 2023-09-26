@@ -122,7 +122,8 @@ typedef struct TSN_Module
     char *path;         // Path to the modules executable       (???)
     char *name;         // Module Name
     char *description;  // Module Description
-    uint32_t subscribed_events_mask;     // Mask describing the relevant events for this module
+    //uint32_t subscribed_events_mask;     // Mask describing the relevant events for this module
+    uint64_t subscribed_events_mask;     // Mask describing the relevant events for this module
     uint8_t registered;
     void (*cb_event)(TSN_Event_CB_Data data);     // Generic callback method for events
     TSN_Module_Data data;
