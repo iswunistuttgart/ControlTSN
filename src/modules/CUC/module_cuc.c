@@ -1018,11 +1018,12 @@ _cb_event(TSN_Event_CB_Data data)
 
     // (data.event_id == EVENT_STREAM_CONFIGURED) removed so that the stream isn't automatically deployed!
     else if (data.event_id == EVENT_STREAM_DEPLOY) {  
-        if (data.event_id == EVENT_STREAM_CONFIGURED) {
-            printf("[CUC][CB] Stream '%s' configured! Deploying the configuration to the enddevices...\n", data.entry_id);
-        } else {
-            printf("[CUC][CB] Deploy configuration of stream '%s' to the enddevices \n", data.entry_id);
-        }
+        //if (data.event_id == EVENT_STREAM_CONFIGURED) {
+        //    printf("[CUC][CB] Stream '%s' configured! Deploying the configuration to the enddevices...\n", data.entry_id);
+        //} else {
+        //    printf("[CUC][CB] Deploy configuration of stream '%s' to the enddevices \n", data.entry_id);
+        //}
+        printf("[CUC][CB] Deploy configuration of stream '%s' to the enddevices \n", data.entry_id);
         
         TSN_Stream *configured_stream = malloc(sizeof(TSN_Stream));
         rc = sysrepo_get_stream(data.entry_id, &configured_stream);

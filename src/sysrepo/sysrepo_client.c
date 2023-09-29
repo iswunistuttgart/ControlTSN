@@ -156,7 +156,8 @@ _notif_listener_cb(sr_session_ctx_t *session, const sr_ev_notif_type_t notif_typ
     uint64_t _event_id = values[0].data.uint64_val;
 
     // Check if the module subscribed to this event
-    if ((_subscribed_mask & values[0].data.uint32_val) == 0) {
+    //if ((_subscribed_mask & values[0].data.uint32_val) == 0) {
+    if ((_subscribed_mask & values[0].data.uint64_val) == 0) {
         return;
     }
 
@@ -2938,7 +2939,7 @@ _read_module(char *xpath, TSN_Module **mod)
     if (rc != SR_ERR_OK) {
         goto cleanup;
     }
-    (*mod)->subscribed_events_mask = val_subscribed_events_mask->data.uint32_val;
+    (*mod)->subscribed_events_mask = val_subscribed_events_mask->data.uint64_val;
 
     // Registered
     _create_xpath(xpath, "/registered", &xpath_registered);
@@ -3037,8 +3038,10 @@ _write_module(char *xpath, TSN_Module *mod)
     // Write Subscribed Events Mask
     _create_xpath(xpath, "/subscribed-events-mask", &xpath_subscribed_events_mask);
     sr_val_t val_subscribed_events_mask;
-    val_subscribed_events_mask.type = SR_UINT32_T;
-    val_subscribed_events_mask.data.uint32_val = mod->subscribed_events_mask;
+    //val_subscribed_events_mask.type = SR_UINT32_T;
+    //val_subscribed_events_mask.data.uint32_val = mod->subscribed_events_mask;
+    val_subscribed_events_mask.type = SR_UINT64_T;
+    val_subscribed_events_mask.data.uint64_val = mod->subscribed_events_mask;
     rc = sr_set_item(session, xpath_subscribed_events_mask, &val_subscribed_events_mask, 0);
     if (rc != SR_ERR_OK) {
         goto cleanup;

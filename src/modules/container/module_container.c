@@ -499,12 +499,13 @@ int main(void)
     signal(SIGTERM, signal_handler);
 
     // Init this module
-    rc = module_init("Container", &this_module,
-                     (EVENT_APPLICATION_LIST_OF_IMAGES_REQUESTED |
-                      EVENT_APPLICATION_LIST_OF_APPS_REQUESTED |
-                      EVENT_APPLICATION_APP_START_REQUESTED |
-                      EVENT_APPLICATION_APP_STOP_REQUESTED),
-                     _cb_event);
+    //rc = module_init("Container", &this_module,
+    //                 (EVENT_APPLICATION_LIST_OF_IMAGES_REQUESTED |
+    //                  EVENT_APPLICATION_LIST_OF_APPS_REQUESTED |
+    //                  EVENT_APPLICATION_APP_START_REQUESTED |
+    //                  EVENT_APPLICATION_APP_STOP_REQUESTED),
+    //                 _cb_event);
+    rc = module_init("Container", &this_module, -1, _cb_event);
     if (rc == EXIT_FAILURE) {
         log("Error initializing module!");
         goto cleanup;

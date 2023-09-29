@@ -5,7 +5,7 @@
       <name>REST</name>
       <desc>Exposes a REST API to interact with the framework</desc>
       <executable-path>./RESTModule</executable-path>
-      <subscribed-events-mask>65535</subscribed-events-mask>
+      <subscribed-events-mask>4223155493794047</subscribed-events-mask>
       <registered>1</registered>
       <pid>0</pid>
       <data>
@@ -21,7 +21,7 @@
       <name>CUC</name>
       <desc>Represents the Central User Controller in the network based on the central configuration approach of TSN</desc>
       <executable-path>./CUCModule</executable-path>
-      <subscribed-events-mask>203631</subscribed-events-mask>
+      <subscribed-events-mask>50331753</subscribed-events-mask>
       <registered>1</registered>
       <pid>0</pid>
       <data>
@@ -53,7 +53,7 @@
       <name>Container</name>
       <desc>This module performs the application deployment to the enddevices.</desc>
       <executable-path>./ContainerModule</executable-path>
-      <subscribed-events-mask>251658240</subscribed-events-mask>
+      <subscribed-events-mask>1030792151040</subscribed-events-mask>
       <registered>1</registered>
       <pid>0</pid>
       <data>
@@ -74,7 +74,7 @@
       <name>AppConfiguration</name>
       <desc>Configures the distributed applications and writes their parameterization</desc>
       <executable-path>./ConfigurationModule</executable-path>
-      <subscribed-events-mask>4026531840</subscribed-events-mask>
+      <subscribed-events-mask>4222124650659840</subscribed-events-mask>
       <registered>1</registered>
       <pid>0</pid>
     </mod>

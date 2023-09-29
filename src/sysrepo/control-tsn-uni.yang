@@ -138,8 +138,8 @@ module control-tsn-uni {
             type string;
         }
         leaf subscribed-events-mask {
-            //type uint32;
             type uint64;
+            default 0;
         }
 
         leaf registered {
@@ -466,7 +466,7 @@ module control-tsn-uni {
         description "A generic notification including the corresponding event ID";
 
         leaf event-id {
-            type uint32;
+            type uint64;
             description "Describing the occured event (see 'events_definitions.h' for the list of events)";
         }
         leaf entry-id {
