@@ -939,14 +939,7 @@ static void _cb_event(TSN_Event_CB_Data data)
         // Configure parameters via OPC/UA!
         configuration_deploy_app_par(&param, enddev);
         */
-
-        //// Get the app
-        //TSN_App *app = malloc(sizeof(TSN_App));
-        //ret = sysrepo_get_application_app(data.entry_id, &app);
-//
-        //printf("[APP][CB] Parameters of App '%s' changed!\n", app->name);
-//
-        //free(app);
+       
         ret = configuration_app_deploy_parameters(data.entry_id);
         if (ret == EXIT_SUCCESS)
         {

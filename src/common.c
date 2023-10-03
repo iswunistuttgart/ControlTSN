@@ -789,35 +789,57 @@ cleanup:
 static void
 _fill_opcua_variant_with_app_parameter(UA_Variant *variant, TSN_App_Parameter *param)
 {
-    printf("----> %s\n", param->name);
     if (param->type == BINARY) {
+        UA_String val = UA_String_fromChars(param->value.binary_val);
+        UA_Variant_setScalarCopy(variant, &val, &UA_TYPES[UA_TYPES_STRING]);
 
     } else if (param->type == BOOLEAN) {
+        UA_Boolean val = param->value.boolean_val;
+        UA_Variant_setScalarCopy(variant, &val, &UA_TYPES[UA_TYPES_BOOLEAN]);
 
     } else if (param->type == DECIMAL64) {
         UA_Double val = param->value.decimal64_val;
         UA_Variant_setScalarCopy(variant, &val, &UA_TYPES[UA_TYPES_DOUBLE]);
         
     } else if (param->type == INSTANCE_IDENTIFIER) {
+        UA_String val = UA_String_fromChars(param->value.instance_identifier_val);
+        UA_Variant_setScalarCopy(variant, &val, &UA_TYPES[UA_TYPES_STRING]);
         
     } else if (param->type == INT8) {
+        UA_SByte val = param->value.int8_val;
+        UA_Variant_setScalarCopy(variant, &val, &UA_TYPES[UA_TYPES_SBYTE]);
         
     } else if (param->type == INT16) {
+        UA_Int16 val = param->value.int16_val;
+        UA_Variant_setScalarCopy(variant, &val, &UA_TYPES[UA_TYPES_INT16]);
         
     } else if (param->type == INT32) {
+        UA_Int32 val = param->value.int32_val;
+        UA_Variant_setScalarCopy(variant, &val, &UA_TYPES[UA_TYPES_INT32]);
         
     } else if (param->type == INT64) {
+        UA_Int64 val = param->value.int64_val;
+        UA_Variant_setScalarCopy(variant, &val, &UA_TYPES[UA_TYPES_INT64]);
         
     } else if (param->type == STRING) {
+        UA_String val = UA_String_fromChars(param->value.string_val);
+        UA_Variant_setScalarCopy(variant, &val, &UA_TYPES[UA_TYPES_STRING]);
         
     } else if (param->type == UINT8) {
+        UA_Byte val = param->value.uint8_val;
+        UA_Variant_setScalarCopy(variant, &val, &UA_TYPES[UA_TYPES_BYTE]);
         
     } else if (param->type == UINT16) {
+        UA_UInt16 val = param->value.uint16_val;
+        UA_Variant_setScalarCopy(variant, &val, &UA_TYPES[UA_TYPES_UINT16]);
         
     } else if (param->type == UINT32) {
+        UA_UInt32 val = param->value.uint32_val;
+        UA_Variant_setScalarCopy(variant, &val, &UA_TYPES[UA_TYPES_UINT32]);
         
     } else if (param->type == UINT64) {
-        
+        UA_UInt64 val = param->value.uint64_val;
+        UA_Variant_setScalarCopy(variant, &val, &UA_TYPES[UA_TYPES_UINT64]);
     }
 }
 
@@ -871,10 +893,9 @@ _write_app_parameters(const TSN_Enddevice *enddevice, TSN_App *app)
         elem->targetName = UA_QUALIFIEDNAME_ALLOC(APP_PARAMS_ROOT_FOLDER_NAMESPACE_INDEX, app->parameters[i].name);
        
         request.browsePaths[i] = browsePath;
-        //UA_BrowsePath_deleteMembers(&browsePath);
-        //UA_TranslateBrowsePathsToNodeIdsResponse_deleteMembers(&response);
     }
 
+    uint16_t successCounter = 0;
     UA_TranslateBrowsePathsToNodeIdsResponse response = UA_Client_Service_translateBrowsePathsToNodeIds(client, request);
     if (response.responseHeader.serviceResult == UA_STATUSCODE_GOOD) {
         for (int i=0; i<response.resultsSize; i++) {
@@ -883,13 +904,14 @@ _write_app_parameters(const TSN_Enddevice *enddevice, TSN_App *app)
                 printf("Response #%d:  %d\n", i, nodeId.identifier.numeric);
 
                 // Write param value to node
-                // TODO: Convert param type to OPC UA Type...
+                // Convert param type to OPC UA Type...
                 _fill_opcua_variant_with_app_parameter(variant, &(app->parameters[i]));
                 ret = UA_Client_writeValueAttribute(client, nodeId, variant);
                 if (ret != UA_STATUSCODE_GOOD) {
                     printf("[COMMON][OPCUA][ERROR] Could not write '%s' to Node ns=%d;i=%d!\n", app->parameters[i].name, nodeId.namespaceIndex, nodeId.identifier.numeric);
                     goto cleanup;
                 }
+                successCounter++;
             }
         }
     }
@@ -898,7 +920,7 @@ cleanup:
     UA_Variant_delete(variant);
     UA_Client_delete(client);
 
-    return rc;
+    return successCounter == app->count_parameters ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
 int configuration_app_deploy_parameters(char *app_id)

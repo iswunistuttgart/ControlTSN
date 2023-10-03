@@ -62,7 +62,7 @@ _json_to_data_value(const json_t *val, TSN_Module_Data_Entry_Type type)
         value.boolean_val = json_boolean_value(val);
     }
     else if (type == DECIMAL64) {
-        value.decimal64_val = json_real_value(val);
+        value.decimal64_val = json_number_value(val);
     }
     else if (type == INSTANCE_IDENTIFIER) {
         value.instance_identifier_val = (char *) json_string_value(val);

@@ -336,12 +336,12 @@ attr.userAccessLevel = 1;
 attr.accessLevel = 3;
 /* Value rank inherited */
 attr.valueRank = -2;
-attr.dataType = UA_NODEID_NUMERIC(ns[0], 10LU);
-UA_Float *variablenode_ns_1_i_6004_variant_DataContents =  UA_Float_new();
+attr.dataType = UA_NODEID_NUMERIC(ns[0], 11LU);
+UA_Double *variablenode_ns_1_i_6004_variant_DataContents =  UA_Double_new();
 if (!variablenode_ns_1_i_6004_variant_DataContents) return UA_STATUSCODE_BADOUTOFMEMORY;
-UA_Float_init(variablenode_ns_1_i_6004_variant_DataContents);
-*variablenode_ns_1_i_6004_variant_DataContents = (UA_Float) 0;
-UA_Variant_setScalar(&attr.value, variablenode_ns_1_i_6004_variant_DataContents, &UA_TYPES[UA_TYPES_FLOAT]);
+UA_Double_init(variablenode_ns_1_i_6004_variant_DataContents);
+*variablenode_ns_1_i_6004_variant_DataContents = (UA_Double) 0;
+UA_Variant_setScalar(&attr.value, variablenode_ns_1_i_6004_variant_DataContents, &UA_TYPES[UA_TYPES_DOUBLE]);
 attr.displayName = UA_LOCALIZEDTEXT("", "EnergyThreshold");
 #ifdef UA_ENABLE_NODESET_COMPILER_DESCRIPTIONS
 attr.description = UA_LOCALIZEDTEXT("", "The threshold value of the energy from when a warning should be emitted");
@@ -354,7 +354,7 @@ UA_QUALIFIEDNAME(ns[1], "EnergyThreshold"),
 UA_NODEID_NUMERIC(ns[0], 63LU),
 (const UA_NodeAttributes*)&attr, &UA_TYPES[UA_TYPES_VARIABLEATTRIBUTES],NULL, NULL);
 if (retVal != UA_STATUSCODE_GOOD) return retVal;
-UA_Float_delete(variablenode_ns_1_i_6004_variant_DataContents);
+UA_Double_delete(variablenode_ns_1_i_6004_variant_DataContents);
 retVal |= UA_Server_addReference(server, UA_NODEID_NUMERIC(ns[1], 6004LU), UA_NODEID_NUMERIC(ns[0], 37LU), UA_EXPANDEDNODEID_NUMERIC(ns[0], 78LU), true);
 if (retVal != UA_STATUSCODE_GOOD) return retVal;
 return retVal;
@@ -376,12 +376,12 @@ attr.userAccessLevel = 1;
 attr.accessLevel = 3;
 /* Value rank inherited */
 attr.valueRank = -2;
-attr.dataType = UA_NODEID_NUMERIC(ns[0], 10LU);
-UA_Float *variablenode_ns_1_i_6003_variant_DataContents =  UA_Float_new();
+attr.dataType = UA_NODEID_NUMERIC(ns[0], 11LU);
+UA_Double *variablenode_ns_1_i_6003_variant_DataContents =  UA_Double_new();
 if (!variablenode_ns_1_i_6003_variant_DataContents) return UA_STATUSCODE_BADOUTOFMEMORY;
-UA_Float_init(variablenode_ns_1_i_6003_variant_DataContents);
-*variablenode_ns_1_i_6003_variant_DataContents = (UA_Float) 0;
-UA_Variant_setScalar(&attr.value, variablenode_ns_1_i_6003_variant_DataContents, &UA_TYPES[UA_TYPES_FLOAT]);
+UA_Double_init(variablenode_ns_1_i_6003_variant_DataContents);
+*variablenode_ns_1_i_6003_variant_DataContents = (UA_Double) 0;
+UA_Variant_setScalar(&attr.value, variablenode_ns_1_i_6003_variant_DataContents, &UA_TYPES[UA_TYPES_DOUBLE]);
 attr.displayName = UA_LOCALIZEDTEXT("", "UpperEnergyBound");
 #ifdef UA_ENABLE_NODESET_COMPILER_DESCRIPTIONS
 attr.description = UA_LOCALIZEDTEXT("", "The upper limit of the energy value to be monitored");
@@ -394,7 +394,7 @@ UA_QUALIFIEDNAME(ns[1], "UpperEnergyBound"),
 UA_NODEID_NUMERIC(ns[0], 63LU),
 (const UA_NodeAttributes*)&attr, &UA_TYPES[UA_TYPES_VARIABLEATTRIBUTES],NULL, NULL);
 if (retVal != UA_STATUSCODE_GOOD) return retVal;
-UA_Float_delete(variablenode_ns_1_i_6003_variant_DataContents);
+UA_Double_delete(variablenode_ns_1_i_6003_variant_DataContents);
 retVal |= UA_Server_addReference(server, UA_NODEID_NUMERIC(ns[1], 6003LU), UA_NODEID_NUMERIC(ns[0], 37LU), UA_EXPANDEDNODEID_NUMERIC(ns[0], 78LU), true);
 if (retVal != UA_STATUSCODE_GOOD) return retVal;
 return retVal;
@@ -416,12 +416,12 @@ attr.userAccessLevel = 1;
 attr.accessLevel = 3;
 /* Value rank inherited */
 attr.valueRank = -2;
-attr.dataType = UA_NODEID_NUMERIC(ns[0], 10LU);
-UA_Float *variablenode_ns_1_i_6002_variant_DataContents =  UA_Float_new();
+attr.dataType = UA_NODEID_NUMERIC(ns[0], 11LU);
+UA_Double *variablenode_ns_1_i_6002_variant_DataContents =  UA_Double_new();
 if (!variablenode_ns_1_i_6002_variant_DataContents) return UA_STATUSCODE_BADOUTOFMEMORY;
-UA_Float_init(variablenode_ns_1_i_6002_variant_DataContents);
-*variablenode_ns_1_i_6002_variant_DataContents = (UA_Float) 0;
-UA_Variant_setScalar(&attr.value, variablenode_ns_1_i_6002_variant_DataContents, &UA_TYPES[UA_TYPES_FLOAT]);
+UA_Double_init(variablenode_ns_1_i_6002_variant_DataContents);
+*variablenode_ns_1_i_6002_variant_DataContents = (UA_Double) 0;
+UA_Variant_setScalar(&attr.value, variablenode_ns_1_i_6002_variant_DataContents, &UA_TYPES[UA_TYPES_DOUBLE]);
 attr.displayName = UA_LOCALIZEDTEXT("", "LowerEnergyBound");
 #ifdef UA_ENABLE_NODESET_COMPILER_DESCRIPTIONS
 attr.description = UA_LOCALIZEDTEXT("", "The lower limit of the energy value to be monitored");
@@ -434,7 +434,7 @@ UA_QUALIFIEDNAME(ns[1], "LowerEnergyBound"),
 UA_NODEID_NUMERIC(ns[0], 63LU),
 (const UA_NodeAttributes*)&attr, &UA_TYPES[UA_TYPES_VARIABLEATTRIBUTES],NULL, NULL);
 if (retVal != UA_STATUSCODE_GOOD) return retVal;
-UA_Float_delete(variablenode_ns_1_i_6002_variant_DataContents);
+UA_Double_delete(variablenode_ns_1_i_6002_variant_DataContents);
 retVal |= UA_Server_addReference(server, UA_NODEID_NUMERIC(ns[1], 6002LU), UA_NODEID_NUMERIC(ns[0], 37LU), UA_EXPANDEDNODEID_NUMERIC(ns[0], 78LU), true);
 if (retVal != UA_STATUSCODE_GOOD) return retVal;
 return retVal;
@@ -560,12 +560,12 @@ attr.userAccessLevel = 1;
 attr.accessLevel = 3;
 /* Value rank inherited */
 attr.valueRank = -2;
-attr.dataType = UA_NODEID_NUMERIC(ns[0], 10LU);
-UA_Float *variablenode_ns_1_i_6015_variant_DataContents =  UA_Float_new();
+attr.dataType = UA_NODEID_NUMERIC(ns[0], 11LU);
+UA_Double *variablenode_ns_1_i_6015_variant_DataContents =  UA_Double_new();
 if (!variablenode_ns_1_i_6015_variant_DataContents) return UA_STATUSCODE_BADOUTOFMEMORY;
-UA_Float_init(variablenode_ns_1_i_6015_variant_DataContents);
-*variablenode_ns_1_i_6015_variant_DataContents = (UA_Float) 0;
-UA_Variant_setScalar(&attr.value, variablenode_ns_1_i_6015_variant_DataContents, &UA_TYPES[UA_TYPES_FLOAT]);
+UA_Double_init(variablenode_ns_1_i_6015_variant_DataContents);
+*variablenode_ns_1_i_6015_variant_DataContents = (UA_Double) 0;
+UA_Variant_setScalar(&attr.value, variablenode_ns_1_i_6015_variant_DataContents, &UA_TYPES[UA_TYPES_DOUBLE]);
 attr.displayName = UA_LOCALIZEDTEXT("", "UpperEnergyBound");
 #ifdef UA_ENABLE_NODESET_COMPILER_DESCRIPTIONS
 attr.description = UA_LOCALIZEDTEXT("", "The upper limit of the energy value to be monitored");
@@ -578,7 +578,7 @@ UA_QUALIFIEDNAME(ns[1], "UpperEnergyBound"),
 UA_NODEID_NUMERIC(ns[0], 63LU),
 (const UA_NodeAttributes*)&attr, &UA_TYPES[UA_TYPES_VARIABLEATTRIBUTES],NULL, NULL);
 if (retVal != UA_STATUSCODE_GOOD) return retVal;
-UA_Float_delete(variablenode_ns_1_i_6015_variant_DataContents);
+UA_Double_delete(variablenode_ns_1_i_6015_variant_DataContents);
 return retVal;
 }
 
@@ -598,12 +598,12 @@ attr.userAccessLevel = 1;
 attr.accessLevel = 3;
 /* Value rank inherited */
 attr.valueRank = -2;
-attr.dataType = UA_NODEID_NUMERIC(ns[0], 10LU);
-UA_Float *variablenode_ns_1_i_6014_variant_DataContents =  UA_Float_new();
+attr.dataType = UA_NODEID_NUMERIC(ns[0], 11LU);
+UA_Double *variablenode_ns_1_i_6014_variant_DataContents =  UA_Double_new();
 if (!variablenode_ns_1_i_6014_variant_DataContents) return UA_STATUSCODE_BADOUTOFMEMORY;
-UA_Float_init(variablenode_ns_1_i_6014_variant_DataContents);
-*variablenode_ns_1_i_6014_variant_DataContents = (UA_Float) 0;
-UA_Variant_setScalar(&attr.value, variablenode_ns_1_i_6014_variant_DataContents, &UA_TYPES[UA_TYPES_FLOAT]);
+UA_Double_init(variablenode_ns_1_i_6014_variant_DataContents);
+*variablenode_ns_1_i_6014_variant_DataContents = (UA_Double) 0;
+UA_Variant_setScalar(&attr.value, variablenode_ns_1_i_6014_variant_DataContents, &UA_TYPES[UA_TYPES_DOUBLE]);
 attr.displayName = UA_LOCALIZEDTEXT("", "LowerEnergyBound");
 #ifdef UA_ENABLE_NODESET_COMPILER_DESCRIPTIONS
 attr.description = UA_LOCALIZEDTEXT("", "The lower limit of the energy value to be monitored");
@@ -616,7 +616,7 @@ UA_QUALIFIEDNAME(ns[1], "LowerEnergyBound"),
 UA_NODEID_NUMERIC(ns[0], 63LU),
 (const UA_NodeAttributes*)&attr, &UA_TYPES[UA_TYPES_VARIABLEATTRIBUTES],NULL, NULL);
 if (retVal != UA_STATUSCODE_GOOD) return retVal;
-UA_Float_delete(variablenode_ns_1_i_6014_variant_DataContents);
+UA_Double_delete(variablenode_ns_1_i_6014_variant_DataContents);
 return retVal;
 }
 
@@ -636,12 +636,12 @@ attr.userAccessLevel = 1;
 attr.accessLevel = 3;
 /* Value rank inherited */
 attr.valueRank = -2;
-attr.dataType = UA_NODEID_NUMERIC(ns[0], 10LU);
-UA_Float *variablenode_ns_1_i_6013_variant_DataContents =  UA_Float_new();
+attr.dataType = UA_NODEID_NUMERIC(ns[0], 11LU);
+UA_Double *variablenode_ns_1_i_6013_variant_DataContents =  UA_Double_new();
 if (!variablenode_ns_1_i_6013_variant_DataContents) return UA_STATUSCODE_BADOUTOFMEMORY;
-UA_Float_init(variablenode_ns_1_i_6013_variant_DataContents);
-*variablenode_ns_1_i_6013_variant_DataContents = (UA_Float) 0;
-UA_Variant_setScalar(&attr.value, variablenode_ns_1_i_6013_variant_DataContents, &UA_TYPES[UA_TYPES_FLOAT]);
+UA_Double_init(variablenode_ns_1_i_6013_variant_DataContents);
+*variablenode_ns_1_i_6013_variant_DataContents = (UA_Double) 0;
+UA_Variant_setScalar(&attr.value, variablenode_ns_1_i_6013_variant_DataContents, &UA_TYPES[UA_TYPES_DOUBLE]);
 attr.displayName = UA_LOCALIZEDTEXT("", "EnergyThreshold");
 #ifdef UA_ENABLE_NODESET_COMPILER_DESCRIPTIONS
 attr.description = UA_LOCALIZEDTEXT("", "The threshold value of the energy from when a warning should be emitted");
@@ -654,7 +654,7 @@ UA_QUALIFIEDNAME(ns[1], "EnergyThreshold"),
 UA_NODEID_NUMERIC(ns[0], 63LU),
 (const UA_NodeAttributes*)&attr, &UA_TYPES[UA_TYPES_VARIABLEATTRIBUTES],NULL, NULL);
 if (retVal != UA_STATUSCODE_GOOD) return retVal;
-UA_Float_delete(variablenode_ns_1_i_6013_variant_DataContents);
+UA_Double_delete(variablenode_ns_1_i_6013_variant_DataContents);
 return retVal;
 }
 
