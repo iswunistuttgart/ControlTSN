@@ -345,7 +345,7 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
                 }
             }
 
-            // APPLICATION ---------------------------------------------------
+        // APPLICATION ---------------------------------------------------
         }
         else if (strstr(val->xpath, "/application/") != NULL)
         {
@@ -353,6 +353,24 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
             // EVENT_APPLICATION_LIST_OF_APPS_REQUESTED     (currently not used)
             // EVENT_APPLICATION_APP_START_REQUESTED        (directly from sysrepo)
             // EVENT_APPLICATION_APP_STOP_REQUESTED         (directly from sysrepo)
+
+
+            if (strstr(val->xpath, "/apps") != NULL) {
+                // APPS ---------------------------------------------------
+
+                if (strstr(val->xpath, "/parameters") != NULL && (op == SR_OP_MODIFIED || op == SR_OP_CREATED)) {
+                    if ((already_send_mask & EVENT_CONFIGURATION_CHANGED) == 0) {
+                        // App Parameters changed/created --> Send Event to deploy the new parameters
+                        char *key = _extract_key(val->xpath, "id");
+                        rc = _send_notification(session, EVENT_CONFIGURATION_CHANGED, key, "Application parameters changed!");
+                        if (rc == EXIT_FAILURE) {
+                            printf("[PLUGIN] Failed to send notification '%s'!\n", "EVENT_CONFIGURATION_CHANGED");
+                        } else {
+                            already_send_mask |= EVENT_CONFIGURATION_CHANGED;
+                        }
+                    }
+                }
+            }
         }
     }
 

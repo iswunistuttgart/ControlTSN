@@ -189,7 +189,11 @@ sysrepo_data_to_data_value(sr_data_t data, TSN_Module_Data_Entry_Type type)
         val.boolean_val = data.bool_val;
     }
     else if (type == DECIMAL64) {
-        val.decimal64_val = data.decimal64_val;
+        //val.decimal64_val = data.decimal64_val;
+
+        // TODO: There is a problem with handling of dec64 values in sysrepo... Maybe use the internal libyang api instead to write and read these param values?
+        // Somehow the decimal64 value is stored with the type string...
+        val.decimal64_val = strtod(data.string_val, NULL);
     }
     else if (type == INSTANCE_IDENTIFIER) {
         val.instance_identifier_val = strdup(data.instanceid_val);

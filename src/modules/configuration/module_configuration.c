@@ -33,7 +33,7 @@
 //---------------------------------------
 static volatile sig_atomic_t is_running = 1;
 
-static UA_DataTypeArray customTypesArray = { NULL, UA_TYPES_ENDPOINT_COUNT, UA_TYPES_ENDPOINT, UA_FALSE };
+static UA_DataTypeArray customTypesArray = {NULL, UA_TYPES_ENDPOINT_COUNT, UA_TYPES_ENDPOINT, UA_FALSE};
 
 static void signal_handler(int signum)
 {
@@ -41,12 +41,13 @@ static void signal_handler(int signum)
     is_running = 0;
 }
 
-#define log(...)                                                        \
-    do {                                                                \
-        configuration_log(__func__, __VA_ARGS__);                       \
+#define log(...)                                  \
+    do                                            \
+    {                                             \
+        configuration_log(__func__, __VA_ARGS__); \
     } while (0)
 
-static void configuration_log(const char * restrict func, const char * restrict fmt, ...)
+static void configuration_log(const char *restrict func, const char *restrict fmt, ...)
 {
     FILE *out = stdout;
     va_list args;
@@ -64,7 +65,8 @@ static void configuration_log(const char * restrict func, const char * restrict 
 static char *x_strdup(const char *str)
 {
     char *p = strdup(str);
-    if (!p) {
+    if (!p)
+    {
         log("Error allocating memory!");
         exit(EXIT_FAILURE);
     }
@@ -77,7 +79,8 @@ static void *x_calloc(size_t nmemb, size_t size)
     void *p;
 
     p = calloc(nmemb, size);
-    if (!p) {
+    if (!p)
+    {
         log("Error allocating memory!");
         exit(EXIT_FAILURE);
     }
@@ -90,7 +93,8 @@ static void *x_realloc(void *ptr, size_t size)
     void *p;
 
     p = realloc(ptr, size);
-    if (!p) {
+    if (!p)
+    {
         log("Error allocating memory!");
         exit(EXIT_FAILURE);
     }
@@ -131,35 +135,42 @@ static void configuration_fill_app_param(struct configuration_parameter *paramet
     //
     // Fetch and store engineering parameters.
     //
-    for (i = 0; i < app->count_parameters; ++i) {
+    for (i = 0; i < app->count_parameters; ++i)
+    {
         TSN_App_Parameter *par = &app->parameters[i];
 
-        if (!strcmp(par->name, "current_status")) {
+        if (!strcmp(par->name, "current_status"))
+        {
             parameter->eng.current_status = parameter_data_value_to_string(par);
             num_app_parameters--;
         }
 
-        if (!strcmp(par->name, "commanded_status")) {
+        if (!strcmp(par->name, "commanded_status"))
+        {
             parameter->eng.commanded_status = parameter_data_value_to_string(par);
             num_app_parameters--;
         }
 
-        if (!strcmp(par->name, "destination_mac")) {
+        if (!strcmp(par->name, "destination_mac"))
+        {
             parameter->eng.destination_mac = parameter_data_value_to_string(par);
             num_app_parameters--;
         }
 
-        if (!strcmp(par->name, "subscribed_mac")) {
+        if (!strcmp(par->name, "subscribed_mac"))
+        {
             parameter->eng.subscribed_mac = parameter_data_value_to_string(par);
             num_app_parameters--;
         }
 
-        if (!strcmp(par->name, "interface")) {
+        if (!strcmp(par->name, "interface"))
+        {
             parameter->eng.interface = parameter_data_value_to_string(par);
             num_app_parameters--;
         }
 
-        if (!strcmp(par->name, "sendreceive_enabled")) {
+        if (!strcmp(par->name, "sendreceive_enabled"))
+        {
             char *txrx;
             int tmp;
 
@@ -172,7 +183,8 @@ static void configuration_fill_app_param(struct configuration_parameter *paramet
             num_app_parameters--;
         }
 
-        if (!strcmp(par->name, "cycle_time")) {
+        if (!strcmp(par->name, "cycle_time"))
+        {
             char *time, *endptr;
 
             time = parameter_data_value_to_string(par);
@@ -183,7 +195,8 @@ static void configuration_fill_app_param(struct configuration_parameter *paramet
             num_app_parameters--;
         }
 
-        if (!strcmp(par->name, "base_time")) {
+        if (!strcmp(par->name, "base_time"))
+        {
             char *time, *endptr;
 
             time = parameter_data_value_to_string(par);
@@ -194,7 +207,8 @@ static void configuration_fill_app_param(struct configuration_parameter *paramet
             num_app_parameters--;
         }
 
-        if (!strcmp(par->name, "qbv_offset")) {
+        if (!strcmp(par->name, "qbv_offset"))
+        {
             char *time, *endptr;
 
             time = parameter_data_value_to_string(par);
@@ -205,7 +219,8 @@ static void configuration_fill_app_param(struct configuration_parameter *paramet
             num_app_parameters--;
         }
 
-        if (!strcmp(par->name, "wakeup_latency")) {
+        if (!strcmp(par->name, "wakeup_latency"))
+        {
             char *time, *endptr;
 
             time = parameter_data_value_to_string(par);
@@ -216,7 +231,8 @@ static void configuration_fill_app_param(struct configuration_parameter *paramet
             num_app_parameters--;
         }
 
-        if (!strcmp(par->name, "wcet")) {
+        if (!strcmp(par->name, "wcet"))
+        {
             char *time, *endptr;
 
             time = parameter_data_value_to_string(par);
@@ -227,7 +243,8 @@ static void configuration_fill_app_param(struct configuration_parameter *paramet
             num_app_parameters--;
         }
 
-        if (!strcmp(par->name, "scheduling_priority")) {
+        if (!strcmp(par->name, "scheduling_priority"))
+        {
             char *prio;
 
             prio = parameter_data_value_to_string(par);
@@ -238,7 +255,8 @@ static void configuration_fill_app_param(struct configuration_parameter *paramet
             num_app_parameters--;
         }
 
-        if (!strcmp(par->name, "socket_priority")) {
+        if (!strcmp(par->name, "socket_priority"))
+        {
             char *prio;
 
             prio = parameter_data_value_to_string(par);
@@ -253,7 +271,8 @@ static void configuration_fill_app_param(struct configuration_parameter *paramet
     //
     // Skip container module parameters.
     //
-    for (i = 0; i < app->count_parameters; ++i) {
+    for (i = 0; i < app->count_parameters; ++i)
+    {
         TSN_App_Parameter *par = &app->parameters[i];
 
         if (!strcmp(par->name, "command") || !strcmp(par->name, "command_line") ||
@@ -271,7 +290,8 @@ static void configuration_fill_app_param(struct configuration_parameter *paramet
     // All parameters which not belong to engineering or container are
     // application specific.
     //
-    for (i = 0, j = 0; i < app->count_parameters; ++i) {
+    for (i = 0, j = 0; i < app->count_parameters; ++i)
+    {
         TSN_App_Parameter *par = &app->parameters[i];
 
         // Skip engineering parameter
@@ -313,7 +333,8 @@ static void configuration_free_app_param(struct configuration_parameter *paramet
     free((void *)parameter->eng.subscribed_mac);
     free((void *)parameter->eng.interface);
 
-    for (i = 0; i < parameter->app.num_parameters; ++i) {
+    for (i = 0; i < parameter->app.num_parameters; ++i)
+    {
         free((void *)parameter->app.names[i]);
         free((void *)parameter->app.values[i]);
         free((void *)parameter->app.types[i]);
@@ -336,7 +357,8 @@ static void configuration_deploy_app_par(const struct configuration_parameter *p
     UA_Variant out;
 
     // If no URI provided, nothing works
-    if (!parameter || !enddevice->interface_uri || !parameter->app_id) {
+    if (!parameter || !enddevice->interface_uri || !parameter->app_id)
+    {
         log("Missing parameters for deploying configuration to Application!");
         return;
     }
@@ -349,7 +371,8 @@ static void configuration_deploy_app_par(const struct configuration_parameter *p
     cc->customDataTypes = &customTypesArray;
 
     ret = UA_Client_connect(client, enddevice->interface_uri);
-    if (ret != UA_STATUSCODE_GOOD) {
+    if (ret != UA_STATUSCODE_GOOD)
+    {
         log("Failed to connect to endpoint service!");
         UA_Client_delete(client);
         return;
@@ -362,7 +385,8 @@ static void configuration_deploy_app_par(const struct configuration_parameter *p
     app_node = UA_NODEID_NUMERIC(2, UA_ENDPOINTID_ENDPOINT_APPLICATION);
 
     ret = UA_Client_readValueAttribute(client, app_node, &out);
-    if (ret != UA_STATUSCODE_GOOD) {
+    if (ret != UA_STATUSCODE_GOOD)
+    {
         log("Failed to read TSN applications!");
         goto out;
     }
@@ -375,7 +399,8 @@ static void configuration_deploy_app_par(const struct configuration_parameter *p
     UA_TSNApplication *apps, *app = NULL;
     apps = x_calloc(num_apps, sizeof(*apps));
 
-    for (size_t i = 0; i < num_apps; ++i) {
+    for (size_t i = 0; i < num_apps; ++i)
+    {
         UA_TSNApplication *a = obj[i].content.decoded.data;
 
         UA_TSNApplication_init(&apps[i]);
@@ -392,7 +417,8 @@ static void configuration_deploy_app_par(const struct configuration_parameter *p
     //
     // If not found, increase the apps array by one.
     //
-    if (!app) {
+    if (!app)
+    {
         num_apps++;
         apps = x_realloc(apps, num_apps * sizeof(*apps));
         app = &apps[num_apps - 1];
@@ -419,7 +445,8 @@ static void configuration_deploy_app_par(const struct configuration_parameter *p
     app->applicationParameters = x_calloc(parameter->app.num_parameters, sizeof(UA_TSNApplicationEngineeringParameters));
     app->applicationParametersSize = parameter->app.num_parameters;
 
-    for (size_t i = 0; i < app->applicationParametersSize; ++i) {
+    for (size_t i = 0; i < app->applicationParametersSize; ++i)
+    {
         app->applicationParameters[i].name = UA_STRING_ALLOC(parameter->app.names[i]);
         app->applicationParameters[i].type = UA_STRING_ALLOC(parameter->app.types[i]);
         app->applicationParameters[i].value = UA_STRING_ALLOC(parameter->app.values[i]);
@@ -430,7 +457,8 @@ static void configuration_deploy_app_par(const struct configuration_parameter *p
     //
     UA_ExtensionObject *new_obj = x_calloc(num_apps, sizeof(*new_obj));
 
-    for (size_t i = 0; i < num_apps; ++i) {
+    for (size_t i = 0; i < num_apps; ++i)
+    {
         UA_ExtensionObject *o = &new_obj[i];
 
         UA_ExtensionObject_init(o);
@@ -597,7 +625,7 @@ _write_stream_sendreceive_flag(const TSN_Enddevice *enddevice, bool enable)
     client = UA_Client_new();
     UA_ClientConfig *config = UA_Client_getConfig(client);
     UA_ClientConfig_setDefault(config);
-    
+
     ret = UA_Client_connect(client, enddevice->interface_uri);
     if (ret != UA_STATUSCODE_GOOD) {
         printf("[CONFIG][ERROR] Could not connect to OPC UA Server '%s'\n", enddevice->interface_uri);
@@ -626,7 +654,7 @@ static void
 set_stream_sendreceive(const char *stream_id, bool enable)
 {
     // --------------------------------------------------------------
-    // TODO/Info: 
+    // TODO/Info:
     // In the future the send/receive enabled flag will be per communication flow.
     // There will be one OPC UA Server receiving the configurations ('Endpoint Daemon').
     // The datamodel will be splitted into communication, application and deployment.
@@ -653,7 +681,7 @@ set_stream_sendreceive(const char *stream_id, bool enable)
     // --------- ThreadPriority
     // --------- ...
     //
-    // -------------------------------------------------------------- 
+    // --------------------------------------------------------------
 
     int rc;
     TSN_Apps *apps = malloc(sizeof(TSN_Apps));
@@ -661,7 +689,7 @@ set_stream_sendreceive(const char *stream_id, bool enable)
     TSN_App **listenerApps = NULL;
     const TSN_Enddevice **listenerDevices = NULL;
 
-    // First we make sure to find all participating apps and their enddevices 
+    // First we make sure to find all participating apps and their enddevices
     // before setting the flag for one of them
 
     // Get the talker and listener apps
@@ -739,7 +767,6 @@ cleanup:
     return;
 }
 */
-
 
 /*
 static void
@@ -859,12 +886,13 @@ out:
 // ------------------------------------
 static void _cb_event(TSN_Event_CB_Data data)
 {
-    struct configuration_parameter param = { 0 };
-    const char *event_name = NULL;
-    TSN_App *app = NULL;
+    // struct configuration_parameter param = { 0 };
+    // const char *event_name = NULL;
+    // TSN_App *app = NULL;
     int ret;
-    TSN_Devices *devices = malloc(sizeof(TSN_Devices));
+    // TSN_Devices *devices = malloc(sizeof(TSN_Devices));
 
+    /*
     // Initial parameter deployment
     if (data.event_id & EVENT_CONFIGURATION_DEPLOY) {
         event_name = "EVENT_CONFIGURATION_DEPLOY";
@@ -886,9 +914,12 @@ static void _cb_event(TSN_Event_CB_Data data)
         // Configure parameters via OPC/UA!
         configuration_deploy_app_par(&param, enddev);
     }
+    */
 
     // Update run time parameters
-    if (data.event_id & EVENT_CONFIGURATION_CHANGED) {
+    if (data.event_id & EVENT_CONFIGURATION_CHANGED)
+    {
+        /*
         event_name = "EVENT_CONFIGURATION_CHANGED";
 
         // Get app from sysrepo
@@ -907,6 +938,24 @@ static void _cb_event(TSN_Event_CB_Data data)
 
         // Configure parameters via OPC/UA!
         configuration_deploy_app_par(&param, enddev);
+        */
+
+        //// Get the app
+        //TSN_App *app = malloc(sizeof(TSN_App));
+        //ret = sysrepo_get_application_app(data.entry_id, &app);
+//
+        //printf("[APP][CB] Parameters of App '%s' changed!\n", app->name);
+//
+        //free(app);
+        ret = configuration_app_deploy_parameters(data.entry_id);
+        if (ret == EXIT_SUCCESS)
+        {
+            printf("[CONFIG] Successfully deployed parameters of app with ID '%s'\n", data.entry_id);
+        }
+        else
+        {
+            printf("[CONFIG][ERROR] Error deploying parameters of app with ID '%s'!\n", data.entry_id);
+        }
     }
 
     // Request App Run mode
@@ -952,37 +1001,54 @@ static void _cb_event(TSN_Event_CB_Data data)
     */
 
     // Set the send receive flag for a specific stream
-    if (data.event_id & EVENT_CONFIGURATION_ENABLE_STREAM_SEND_RECEIVE 
-        || data.event_id & EVENT_CONFIGURATION_DISABLE_STREAM_SEND_RECEIVE) {
-        
+    if (data.event_id & EVENT_CONFIGURATION_ENABLE_STREAM_SEND_RECEIVE || data.event_id & EVENT_CONFIGURATION_DISABLE_STREAM_SEND_RECEIVE)
+    {
+
         bool enable = data.event_id & EVENT_CONFIGURATION_ENABLE_STREAM_SEND_RECEIVE;
 
+        /*
         // Get the participating apps
         TSN_Apps *apps = malloc(sizeof(TSN_Apps));
         ret = sysrepo_get_application_apps(&apps);
-        if (ret == EXIT_FAILURE) {
+        if (ret == EXIT_FAILURE)
+        {
             printf("[CONFIG][ERROR] Error reading apps from sysrepo!");
-        } else {
-            //set_stream_sendreceive(data.entry_id, enable);
+        }
+        else
+        {
+            // set_stream_sendreceive(data.entry_id, enable);
 
             // Moved logic to common lib
             ret = configuration_stream_set_sendreceive(data.entry_id, enable);
-            if (ret == EXIT_SUCCESS) {
+            if (ret == EXIT_SUCCESS)
+            {
                 printf("[CONFIG] Successfully set Stream (%s) to %s\n", data.entry_id, enable ? "ENABLED" : "DISABLED");
-            } else {
+            }
+            else
+            {
                 printf("[CONFIG][ERROR] Error setting Stream (%s) to %s!\n", data.entry_id, enable ? "ENABLED" : "DISABLED");
             }
-
         }
         free(apps);
+        */
+
+        // Moved logic to common lib
+        ret = configuration_stream_set_sendreceive(data.entry_id, enable);
+        if (ret == EXIT_SUCCESS)
+        {
+            printf("[CONFIG] Successfully set Stream (%s) to %s\n", data.entry_id, enable ? "ENABLED" : "DISABLED");
+        }
+        else
+        {
+            printf("[CONFIG][ERROR] Error setting Stream (%s) to %s!\n", data.entry_id, enable ? "ENABLED" : "DISABLED");
+        }
     }
 
-
-out:
-    log("Event '%s' (%s, %s)", event_name, data.entry_id, data.msg);
-    configuration_free_app_param(&param);
-    application_app_put(app);
-    free(devices);
+    // out:
+    //     log("Event '%s' (%s, %s)", event_name, data.entry_id, data.msg);
+    //     configuration_free_app_param(&param);
+    //     application_app_put(app);
+    //     free(devices);
 }
 
 // ------------------------------------
@@ -1001,12 +1067,13 @@ int main(void)
     // Init this module
     rc = module_init("AppConfiguration", &this_module,
                      //(EVENT_CONFIGURATION_DEPLOY |
-                     //EVENT_CONFIGURATION_CHANGED |
-                     //EVENT_CONFIGURATION_REQUEST_RUN_STATE |
-                     //EVENT_CONFIGURATION_TOGGLE_APP_SEND_RECEIVE),
+                     // EVENT_CONFIGURATION_CHANGED |
+                     // EVENT_CONFIGURATION_REQUEST_RUN_STATE |
+                     // EVENT_CONFIGURATION_TOGGLE_APP_SEND_RECEIVE),
                      -1,
                      _cb_event);
-    if (rc == EXIT_FAILURE) {
+    if (rc == EXIT_FAILURE)
+    {
         log("Error initializing module!");
         goto cleanup;
     }

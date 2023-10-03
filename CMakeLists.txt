@@ -26,6 +26,21 @@ ua_generate_nodeid_header(
   ID_PREFIX "TSNDEP_"
 )
 
+# PCM Subscriber open62541 generation
+ua_generate_nodeset_and_datatypes(
+  NAME "pcmsubscriber"
+  FILE_NS "${FILE_NS_DIRPREFIX}/PCM_Subscriber/pcm_subscriber.xml"
+  OUTPUT_DIR "${GENERATED_SERVER_OUTPUT}"
+  INTERNAL
+)
+
+ua_generate_nodeid_header(
+  NAME "pcmsubscriber_nodeids" 
+  FILE_CSV "${FILE_NS_DIRPREFIX}/PCM_Subscriber/pcm_subscriber.csv"
+  OUTPUT_DIR "${GENERATED_SERVER_OUTPUT}"
+  TARGET_SUFFIX "ids-pcmsubscriber"
+  ID_PREFIX "PCMSUBSCRIBER_"
+)
 
 
 ## The Common lib
@@ -33,8 +48,13 @@ add_library(common SHARED src/common.c
                           src/sysrepo/sysrepo_client.c 
                           src/type_definitions.c 
                           src/logger.c
-                          src_generated/namespace_tsndep_generated.c)
-add_dependencies(common open62541-generator-ns-tsndep open62541-generator-ids-tsndep)
+                          src_generated/namespace_tsndep_generated.c
+                          src_generated/namespace_pcmsubscriber_generated.c)
+add_dependencies(common 
+                 open62541-generator-ns-tsndep 
+                 open62541-generator-ids-tsndep
+                 open62541-generator-ns-pcmsubscriber
+                 open62541-generator-ids-pcmsubscriber)
 target_link_libraries(common sysrepo open62541)
 
 ## JSON Serializer

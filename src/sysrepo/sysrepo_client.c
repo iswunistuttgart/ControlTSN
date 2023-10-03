@@ -3975,9 +3975,7 @@ _write_parameter(char *xpath, TSN_App_Parameter *parameter)
 
     // Type
     _create_xpath(xpath, "/param-type", &xpath_param_type);
-    val_param_type.data.enum_val = data_type_to_string(parameter->type);
-    val_param_type.type = SR_ENUM_T;
-    ret = sr_set_item(session, xpath_param_type, &val_param_type, 0);
+    ret = sr_set_item_str(session, xpath_param_type, data_type_to_string(parameter->type), NULL, 0);
     if (ret != SR_ERR_OK)
         goto cleanup;
 
@@ -4117,6 +4115,7 @@ static int _write_app(char *xpath, TSN_App *app)
     if (rc != SR_ERR_OK) {
         goto cleanup;
     }
+    rc = sr_apply_changes(session, 0, 1);
     _create_xpath(xpath, "/parameters/parameter[param-name='%s']", &xpath_parameters);
     for (i = 0; i < app->count_parameters; ++i) {
         TSN_App_Parameter *par = &app->parameters[i];
@@ -4244,9 +4243,10 @@ _read_app_parameter(char *xpath, TSN_App_Parameter **parameter)
     if (rc != SR_ERR_OK) {
         goto cleanup;
     }
-    (*parameter)->value = sysrepo_value_to_data_value(*val_param_value);
-    (*parameter)->type = sysrepo_value_to_data_type(*val_param_value);
-
+    //(*parameter)->value = sysrepo_value_to_data_value(*val_param_value, (*parameter)->type);
+    //(*parameter)->type = sysrepo_value_to_data_type(*val_param_value);
+    (*parameter)->value = sysrepo_data_to_data_value(val_param_value->data, (*parameter)->type);
+    
     // Description
     _create_xpath(xpath, "/param-desc", &xpath_param_desc);
     rc = sr_get_item(session, xpath_param_desc, 0, &val_param_desc);

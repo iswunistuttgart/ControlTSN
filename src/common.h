@@ -271,4 +271,11 @@ int configuration_stream_set_sendreceive(char *stream_id, bool enable);
 */
 bool configuration_stream_get_sendreceive(char *stream_id);
 
+/**
+ * @brief Deploys the application-specific parameters to the engineering interface fo the app.
+ * @param app_id The ID of the app
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+*/
+int configuration_app_deploy_parameters(char *app_id);
+
 #endif // __COMMON_H__

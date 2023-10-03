@@ -281,7 +281,7 @@ module control-tsn-uni {
                 type uint16;
                 type uint32;
                 type uint64;
-                type decimal64              {fraction-digits 5;}
+                type decimal64              {fraction-digits 10;}
             }
         }
         leaf param-desc {

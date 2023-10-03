@@ -13,6 +13,7 @@
 #include <open62541/client_config_default.h>
 #include <open62541/client_highlevel.h>
 #include "../src_generated/tsndep_nodeids.h"
+#include "../src_generated/pcmsubscriber_nodeids.h"
 
 #include "common.h"
 #include "logger.h"
@@ -633,7 +634,7 @@ int configuration_stream_set_sendreceive(char *stream_id, bool enable)
     // Get the talker and listener apps
     rc = sysrepo_get_application_apps(&apps);
     if (rc != EXIT_SUCCESS) {
-        printf("[COMMON][OPCUA][ERROR] Error reading applications from datastore!");
+        printf("[COMMON][ERROR] Error reading applications from datastore!\n");
         goto cleanup;
     }
     // Find the talker
@@ -659,12 +660,12 @@ int configuration_stream_set_sendreceive(char *stream_id, bool enable)
     // Find the enddevices
     rc = sysrepo_get_all_devices(&devices);
     if (rc != EXIT_SUCCESS) {
-        printf("[COMMON][OPCUA][ERROR] Error reading devices from datastore!");
+        printf("[COMMON][ERROR] Error reading devices from datastore!\n");
         goto cleanup;
     }
     const TSN_Enddevice *talkerDevice = configuration_find_enddevice_of_app(talkerApp->id, devices->enddevices, devices->count_enddevices);
     if (!talkerDevice) {
-        printf("[COMMON][OPCUA][ERROR] Error finding enddevice for app id %s!", talkerApp->id);
+        printf("[COMMON][ERROR] Error finding enddevice for app id %s!\n", talkerApp->id);
         goto cleanup;
     }
 
@@ -672,7 +673,7 @@ int configuration_stream_set_sendreceive(char *stream_id, bool enable)
     for (int i=0; i<count_listeners; ++i) {
         listenerDevices[i] = configuration_find_enddevice_of_app(listenerApps[i]->id, devices->enddevices, devices->count_enddevices);
         if (!listenerDevices[i]) {
-            printf("[COMMON][OPCUA][ERROR] Error finding enddevice for app id %s!", listenerApps[i]->id);
+            printf("[COMMON][ERROR] Error finding enddevice for app id %s!\n", listenerApps[i]->id);
             goto cleanup;
         }
     }
@@ -717,7 +718,7 @@ bool configuration_stream_get_sendreceive(char *stream_id)
     // Get the talker and listener apps
     rc = sysrepo_get_application_apps(&apps);
     if (rc != EXIT_SUCCESS) {
-        printf("[COMMON][OPCUA][ERROR] Error reading applications from datastore!");
+        printf("[COMMON][ERROR] Error reading applications from datastore!\n");
         goto cleanup;
     }
     // Find the talker
@@ -745,12 +746,12 @@ bool configuration_stream_get_sendreceive(char *stream_id)
     // Find the enddevices
     rc = sysrepo_get_all_devices(&devices);
     if (rc != EXIT_SUCCESS) {
-        printf("[COMMON][OPCUA][ERROR] Error reading devices from datastore!");
+        printf("[COMMON][ERROR] Error reading devices from datastore!\n");
         goto cleanup;
     }
     const TSN_Enddevice *talkerDevice = configuration_find_enddevice_of_app(talkerApp->id, devices->enddevices, devices->count_enddevices);
     if (!talkerDevice) {
-        printf("[COMMON][OPCUA][ERROR] Error finding enddevice for app id %s!", talkerApp->id);
+        printf("[COMMON][ERROR] Error finding enddevice for app id %s!\n", talkerApp->id);
         goto cleanup;
     }
 
@@ -758,7 +759,7 @@ bool configuration_stream_get_sendreceive(char *stream_id)
     for (int i=0; i<count_listeners; ++i) {
         listenerDevices[i] = configuration_find_enddevice_of_app(listenerApps[i]->id, devices->enddevices, devices->count_enddevices);
         if (!listenerDevices[i]) {
-            printf("[COMMON][OPCUA][ERROR] Error finding enddevice for app id %s!", listenerApps[i]->id);
+            printf("[COMMON][ERROR] Error finding enddevice for app id %s!\n", listenerApps[i]->id);
             goto cleanup;
         }
     }
@@ -783,4 +784,154 @@ cleanup:
     free(listenerDevices);
     // Indicate a success if all listeners and the talker are set to enabled
     return is_enabled;
+}
+
+static void
+_fill_opcua_variant_with_app_parameter(UA_Variant *variant, TSN_App_Parameter *param)
+{
+    printf("----> %s\n", param->name);
+    if (param->type == BINARY) {
+
+    } else if (param->type == BOOLEAN) {
+
+    } else if (param->type == DECIMAL64) {
+        UA_Double val = param->value.decimal64_val;
+        UA_Variant_setScalarCopy(variant, &val, &UA_TYPES[UA_TYPES_DOUBLE]);
+        
+    } else if (param->type == INSTANCE_IDENTIFIER) {
+        
+    } else if (param->type == INT8) {
+        
+    } else if (param->type == INT16) {
+        
+    } else if (param->type == INT32) {
+        
+    } else if (param->type == INT64) {
+        
+    } else if (param->type == STRING) {
+        
+    } else if (param->type == UINT8) {
+        
+    } else if (param->type == UINT16) {
+        
+    } else if (param->type == UINT32) {
+        
+    } else if (param->type == UINT64) {
+        
+    }
+}
+
+static int 
+_write_app_parameters(const TSN_Enddevice *enddevice, TSN_App *app)
+{
+    int rc = EXIT_FAILURE;
+    UA_NodeId paramsRootNodeId;
+    UA_StatusCode ret;
+    UA_Client *client;
+    UA_Variant *variant;
+
+    variant = UA_Variant_new();
+
+    if (!enddevice->interface_uri) {
+        printf("[COMMON][OPCUA][ERROR] No configuration interface specified for enddevice %s!\n", enddevice->name);
+        goto cleanup;
+    }
+
+    // Connect to the server
+    client = UA_Client_new();
+    UA_ClientConfig *config = UA_Client_getConfig(client);
+    UA_ClientConfig_setDefault(config);
+    
+    ret = UA_Client_connect(client, enddevice->interface_uri);
+    if (ret != UA_STATUSCODE_GOOD) {
+        printf("[COMMON][OPCUA][ERROR] Could not connect to OPC UA Server '%s'\n", enddevice->interface_uri);
+        goto cleanup;
+    }
+
+    #define APP_PARAMS_ROOT_FOLDER_NAMESPACE_INDEX 8
+    paramsRootNodeId = UA_NODEID_NUMERIC(APP_PARAMS_ROOT_FOLDER_NAMESPACE_INDEX, UA_PCMSUBSCRIBER_ID_PCMSUBSCRIBERENGINEERING);
+    
+    UA_TranslateBrowsePathsToNodeIdsRequest request;
+    UA_TranslateBrowsePathsToNodeIdsRequest_init(&request);
+
+    request.browsePathsSize = app->count_parameters;
+    request.browsePaths = (UA_BrowsePath *) UA_Array_new(app->count_parameters, &UA_TYPES[UA_TYPES_BROWSEPATH]);
+
+    // Iterate over the app parameters to find the Node for each of them
+    for (int i=0; i<app->count_parameters; ++i) {
+        UA_BrowsePath browsePath;
+        UA_BrowsePath_init(&browsePath);
+        browsePath.startingNode = paramsRootNodeId;
+        // Assuming the params are stored as direct child of the params root folder!
+        #define BROWSE_PATHS_SIZE 1
+        browsePath.relativePath.elements = (UA_RelativePathElement *) UA_Array_new(BROWSE_PATHS_SIZE, &UA_TYPES[UA_TYPES_RELATIVEPATHELEMENT]);
+        browsePath.relativePath.elementsSize = BROWSE_PATHS_SIZE;
+        UA_RelativePathElement *elem = &browsePath.relativePath.elements[0];
+        elem->referenceTypeId = UA_NODEID_NUMERIC(0, UA_NS0ID_HASCOMPONENT);
+        elem->targetName = UA_QUALIFIEDNAME_ALLOC(APP_PARAMS_ROOT_FOLDER_NAMESPACE_INDEX, app->parameters[i].name);
+       
+        request.browsePaths[i] = browsePath;
+        //UA_BrowsePath_deleteMembers(&browsePath);
+        //UA_TranslateBrowsePathsToNodeIdsResponse_deleteMembers(&response);
+    }
+
+    UA_TranslateBrowsePathsToNodeIdsResponse response = UA_Client_Service_translateBrowsePathsToNodeIds(client, request);
+    if (response.responseHeader.serviceResult == UA_STATUSCODE_GOOD) {
+        for (int i=0; i<response.resultsSize; i++) {
+            if (response.results[i].statusCode == UA_STATUSCODE_GOOD) {
+                UA_NodeId nodeId = response.results[i].targets[0].targetId.nodeId;
+                printf("Response #%d:  %d\n", i, nodeId.identifier.numeric);
+
+                // Write param value to node
+                // TODO: Convert param type to OPC UA Type...
+                _fill_opcua_variant_with_app_parameter(variant, &(app->parameters[i]));
+                ret = UA_Client_writeValueAttribute(client, nodeId, variant);
+                if (ret != UA_STATUSCODE_GOOD) {
+                    printf("[COMMON][OPCUA][ERROR] Could not write '%s' to Node ns=%d;i=%d!\n", app->parameters[i].name, nodeId.namespaceIndex, nodeId.identifier.numeric);
+                    goto cleanup;
+                }
+            }
+        }
+    }
+
+cleanup:
+    UA_Variant_delete(variant);
+    UA_Client_delete(client);
+
+    return rc;
+}
+
+int configuration_app_deploy_parameters(char *app_id)
+{
+    int rc;
+    TSN_App *app = malloc(sizeof(TSN_App));
+    TSN_Devices *devices = malloc(sizeof(TSN_Devices));
+
+    // Read the application from the datastore
+    rc = sysrepo_get_application_app(app_id, &app);
+    if (rc != EXIT_SUCCESS) {
+        printf("[COMMON][ERROR] Error reading application with ID '%s' from datastore!\n", app_id);
+        goto cleanup;
+    }
+
+    // Find the enddevice
+    rc = sysrepo_get_all_devices(&devices);
+    if (rc != EXIT_SUCCESS) {
+        printf("[COMMON][ERROR] Error reading devices from datastore!\n");
+        goto cleanup;
+    }
+    const TSN_Enddevice *appDevice = configuration_find_enddevice_of_app(app->id, devices->enddevices, devices->count_enddevices);
+    if (!appDevice) {
+        printf("[COMMON][ERROR] Error finding enddevice for app id %s!\n", app->id);
+        goto cleanup;
+    }
+
+    // Write the application parameters to the engineering interface of the corresponding enddevice
+    rc = _write_app_parameters(appDevice, app);
+
+cleanup:
+    free(app);
+    free(devices);
+
+    return rc;
 }
