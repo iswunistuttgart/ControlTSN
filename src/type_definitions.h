@@ -67,6 +67,17 @@ typedef union TSN_Module_Data_Entry_Value {
  * @return The converted module data value struct
  */
 TSN_Module_Data_Entry_Value sysrepo_data_to_data_value(sr_data_t data, TSN_Module_Data_Entry_Type type);
+
+/**
+ * @brief Same functionality as 'sysrepo_data_to_data_value' but using the internal used lyd_val data.
+ * Reason for that is, there seems to be some problems while reading the stored data: When using 'sr_get_item' 
+ * the interpreted data type sometimes is wrong. E.g. when reading the value 100 of a uint16 node, sysrepo sets the datatype to int8.
+ * @param data The data struct from sysrepo as lyd_val (get it by using 'sr_get_subtree')
+ * @param type The assigned type of this module data
+ * @return The converted module data value struct
+*/
+TSN_Module_Data_Entry_Value lyd_data_to_data_value(lyd_val data, TSN_Module_Data_Entry_Type type);
+
 /**
  * @brief Converts a sysrepo value struct to the corresponding module data value.
  * @param data The sr_val_t struct from sysrepo

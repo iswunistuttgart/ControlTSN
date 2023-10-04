@@ -4214,7 +4214,8 @@ _read_app_parameter(char *xpath, TSN_App_Parameter **parameter)
     int rc = SR_ERR_OK;
     sr_val_t *val_param_name = NULL;
     sr_val_t *val_param_type = NULL;
-    sr_val_t *val_param_value = NULL;
+    //sr_val_t *val_param_value = NULL;
+    struct lyd_node *val_param_value = NULL;
     sr_val_t *val_param_desc = NULL;
     char *xpath_param_name = NULL;
     char *xpath_param_type = NULL;
@@ -4239,14 +4240,19 @@ _read_app_parameter(char *xpath, TSN_App_Parameter **parameter)
 
     // Value
     _create_xpath(xpath, "/param-value", &xpath_param_value);
-    rc = sr_get_item(session, xpath_param_value, 0, &val_param_value);
+    //rc = sr_get_item(session, xpath_param_value, 0, &val_param_value);
+    //if (rc != SR_ERR_OK) {
+    //    goto cleanup;
+    //}
+    //(*parameter)->value = sysrepo_data_to_data_value(val_param_value->data, (*parameter)->type);
+
+    // Switched to internal lyd_node because sysrepo sometimes misinterprets the data type
+    rc = sr_get_subtree(session, xpath_param_value, 0, &val_param_value);
     if (rc != SR_ERR_OK) {
         goto cleanup;
     }
-    //(*parameter)->value = sysrepo_value_to_data_value(*val_param_value, (*parameter)->type);
-    //(*parameter)->type = sysrepo_value_to_data_type(*val_param_value);
-    (*parameter)->value = sysrepo_data_to_data_value(val_param_value->data, (*parameter)->type);
-    
+    (*parameter)->value = lyd_data_to_data_value(((struct lyd_node_leaf_list *)val_param_value)->value, (*parameter)->type);
+
     // Description
     _create_xpath(xpath, "/param-desc", &xpath_param_desc);
     rc = sr_get_item(session, xpath_param_desc, 0, &val_param_desc);
@@ -4258,7 +4264,8 @@ _read_app_parameter(char *xpath, TSN_App_Parameter **parameter)
 cleanup:
     sr_free_val(val_param_name);
     sr_free_val(val_param_type);
-    sr_free_val(val_param_value);
+    //sr_free_val(val_param_value);
+    lyd_free(val_param_value);
     sr_free_val(val_param_desc);
     free(xpath_param_name);
     free(xpath_param_type);

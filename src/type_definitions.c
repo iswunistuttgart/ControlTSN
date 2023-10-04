@@ -226,21 +226,56 @@ sysrepo_data_to_data_value(sr_data_t data, TSN_Module_Data_Entry_Type type)
         val.uint64_val = data.uint64_val;
     }
 
-    /*
-    val.binary_val = data.binary_val;
-    val.boolean_val = data.bool_val;
-    val.decimal64_val = data.decimal64_val;
-    val.instance_identifier_val = data.instanceid_val;
-    val.int8_val = data.int8_val;
-    val.int16_val = data.int16_val;
-    val.int32_val = data.int32_val;
-    val.int64_val = data.int64_val;
-    val.string_val = data.string_val;
-    val.uint8_val = data.uint8_val;
-    val.uint16_val = data.uint16_val;
-    val.uint32_val = data.uint32_val;
-    val.uint64_val = data.uint64_val;
-    */
+    return val;
+}
+
+TSN_Module_Data_Entry_Value lyd_data_to_data_value(lyd_val data, TSN_Module_Data_Entry_Type type)
+{
+    TSN_Module_Data_Entry_Value val;
+
+    if (type == BINARY) {
+        val.binary_val = strdup(data.binary);
+    }
+    else if (type == BOOLEAN) {
+        val.boolean_val = data.bln;
+    }
+    else if (type == DECIMAL64) {
+        //val.decimal64_val = data.decimal64_val;
+
+        // TODO: There is a problem with handling of dec64 values in sysrepo... Maybe use the internal libyang api instead to write and read these param values?
+        // Somehow the decimal64 value is stored with the type string...
+        val.decimal64_val = strtod(data.string, NULL);
+    }
+    else if (type == INSTANCE_IDENTIFIER) {
+        // TODO: Not implemented yet...
+    }
+    else if (type == INT8) {
+        val.int8_val = data.int8;
+    }
+    else if (type == INT16) {
+        val.int16_val = data.int16;
+    }
+    else if (type == INT32) {
+        val.int32_val = data.int32;
+    }
+    else if (type == INT64) {
+        val.int64_val = data.int64;
+    }
+    else if (type == STRING) {
+        val.string_val = strdup(data.string);
+    }
+    else if (type == UINT8) {
+        val.uint8_val = data.uint8;
+    }
+    else if (type == UINT16) {
+        val.uint16_val = data.uint16;
+    }
+    else if (type == UINT32) {
+        val.uint32_val = data.uint32;
+    }
+    else if (type == UINT64) {
+        val.uint64_val = data.uint64;
+    }
 
     return val;
 }
