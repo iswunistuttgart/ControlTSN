@@ -82,63 +82,113 @@
   <application>
     <apps>
       <app>
-        <id>Sensor_0.0.1</id>
-        <name>Sensor</name>
-        <desc>Sensor Application</desc>
+        <id>PCM_0.0.1</id>
+        <name>PCM</name>
+        <desc>Application which publishes PCM Data</desc>
         <version>0.0.1</version>
         <has-image>1</has-image>
-        <image-ref>SensorImage_0.0.1</image-ref>
+        <image-ref>PCMImage_0.0.1</image-ref>
+        <has-mac>1</has-mac>
+        <mac>00-1B-21-ED-A9-92</mac>
+      </app>
+      <app>
+        <id>PowerConsumer1_0.0.1</id>
+        <name>PowerConsumer1</name>
+        <desc>Application which consumes Power Data</desc>
+        <version>0.0.1</version>
+        <has-image>1</has-image>
+        <image-ref>PowerConsumerImage_0.0.1</image-ref>
         <has-mac>1</has-mac>
         <mac>48-21-0b-26-3d-8a</mac>
-        <stream-mapping>
-          <egress>48-21-0b-26-3d-8a:00-01</egress>
-        </stream-mapping>
+        <iface>enp88s0.4003</iface>
+        <parameters>
+          <parameter>
+            <param-name>LowerEnergyBound</param-name>
+            <param-type>decimal64</param-type>
+            <param-value>0.0000000000</param-value>
+            <param-desc>The lower limit of the energy value to be monitored</param-desc>
+          </parameter>
+          <parameter>
+            <param-name>UpperEnergyBound</param-name>
+            <param-type>decimal64</param-type>
+            <param-value>500.0000000000</param-value>
+            <param-desc>The upper limit of the energy value to be monitored</param-desc>
+          </parameter>
+          <parameter>
+            <param-name>EnergyThreshold</param-name>
+            <param-type>decimal64</param-type>
+            <param-value>400.0000000000</param-value>
+            <param-desc>The threshold value of the energy from when a warning should be emitted</param-desc>
+          </parameter>
+          <parameter>
+            <param-name>COMPort</param-name>
+            <param-type>string</param-type>
+            <param-value>/dev/ttyUSB0</param-value>
+            <param-desc>The COM port to be used for communication with the microcontroller</param-desc>
+          </parameter>
+          <parameter>
+            <param-name>LEDsCount</param-name>
+            <param-type>uint16</param-type>
+            <param-value>71</param-value>
+            <param-desc>How much LEDs are on the connected Stripe</param-desc>
+          </parameter>
+        </parameters>
       </app>
       <app>
-        <id>PLC_0.0.1</id>
-        <name>PLC</name>
-        <desc>PLC Application</desc>
+        <id>PowerConsumer2_0.0.1</id>
+        <name>PowerConsumer2</name>
+        <desc>Application which consumes Power Data</desc>
         <version>0.0.1</version>
         <has-image>1</has-image>
-        <image-ref>PLCImage_0.0.1</image-ref>
+        <image-ref>PowerConsumerImage_0.0.1</image-ref>
         <has-mac>1</has-mac>
         <mac>48-21-0b-26-3f-ed</mac>
-        <stream-mapping>
-          <egress>48-21-0b-26-3f-ed:00-01</egress>
-          <ingress>48-21-0b-26-3d-8a:00-01</ingress>
-        </stream-mapping>
-      </app>
-      <app>
-        <id>ConveyorBelt_0.0.1</id>
-        <name>ConveyorBelt</name>
-        <desc>ConveyorBelt Application</desc>
-        <version>0.0.1</version>
-        <has-image>1</has-image>
-        <image-ref>ConveyorBeltImage_0.0.1</image-ref>
-        <has-mac>1</has-mac>
-        <mac>48-21-0b-26-3f-42</mac>
-        <stream-mapping>
-          <ingress>48-21-0b-26-3f-ed:00-01</ingress>
-        </stream-mapping>
+        <iface>enp88s0.4003</iface>
+        <parameters>
+          <parameter>
+            <param-name>LowerEnergyBound</param-name>
+            <param-type>decimal64</param-type>
+            <param-value>0.0000000000</param-value>
+            <param-desc>The lower limit of the energy value to be monitored</param-desc>
+          </parameter>
+          <parameter>
+            <param-name>UpperEnergyBound</param-name>
+            <param-type>decimal64</param-type>
+            <param-value>500.0000000000</param-value>
+            <param-desc>The upper limit of the energy value to be monitored</param-desc>
+          </parameter>
+          <parameter>
+            <param-name>EnergyThreshold</param-name>
+            <param-type>decimal64</param-type>
+            <param-value>400.0000000000</param-value>
+            <param-desc>The threshold value of the energy from when a warning should be emitted</param-desc>
+          </parameter>
+          <parameter>
+            <param-name>COMPort</param-name>
+            <param-type>string</param-type>
+            <param-value>/dev/ttyUSB0</param-value>
+            <param-desc>The COM port to be used for communication with the microcontroller</param-desc>
+          </parameter>
+          <parameter>
+            <param-name>LEDsCount</param-name>
+            <param-type>uint16</param-type>
+            <param-value>71</param-value>
+            <param-desc>How much LEDs are on the connected Stripe</param-desc>
+          </parameter>
+        </parameters>
       </app>
     </apps>
     <images>
       <image>
-        <id>SensorImage_0.0.1</id>
-        <name>SensorImage</name>
-        <desc>Sensor Image</desc>
+        <id>PCMImage_0.0.1</id>
+        <name>PCMImage</name>
+        <desc>Image of the Power Consumption Module (PCM) as Publisher</desc>
         <version>0.0.1</version>
       </image>
       <image>
-        <id>PLCImage_0.0.1</id>
-        <name>PLCImage</name>
-        <desc>PLC Image</desc>
-        <version>0.0.1</version>
-      </image>
-      <image>
-        <id>ConveyorBeltImage_0.0.1</id>
-        <name>ConveyorBeltImage</name>
-        <desc>ConveyorBelt Image</desc>
+        <id>PowerConsumerImage_0.0.1</id>
+        <name>PowerConsumerImage</name>
+        <desc>Image of a Consumer of the PCM Data as Subscriber</desc>
         <version>0.0.1</version>
       </image>
     </images>
@@ -152,12 +202,7 @@
           <name>NUC 1</name>
           <num-cores>2</num-cores>
           <interface-uri>opc.tcp://localhost:62541</interface-uri>
-          <has-app>1</has-app>
-          <apps>
-            <app>
-              <app-ref>Sensor_0.0.1</app-ref>
-            </app>
-          </apps>
+          <has-app>0</has-app>
         </enddevice>
         <enddevice>
           <mac>48-21-0b-26-3f-ed</mac>
@@ -165,25 +210,15 @@
           <name>NUC 2</name>
           <num-cores>2</num-cores>
           <interface-uri>opc.tcp://localhost:62541</interface-uri>
-          <has-app>1</has-app>
-          <apps>
-            <app>
-              <app-ref>PLC_0.0.1</app-ref>
-            </app>
-          </apps>
+          <has-app>0</has-app>
         </enddevice>
         <enddevice>
-          <mac>48-21-0b-26-3f-42</mac>
-          <iface>enp88s0</iface>
-          <name>NUC 3</name>
-          <num-cores>2</num-cores>
+          <mac>00-1B-21-ED-A9-92</mac>
+          <iface>eth0</iface>
+          <name>PCM Box</name>
+          <num-cores>1</num-cores>
           <interface-uri>opc.tcp://localhost:62541</interface-uri>
-          <has-app>1</has-app>
-          <apps>
-            <app>
-              <app-ref>ConveyorBelt_0.0.1</app-ref>
-            </app>
-          </apps>
+          <has-app>0</has-app>
         </enddevice>
       </enddevices>
       <switches>
@@ -194,6 +229,7 @@
         </switch>
       </switches>
     </devices>
+    <!--
     <graph>
       <connections>
         <connection>
@@ -219,7 +255,9 @@
         </connection>
       </connections>
     </graph>
+    -->
   </topology>
+  <!--
   <streams>
     <stream>
       <stream-id>48-21-0b-26-3d-8a:00-01</stream-id>
@@ -474,5 +512,6 @@
       </configuration>
     </stream>
   </streams>
+  -->
   <plugin-running>true</plugin-running>
 </tsn-uni>
