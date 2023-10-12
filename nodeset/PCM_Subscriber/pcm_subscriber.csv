@@ -18,3 +18,5 @@ PCMSubscriberEngineering_LowerEnergyBound,6014,Variable
 PCMSubscriberEngineering_UpperEnergyBound,6015,Variable
 PCMSubscriberType_LEDsCount,6016,Variable
 PCMSubscriberEngineering_LEDsCount,6017,Variable
+PCMSubscriberType_LEDRefreshHz,6018,Variable
+PCMSubscriberEngineering_LEDRefreshHz,6019,Variable
