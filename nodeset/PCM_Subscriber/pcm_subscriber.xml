@@ -25,7 +25,7 @@
     </Aliases>
     <Extensions>
         <Extension>
-            <ua:ModelInfo Tool="UaModeler" Hash="lbvev6ePg4ajZTY+Js8e1A==" Version="1.6.7"/>
+            <ua:ModelInfo Tool="UaModeler" Hash="31s73tE5VhWGyN492LQPpw==" Version="1.6.7"/>
         </Extension>
     </Extensions>
     <UAObjectType NodeId="ns=1;i=1003" BrowseName="1:PCMSubscriberType">
@@ -45,8 +45,8 @@
         <DisplayName>COMPort</DisplayName>
         <Description>The COM port to be used for communication with the microcontroller</Description>
         <References>
-            <Reference ReferenceType="HasModellingRule">i=78</Reference>
             <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
             <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1003</Reference>
         </References>
         <Value>
@@ -57,8 +57,8 @@
         <DisplayName>EnergyThreshold</DisplayName>
         <Description>The threshold value of the energy from when a warning should be emitted</Description>
         <References>
-            <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
             <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1003</Reference>
         </References>
         <Value>
@@ -67,6 +67,7 @@
     </UAVariable>
     <UAVariable DataType="UInt16" ParentNodeId="ns=1;i=1003" NodeId="ns=1;i=6018" BrowseName="1:LEDRefreshHz" AccessLevel="3">
         <DisplayName>LEDRefreshHz</DisplayName>
+        <Description>How often the LEDs should be updated per second</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -80,8 +81,8 @@
         <DisplayName>LEDsCount</DisplayName>
         <Description>How much LEDs are on the connected Stripe</Description>
         <References>
-            <Reference ReferenceType="HasModellingRule">i=78</Reference>
             <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
             <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1003</Reference>
         </References>
         <Value>
@@ -92,8 +93,8 @@
         <DisplayName>LowerEnergyBound</DisplayName>
         <Description>The lower limit of the energy value to be monitored</Description>
         <References>
-            <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
             <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1003</Reference>
         </References>
         <Value>
@@ -104,8 +105,8 @@
         <DisplayName>UpperEnergyBound</DisplayName>
         <Description>The upper limit of the energy value to be monitored</Description>
         <References>
-            <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
             <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1003</Reference>
         </References>
         <Value>
@@ -150,6 +151,7 @@
     </UAVariable>
     <UAVariable DataType="UInt16" ParentNodeId="ns=1;i=5004" NodeId="ns=1;i=6019" BrowseName="1:LEDRefreshHz" AccessLevel="3">
         <DisplayName>LEDRefreshHz</DisplayName>
+        <Description>How often the LEDs should be updated per second</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
             <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=5004</Reference>

@@ -132,6 +132,12 @@
             <param-value>71</param-value>
             <param-desc>How much LEDs are on the connected Stripe</param-desc>
           </parameter>
+          <parameter>
+            <param-name>LEDRefreshHz</param-name>
+            <param-type>uint16</param-type>
+            <param-value>100</param-value>
+            <param-desc>How often the LEDs should be updated per second</param-desc>
+          </parameter>
         </parameters>
       </app>
       <app>
@@ -175,6 +181,12 @@
             <param-value>71</param-value>
             <param-desc>How much LEDs are on the connected Stripe</param-desc>
           </parameter>
+          <parameter>
+            <param-name>LEDRefreshHz</param-name>
+            <param-type>uint16</param-type>
+            <param-value>100</param-value>
+            <param-desc>How often the LEDs should be updated per second</param-desc>
+          </parameter>
         </parameters>
       </app>
     </apps>
@@ -195,6 +207,7 @@
   </application>
   <topology>
     <devices>
+      <!-- TSN Demo Setup -->
       <enddevices>
         <enddevice>
           <mac>48-21-0b-26-3d-8a</mac>
@@ -220,11 +233,94 @@
           <interface-uri>opc.tcp://localhost:62541</interface-uri>
           <has-app>0</has-app>
         </enddevice>
+
+        <!-- Edges -->
+        <enddevice>
+          <mac>00-00-00-00-00-01</mac>
+          <iface>enp8s0</iface>
+          <name>Edge 1</name>
+          <num-cores>4</num-cores>
+          <interface-uri></interface-uri>
+          <has-app>0</has-app>
+        </enddevice>
+        <enddevice>
+          <mac>00-00-00-00-00-02</mac>
+          <iface>enp8s0</iface>
+          <name>Edge 2</name>
+          <num-cores>4</num-cores>
+          <interface-uri></interface-uri>
+          <has-app>0</has-app>
+        </enddevice>
+
+        <!-- Router -->
+        <enddevice>
+          <mac>00-00-00-00-00-03</mac>
+          <iface>eth0</iface>
+          <name>Router</name>
+          <num-cores>1</num-cores>
+          <interface-uri></interface-uri>
+          <has-app>0</has-app>
+        </enddevice>
+
+        <!-- Machines -->
+        <enddevice>
+          <mac>00-00-00-00-00-04</mac>
+          <iface>eth0</iface>
+          <name>Panda</name>
+          <num-cores>1</num-cores>
+          <interface-uri></interface-uri>
+          <has-app>0</has-app>
+        </enddevice>
+        <enddevice>
+          <mac>00-00-00-00-00-05</mac>
+          <iface>eth0</iface>
+          <name>vOSACA 1</name>
+          <num-cores>1</num-cores>
+          <interface-uri></interface-uri>
+          <has-app>0</has-app>
+        </enddevice>
+        <enddevice>
+          <mac>00-00-00-00-00-06</mac>
+          <iface>eth0</iface>
+          <name>vOSACA 2</name>
+          <num-cores>1</num-cores>
+          <interface-uri></interface-uri>
+          <has-app>0</has-app>
+        </enddevice>
+
       </enddevices>
       <switches>
+        <!-- TSN Demo Setup -->
         <switch>
           <mac>01-02-03-04-05-06</mac>
-          <name>KSwitch D10</name>
+          <name>KSwitch D10 1 [TSNDemo]</name>
+          <ports-count>8</ports-count>
+        </switch>
+        <switch>
+          <mac>01-02-03-04-05-07</mac>
+          <name>KSwitch D10 2 [TSNDemo]</name>
+          <ports-count>8</ports-count>
+        </switch>
+        <switch>
+          <mac>01-02-03-04-05-08</mac>
+          <name>KSwitch D10 3 [TSNDemo]</name>
+          <ports-count>8</ports-count>
+        </switch>
+
+        <!-- Infrastructure -->
+        <switch>
+          <mac>01-02-03-04-05-09</mac>
+          <name>KSwitch D10 4 [Infrastructure]</name>
+          <ports-count>8</ports-count>
+        </switch>
+        <switch>
+          <mac>01-02-03-04-05-10</mac>
+          <name>KSwitch D10 5 [Infrastructure]</name>
+          <ports-count>8</ports-count>
+        </switch>
+        <switch>
+          <mac>01-02-03-04-05-11</mac>
+          <name>NRT [Infrastructure]</name>
           <ports-count>8</ports-count>
         </switch>
       </switches>

@@ -149,7 +149,7 @@ _test_emulate_stream_computation(TSN_Streams *streams)
         IEEE_ConfigList *cl = malloc(sizeof(IEEE_ConfigList));
         cl->index = interface_list_talker->count_config_list_entries - 1;
         cl->field_type = CONFIG_LIST_TIME_AWARE_OFFSET;
-        cl->time_aware_offset = 100 * 1000; // [ns]
+        cl->time_aware_offset = 120 * 1000; // [ns] = 100µs
         interface_list_talker->config_list[cl->index] = *cl;
 
         interface_configuration_talker.interface_list = interface_list_talker;

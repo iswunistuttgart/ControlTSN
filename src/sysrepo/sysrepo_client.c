@@ -3902,6 +3902,20 @@ cleanup:
     return rc;
 }
 
+static int
+_remove_topology_graph()
+{
+    int rc = SR_ERR_OK;
+
+    rc = sr_delete_item(session, "/control-tsn-uni:tsn-uni/topology/graph", 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+cleanup:
+    return rc;
+}
+
 // -------------------------------
 // Application
 // -------------------------------
@@ -5481,6 +5495,34 @@ sysrepo_set_topology(TSN_Topology *topology)
         if (rc != SR_ERR_OK) {
             goto cleanup;
         }
+    }
+
+    rc = sr_apply_changes(session, 0, 1);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+cleanup:
+    return rc ? EXIT_FAILURE : EXIT_SUCCESS;
+}
+
+int 
+sysrepo_set_topology_graph(TSN_Graph *graph)
+{
+    if (!graph) {
+        goto cleanup;
+    }
+
+    // Clear the graph first
+    rc = _remove_topology_graph();
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+    // Write the topology graph
+    rc = _write_graph("/control-tsn-uni:tsn-uni/topology/graph", graph);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
     }
 
     rc = sr_apply_changes(session, 0, 1);

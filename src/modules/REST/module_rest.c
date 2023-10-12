@@ -147,6 +147,7 @@ _api_index_get(const struct _u_request *request, struct _u_response *response, v
                        "<tr><td><a href='/topology/devices'>/topology/devices</a></td><td>GET</td><td>Get the stored devices</td></tr>" \
                        "<tr><td><a href='/topology/devices/00-00-00-00-00-00/update'>/topology/devices/:mac/update</a></td><td>POST</td><td>Update the attributes of a specific enddevice</td><td>name (string), interface-uri (string)</td></tr>" \
                        "<tr><td><a href='/topology/graph'>/topology/graph</a></td><td>GET</td><td>Get the topology graph containing all connections</td></tr>" \
+                       "<tr><td><a href='/topology/graph/update'>/topology/graph/update</a></td><td>POST</td><td>Update the topology graph with the modeled connections</td></tr>" \
                        // Streams
                        "<tr><th>Streams</th></tr>" \
                        "<tr><td><a href='/streams'>/streams</a></td><td>GET</td><td>Get all streams</td></tr>" \
@@ -799,6 +800,27 @@ _api_topology_graph_get(const struct _u_request *request, struct _u_response *re
 }
 
 static int
+_api_topology_graph_update(const struct _u_request *request, struct _u_response *response, void *user_data)
+{
+    // Get the connections from the post body
+    json_t *json_post_body = ulfius_get_json_body_request(request, NULL);
+    if (json_post_body == NULL) {
+        return U_CALLBACK_ERROR;
+    }
+
+    TSN_Graph *graph = malloc(sizeof(TSN_Graph));
+    graph = deserialize_graph(json_post_body);
+
+    rc = sysrepo_set_topology_graph(graph);
+    json_decref(json_post_body);
+    if (rc == EXIT_SUCCESS) {
+        return U_CALLBACK_COMPLETE;
+    }
+    
+    return U_CALLBACK_ERROR;
+}
+
+static int
 _api_topology_discover(const struct _u_request *request, struct _u_response *response, void *user_data)
 {
     rc = sysrepo_send_notification(EVENT_TOPOLOGY_DISCOVERY_REQUESTED, NULL, "topology discovery requested via REST module");
@@ -1447,6 +1469,7 @@ _init_server()
     ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_TOPOLOGY_DEVICES_ID_UPDATE, 0, &_api_topology_devices_update,   NULL);
     ulfius_add_endpoint_by_val(&server_instance, "GET",     API_PREFIX, API_TOPOLOGY_GRAPH,             0, &_api_topology_graph_get,        NULL);
     ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_TOPOLOGY_DISCOVER,          0, &_api_topology_discover,         NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_TOPOLOGY_GRAPH_UPDATE,      0, &_api_topology_graph_update,     NULL);
     // Application
     ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_APPLICATION_DISCOVER,	 0, &_api_application_discover_post, NULL);
     ulfius_add_endpoint_by_val(&server_instance, "GET",     API_PREFIX, API_APPLICATION,		     0, &_api_application_get,           NULL);

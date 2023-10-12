@@ -47,6 +47,7 @@ const char *API_TOPOLOGY_DEVICES            = "/topology/devices";
 const char* API_TOPOLOGY_DEVICES_ID_UPDATE  = "/topology/devices/:mac/update";
 const char *API_TOPOLOGY_GRAPH              = "/topology/graph";
 const char *API_TOPOLOGY_DISCOVER           = "/topology/discover";
+const char* API_TOPOLOGY_GRAPH_UPDATE       = "/topology/graph/update";
 
 // Streams
 const char *API_STREAMS                     = "/streams";
