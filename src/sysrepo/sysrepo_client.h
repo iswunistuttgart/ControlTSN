@@ -161,6 +161,42 @@ int sysrepo_delete_stream(char *stream_id);
 
 
 // -------------------------------------------------------- //
+// Communication-flow handling
+// -------------------------------------------------------- //
+/**
+ * @brief Get all communication-flows
+ * @param communication_flows The struct to write on
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+*/
+int sysrepo_get_communication_flows(TSN_CommunicationFlows **communication_flows);
+/**
+ * @brief Get a specific communication-flow
+ * @param id The id of the communication-flow
+ * @param communication_flow The struct to write on
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+*/
+int sysrepo_get_communication_flow(uint32_t id, TSN_CommunicationFlow **communication_flow);
+/**
+ * @brief Add a new communication-flow
+ * @param communication_flow The struct of the to be added communication-flow
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+*/
+int sysrepo_add_communication_flow(TSN_CommunicationFlow **communication_flow);
+/**
+ * @brief Add a new communication-flows
+ * @param communication_flow The struct containing the to be added communication-flows
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+*/
+int sysrepo_add_communication_flows(TSN_CommunicationFlows **communication_flows);
+/**
+ * @brief Remove a specific communication-flows
+ * @param id The id of the communication-flows 
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+*/
+int sysrepo_delete_communication_flow(uint32_t id);
+
+
+// -------------------------------------------------------- //
 // Topology handling
 // -------------------------------------------------------- //
 /**

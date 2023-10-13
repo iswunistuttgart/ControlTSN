@@ -232,6 +232,22 @@ typedef struct TSN_Streams {
 
 
 // ---------------------------------------
+// Communication-flow definitions
+// ---------------------------------------
+typedef struct TSN_CommunicationFlow {
+    uint32_t id;
+    uint8_t traffic_class;
+    uint32_t payload_size;
+    uint16_t ethertype;
+} TSN_CommunicationFlow;
+
+typedef struct TSN_CommunicationFlows {
+    uint32_t count_communication_flows;
+    TSN_CommunicationFlow *communication_flows;
+} TSN_CommunicationFlows;
+
+
+// ---------------------------------------
 // Topology definitions
 // ---------------------------------------
 typedef struct TSN_Enddevice_AppRef {
@@ -307,6 +323,12 @@ typedef struct TSN_App_StreamMapping {
     char **ingress;              // Contains the Stream IDs of incoming streams (App as Listener)
 } TSN_App_StreamMapping;
 
+typedef struct TSN_App_CommunicationFlowMapping {
+    uint16_t count_egress;
+    uint16_t count_ingress;
+    uint32_t *egress;               // Contains the Communication Flow IDs of outgoing flows (App as Talker)
+    uint32_t *ingress;              // Contains the Communication Flow IDs of incoming flows (App as Listener)
+} TSN_App_CommunicationFlowMapping;
 
 typedef struct TSN_App {
     char *id;           // {name}_{version}
@@ -322,6 +344,7 @@ typedef struct TSN_App {
     TSN_App_Parameter *parameters;
 
     TSN_App_StreamMapping stream_mapping;
+    TSN_App_CommunicationFlowMapping communication_flow_mapping;
 } TSN_App;
 
 typedef struct TSN_Image {
@@ -351,6 +374,7 @@ typedef struct TSN_Application {
 // ----------------------------------------------
 typedef struct TSN_Uni {
     TSN_Streams streams;
+    TSN_CommunicationFlows communication_flows;
     TSN_Modules modules;
     TSN_Topology topology;
     TSN_Application application;

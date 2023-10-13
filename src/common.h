@@ -278,4 +278,15 @@ bool configuration_stream_get_sendreceive(char *stream_id);
 */
 int configuration_app_deploy_parameters(char *app_id);
 
+
+// ----------------------------------------------
+//      FUNCTIONS - Communication-flow
+// ----------------------------------------------
+/*
+int communication_flow_get_all(TSN_CommunicationFlows **communication_flows);
+int communication_flow_get_id(uint32_t id, TSN_CommunicationFlow **communication_flow);
+int communication_flow_add(TSN_CommunicationFlow **communication_flow);
+int communication_flow_add_multiple(TSN_CommunicationFlows **communication_flows);
+*/
+
 #endif // __COMMON_H__

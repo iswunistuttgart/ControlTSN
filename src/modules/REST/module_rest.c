@@ -156,6 +156,12 @@ _api_index_get(const struct _u_request *request, struct _u_response *response, v
                        "<tr><td><a href='/streams/00-00-00-00-00-00:00-01/deploy'>/streams/:stream-id/deploy</a></td><td>POST</td><td>Deploy a specific stream configuration to the enddevices</td></tr>" \
                        "<tr><td><a href='/streams/request'>/streams/request</a></td><td>POST</td><td>Request a new stream</td><td>request (TSN_Request)</td></tr>" \
                        "<tr><td><a href='/streams/compute'>/streams/compute</a></td><td>POST</td><td>Trigger the computation of all stream requests</td><td></td></tr>" \
+                       // Communication-flows
+                       "<tr><th>Communication-flows</th></tr>" \
+                       "<tr><td><a href='/communication-flows'>/communication-flows</a></td><td>GET</td><td>Get all communication-flows</td></tr>" \
+                       "<tr><td><a href='/communication-flows/0'>/communication-flows/:id</a></td><td>GET</td><td>Get a specific communication-flows</td></tr>" \
+                       "<tr><td><a href='/communication-flows/add'>/communication-flows/add</a></td><td>POST</td><td>Add a new communication-flows</td><td>traffic-class (uint8), payload-size (uint32), ethertype (uint16)</td></tr>" \
+                       "<tr><td><a href='/communication-flows/add-multiple'>/communication-flows/add-multiple</a></td><td>POST</td><td>Add multiple new communication-flows at once</td><td></td></tr>" \
                        // Applications
                        "<tr><th>Applications</th></tr>" \
                        "<tr><td><a href='/application/discover'>/application/discover</a></td><td>POST</td><td>Request discovery of images and applications</td></tr>" \
@@ -854,7 +860,6 @@ _api_application_get(const struct _u_request *request, struct _u_response *respo
     if (rc == EXIT_FAILURE) {
         return U_CALLBACK_ERROR;
     }
-
     json_t *json_body = serialize_application(application);
     ulfius_set_json_body_response(response, 200, json_body);
 
@@ -1010,39 +1015,6 @@ _api_application_app_stop(const struct _u_request *request, struct _u_response *
 static int
 _api_application_app_update(const struct _u_request *request, struct _u_response *response, void *user_data)
 {
-    /*
-    const char *app_id = u_map_get(request->map_url, "id");
-    json_t *json_post_body;
-    TSN_App *app;
-    int ret;
-
-
-    if (!app_id)
-        return U_CALLBACK_ERROR;
-
-    json_post_body = ulfius_get_json_body_request(request, NULL);
-    if (!json_post_body)
-        return U_CALLBACK_ERROR;
-
-    app = deserialize_app(json_post_body);
-    if (!app)
-        return U_CALLBACK_ERROR;
-
-    ret = sysrepo_set_application_app(app);
-    if (ret == EXIT_FAILURE) {
-        ret = U_CALLBACK_ERROR;
-        goto out;
-    }
-
-    ret = U_CALLBACK_COMPLETE;
-
-out:
-    json_decref(json_post_body);
-    application_app_put(app);
-
-    return ret;
-    */
-
     const char *app_id = u_map_get(request->map_url, "id");
     json_t *json_post_body;
     TSN_App *app;
@@ -1208,6 +1180,101 @@ _api_configuration_get_stream_sendreceive(const struct _u_request *request, stru
 
     return U_CALLBACK_COMPLETE;
 
+}
+
+// ------------------------------------
+// Communication-flow
+// ------------------------------------
+static int
+_api_communication_flows_get(const struct _u_request *request, struct _u_response *response, void *user_data)
+{
+    TSN_CommunicationFlows *communication_flows = malloc(sizeof(TSN_CommunicationFlows));
+    rc = sysrepo_get_communication_flows(&communication_flows);
+    if (rc == EXIT_FAILURE) {
+        return U_CALLBACK_ERROR;
+    }
+
+    json_t *json_body = serialize_communication_flows(communication_flows);
+    ulfius_set_json_body_response(response, 200, json_body);
+
+    json_decref(json_body);
+
+    return U_CALLBACK_COMPLETE;
+}
+
+static int
+_api_communication_flows_get_id(const struct _u_request *request, struct _u_response *response, void *user_data)
+{
+    const char *url_id = u_map_get(request->map_url, "id");
+    int id = atoi(url_id);
+    if (id <= 0) {
+        return U_CALLBACK_ERROR;
+    }
+    
+    TSN_CommunicationFlow *communication_flow = malloc(sizeof(TSN_CommunicationFlow));
+    rc = sysrepo_get_communication_flow(id, &communication_flow);
+    if (rc == EXIT_FAILURE) {
+        return U_CALLBACK_ERROR;
+    }
+
+    json_t *json_body = serialize_communication_flow(communication_flow);
+    ulfius_set_json_body_response(response, 200, json_body);
+
+    json_decref(json_body);
+
+    return U_CALLBACK_COMPLETE;
+}
+
+static int
+_api_communication_flows_add(const struct _u_request *request, struct _u_response *response, void *user_data)
+{
+    json_error_t json_error;
+    json_t *json_post_body = ulfius_get_json_body_request(request, &json_error);
+    if (json_post_body == NULL) {
+        return U_CALLBACK_ERROR;
+    }
+
+    const uint8_t traffic_class = json_number_value(json_object_get(json_post_body, "traffic-class"));
+    const uint32_t payload_size = json_number_value(json_object_get(json_post_body, "payload-size"));
+    const uint16_t ethertype = json_number_value(json_object_get(json_post_body, "ethertype"));
+    TSN_CommunicationFlow *communication_flow = malloc(sizeof(TSN_CommunicationFlow));
+
+    communication_flow->traffic_class = traffic_class;
+    communication_flow->payload_size = payload_size;
+    communication_flow->ethertype = ethertype;
+
+    json_decref(json_post_body);
+
+    rc = sysrepo_add_communication_flow(&communication_flow);
+    if (rc != EXIT_SUCCESS) {
+        return U_CALLBACK_ERROR;
+    }
+
+    json_t *id_response = json_object();
+    json_object_set_new(id_response, "id", json_integer(communication_flow->id));
+    ulfius_set_json_body_response(response, 200, id_response);
+    json_decref(id_response);
+
+    return U_CALLBACK_COMPLETE;
+}
+
+static int
+_api_communication_flows_add_multiple(const struct _u_request *request, struct _u_response *response, void *user_data)
+{
+    json_error_t json_error;
+    json_t *json_post_body = ulfius_get_json_body_request(request, &json_error);
+    if (json_post_body == NULL) {
+        return U_CALLBACK_ERROR;
+    }
+
+    TSN_CommunicationFlows *communication_flows = malloc(sizeof(TSN_CommunicationFlows));
+    communication_flows = deserialize_communication_flows(json_post_body);
+    rc = sysrepo_add_communication_flows(&communication_flows);
+    if (rc != EXIT_SUCCESS) {
+        return U_CALLBACK_ERROR;
+    }
+
+    return U_CALLBACK_COMPLETE;
 }
 
 // ------------------------------------
@@ -1462,7 +1529,11 @@ _init_server()
     ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_STREAMS_ID_DELETE,          0, &_api_streams_delete,                NULL);
     ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_STREAMS_COMPUTE,            0, &_api_streams_compute,               NULL);
     ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_STREAMS_ID_DEPLOY,          0, &_api_streams_deploy,                NULL);
-
+    // Communication-flows
+    ulfius_add_endpoint_by_val(&server_instance, "GET",     API_PREFIX, API_COMMUNICATION_FLOWS,                0, &_api_communication_flows_get,           NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "GET",     API_PREFIX, API_COMMUNICATION_FLOWS_ID,             0, &_api_communication_flows_get_id,        NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_COMMUNICATION_FLOWS_ADD,            0, &_api_communication_flows_add,           NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_COMMUNICATION_FLOWS_ADD_MULTIPLE,   0, &_api_communication_flows_add_multiple,  NULL);
     // Topology
     ulfius_add_endpoint_by_val(&server_instance, "GET",     API_PREFIX, API_TOPOLOGY,                   0, &_api_topology_get,              NULL);
     ulfius_add_endpoint_by_val(&server_instance, "GET",     API_PREFIX, API_TOPOLOGY_DEVICES,           0, &_api_topology_devices_get,      NULL);

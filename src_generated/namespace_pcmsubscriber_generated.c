@@ -286,9 +286,49 @@ UA_NODEID_NUMERIC(ns[1], 1003LU)
 );
 }
 
-/* LEDsCount - ns=1;i=6016 */
+/* LEDRefreshHz - ns=1;i=6018 */
 
 static UA_StatusCode function_namespace_pcmsubscriber_generated_9_begin(UA_Server *server, UA_UInt16* ns) {
+UA_StatusCode retVal = UA_STATUSCODE_GOOD;
+UA_VariableAttributes attr = UA_VariableAttributes_default;
+attr.minimumSamplingInterval = 0.000000;
+attr.userAccessLevel = 1;
+attr.accessLevel = 3;
+/* Value rank inherited */
+attr.valueRank = -2;
+attr.dataType = UA_NODEID_NUMERIC(ns[0], 5LU);
+UA_UInt16 *variablenode_ns_1_i_6018_variant_DataContents =  UA_UInt16_new();
+if (!variablenode_ns_1_i_6018_variant_DataContents) return UA_STATUSCODE_BADOUTOFMEMORY;
+UA_UInt16_init(variablenode_ns_1_i_6018_variant_DataContents);
+*variablenode_ns_1_i_6018_variant_DataContents = (UA_UInt16) 100;
+UA_Variant_setScalar(&attr.value, variablenode_ns_1_i_6018_variant_DataContents, &UA_TYPES[UA_TYPES_UINT16]);
+attr.displayName = UA_LOCALIZEDTEXT("", "LEDRefreshHz");
+#ifdef UA_ENABLE_NODESET_COMPILER_DESCRIPTIONS
+attr.description = UA_LOCALIZEDTEXT("", "How often the LEDs should be updated per second");
+#endif
+retVal |= UA_Server_addNode_begin(server, UA_NODECLASS_VARIABLE,
+UA_NODEID_NUMERIC(ns[1], 6018LU),
+UA_NODEID_NUMERIC(ns[1], 1003LU),
+UA_NODEID_NUMERIC(ns[0], 47LU),
+UA_QUALIFIEDNAME(ns[1], "LEDRefreshHz"),
+UA_NODEID_NUMERIC(ns[0], 63LU),
+(const UA_NodeAttributes*)&attr, &UA_TYPES[UA_TYPES_VARIABLEATTRIBUTES],NULL, NULL);
+if (retVal != UA_STATUSCODE_GOOD) return retVal;
+UA_UInt16_delete(variablenode_ns_1_i_6018_variant_DataContents);
+retVal |= UA_Server_addReference(server, UA_NODEID_NUMERIC(ns[1], 6018LU), UA_NODEID_NUMERIC(ns[0], 37LU), UA_EXPANDEDNODEID_NUMERIC(ns[0], 78LU), true);
+if (retVal != UA_STATUSCODE_GOOD) return retVal;
+return retVal;
+}
+
+static UA_StatusCode function_namespace_pcmsubscriber_generated_9_finish(UA_Server *server, UA_UInt16* ns) {
+return UA_Server_addNode_finish(server, 
+UA_NODEID_NUMERIC(ns[1], 6018LU)
+);
+}
+
+/* LEDsCount - ns=1;i=6016 */
+
+static UA_StatusCode function_namespace_pcmsubscriber_generated_10_begin(UA_Server *server, UA_UInt16* ns) {
 UA_StatusCode retVal = UA_STATUSCODE_GOOD;
 UA_VariableAttributes attr = UA_VariableAttributes_default;
 attr.minimumSamplingInterval = 0.000000;
@@ -320,7 +360,7 @@ if (retVal != UA_STATUSCODE_GOOD) return retVal;
 return retVal;
 }
 
-static UA_StatusCode function_namespace_pcmsubscriber_generated_9_finish(UA_Server *server, UA_UInt16* ns) {
+static UA_StatusCode function_namespace_pcmsubscriber_generated_10_finish(UA_Server *server, UA_UInt16* ns) {
 return UA_Server_addNode_finish(server, 
 UA_NODEID_NUMERIC(ns[1], 6016LU)
 );
@@ -328,7 +368,7 @@ UA_NODEID_NUMERIC(ns[1], 6016LU)
 
 /* EnergyThreshold - ns=1;i=6004 */
 
-static UA_StatusCode function_namespace_pcmsubscriber_generated_10_begin(UA_Server *server, UA_UInt16* ns) {
+static UA_StatusCode function_namespace_pcmsubscriber_generated_11_begin(UA_Server *server, UA_UInt16* ns) {
 UA_StatusCode retVal = UA_STATUSCODE_GOOD;
 UA_VariableAttributes attr = UA_VariableAttributes_default;
 attr.minimumSamplingInterval = 0.000000;
@@ -360,7 +400,7 @@ if (retVal != UA_STATUSCODE_GOOD) return retVal;
 return retVal;
 }
 
-static UA_StatusCode function_namespace_pcmsubscriber_generated_10_finish(UA_Server *server, UA_UInt16* ns) {
+static UA_StatusCode function_namespace_pcmsubscriber_generated_11_finish(UA_Server *server, UA_UInt16* ns) {
 return UA_Server_addNode_finish(server, 
 UA_NODEID_NUMERIC(ns[1], 6004LU)
 );
@@ -368,7 +408,7 @@ UA_NODEID_NUMERIC(ns[1], 6004LU)
 
 /* UpperEnergyBound - ns=1;i=6003 */
 
-static UA_StatusCode function_namespace_pcmsubscriber_generated_11_begin(UA_Server *server, UA_UInt16* ns) {
+static UA_StatusCode function_namespace_pcmsubscriber_generated_12_begin(UA_Server *server, UA_UInt16* ns) {
 UA_StatusCode retVal = UA_STATUSCODE_GOOD;
 UA_VariableAttributes attr = UA_VariableAttributes_default;
 attr.minimumSamplingInterval = 0.000000;
@@ -400,7 +440,7 @@ if (retVal != UA_STATUSCODE_GOOD) return retVal;
 return retVal;
 }
 
-static UA_StatusCode function_namespace_pcmsubscriber_generated_11_finish(UA_Server *server, UA_UInt16* ns) {
+static UA_StatusCode function_namespace_pcmsubscriber_generated_12_finish(UA_Server *server, UA_UInt16* ns) {
 return UA_Server_addNode_finish(server, 
 UA_NODEID_NUMERIC(ns[1], 6003LU)
 );
@@ -408,7 +448,7 @@ UA_NODEID_NUMERIC(ns[1], 6003LU)
 
 /* LowerEnergyBound - ns=1;i=6002 */
 
-static UA_StatusCode function_namespace_pcmsubscriber_generated_12_begin(UA_Server *server, UA_UInt16* ns) {
+static UA_StatusCode function_namespace_pcmsubscriber_generated_13_begin(UA_Server *server, UA_UInt16* ns) {
 UA_StatusCode retVal = UA_STATUSCODE_GOOD;
 UA_VariableAttributes attr = UA_VariableAttributes_default;
 attr.minimumSamplingInterval = 0.000000;
@@ -440,7 +480,7 @@ if (retVal != UA_STATUSCODE_GOOD) return retVal;
 return retVal;
 }
 
-static UA_StatusCode function_namespace_pcmsubscriber_generated_12_finish(UA_Server *server, UA_UInt16* ns) {
+static UA_StatusCode function_namespace_pcmsubscriber_generated_13_finish(UA_Server *server, UA_UInt16* ns) {
 return UA_Server_addNode_finish(server, 
 UA_NODEID_NUMERIC(ns[1], 6002LU)
 );
@@ -448,7 +488,7 @@ UA_NODEID_NUMERIC(ns[1], 6002LU)
 
 /* COMPort - ns=1;i=6001 */
 
-static UA_StatusCode function_namespace_pcmsubscriber_generated_13_begin(UA_Server *server, UA_UInt16* ns) {
+static UA_StatusCode function_namespace_pcmsubscriber_generated_14_begin(UA_Server *server, UA_UInt16* ns) {
 UA_StatusCode retVal = UA_STATUSCODE_GOOD;
 UA_VariableAttributes attr = UA_VariableAttributes_default;
 attr.minimumSamplingInterval = 0.000000;
@@ -480,7 +520,7 @@ if (retVal != UA_STATUSCODE_GOOD) return retVal;
 return retVal;
 }
 
-static UA_StatusCode function_namespace_pcmsubscriber_generated_13_finish(UA_Server *server, UA_UInt16* ns) {
+static UA_StatusCode function_namespace_pcmsubscriber_generated_14_finish(UA_Server *server, UA_UInt16* ns) {
 return UA_Server_addNode_finish(server, 
 UA_NODEID_NUMERIC(ns[1], 6001LU)
 );
@@ -488,7 +528,7 @@ UA_NODEID_NUMERIC(ns[1], 6001LU)
 
 /* PCMSubscriberEngineering - ns=1;i=5004 */
 
-static UA_StatusCode function_namespace_pcmsubscriber_generated_14_begin(UA_Server *server, UA_UInt16* ns) {
+static UA_StatusCode function_namespace_pcmsubscriber_generated_15_begin(UA_Server *server, UA_UInt16* ns) {
 UA_StatusCode retVal = UA_STATUSCODE_GOOD;
 UA_ObjectAttributes attr = UA_ObjectAttributes_default;
 attr.displayName = UA_LOCALIZEDTEXT("", "PCMSubscriberEngineering");
@@ -506,15 +546,53 @@ if (retVal != UA_STATUSCODE_GOOD) return retVal;
 return retVal;
 }
 
-static UA_StatusCode function_namespace_pcmsubscriber_generated_14_finish(UA_Server *server, UA_UInt16* ns) {
+static UA_StatusCode function_namespace_pcmsubscriber_generated_15_finish(UA_Server *server, UA_UInt16* ns) {
 return UA_Server_addNode_finish(server, 
 UA_NODEID_NUMERIC(ns[1], 5004LU)
 );
 }
 
+/* LEDRefreshHz - ns=1;i=6019 */
+
+static UA_StatusCode function_namespace_pcmsubscriber_generated_16_begin(UA_Server *server, UA_UInt16* ns) {
+UA_StatusCode retVal = UA_STATUSCODE_GOOD;
+UA_VariableAttributes attr = UA_VariableAttributes_default;
+attr.minimumSamplingInterval = 0.000000;
+attr.userAccessLevel = 1;
+attr.accessLevel = 3;
+/* Value rank inherited */
+attr.valueRank = -2;
+attr.dataType = UA_NODEID_NUMERIC(ns[0], 5LU);
+UA_UInt16 *variablenode_ns_1_i_6019_variant_DataContents =  UA_UInt16_new();
+if (!variablenode_ns_1_i_6019_variant_DataContents) return UA_STATUSCODE_BADOUTOFMEMORY;
+UA_UInt16_init(variablenode_ns_1_i_6019_variant_DataContents);
+*variablenode_ns_1_i_6019_variant_DataContents = (UA_UInt16) 100;
+UA_Variant_setScalar(&attr.value, variablenode_ns_1_i_6019_variant_DataContents, &UA_TYPES[UA_TYPES_UINT16]);
+attr.displayName = UA_LOCALIZEDTEXT("", "LEDRefreshHz");
+#ifdef UA_ENABLE_NODESET_COMPILER_DESCRIPTIONS
+attr.description = UA_LOCALIZEDTEXT("", "How often the LEDs should be updated per second");
+#endif
+retVal |= UA_Server_addNode_begin(server, UA_NODECLASS_VARIABLE,
+UA_NODEID_NUMERIC(ns[1], 6019LU),
+UA_NODEID_NUMERIC(ns[1], 5004LU),
+UA_NODEID_NUMERIC(ns[0], 47LU),
+UA_QUALIFIEDNAME(ns[1], "LEDRefreshHz"),
+UA_NODEID_NUMERIC(ns[0], 63LU),
+(const UA_NodeAttributes*)&attr, &UA_TYPES[UA_TYPES_VARIABLEATTRIBUTES],NULL, NULL);
+if (retVal != UA_STATUSCODE_GOOD) return retVal;
+UA_UInt16_delete(variablenode_ns_1_i_6019_variant_DataContents);
+return retVal;
+}
+
+static UA_StatusCode function_namespace_pcmsubscriber_generated_16_finish(UA_Server *server, UA_UInt16* ns) {
+return UA_Server_addNode_finish(server, 
+UA_NODEID_NUMERIC(ns[1], 6019LU)
+);
+}
+
 /* LEDsCount - ns=1;i=6017 */
 
-static UA_StatusCode function_namespace_pcmsubscriber_generated_15_begin(UA_Server *server, UA_UInt16* ns) {
+static UA_StatusCode function_namespace_pcmsubscriber_generated_17_begin(UA_Server *server, UA_UInt16* ns) {
 UA_StatusCode retVal = UA_STATUSCODE_GOOD;
 UA_VariableAttributes attr = UA_VariableAttributes_default;
 attr.minimumSamplingInterval = 0.000000;
@@ -544,7 +622,7 @@ UA_UInt16_delete(variablenode_ns_1_i_6017_variant_DataContents);
 return retVal;
 }
 
-static UA_StatusCode function_namespace_pcmsubscriber_generated_15_finish(UA_Server *server, UA_UInt16* ns) {
+static UA_StatusCode function_namespace_pcmsubscriber_generated_17_finish(UA_Server *server, UA_UInt16* ns) {
 return UA_Server_addNode_finish(server, 
 UA_NODEID_NUMERIC(ns[1], 6017LU)
 );
@@ -552,7 +630,7 @@ UA_NODEID_NUMERIC(ns[1], 6017LU)
 
 /* UpperEnergyBound - ns=1;i=6015 */
 
-static UA_StatusCode function_namespace_pcmsubscriber_generated_16_begin(UA_Server *server, UA_UInt16* ns) {
+static UA_StatusCode function_namespace_pcmsubscriber_generated_18_begin(UA_Server *server, UA_UInt16* ns) {
 UA_StatusCode retVal = UA_STATUSCODE_GOOD;
 UA_VariableAttributes attr = UA_VariableAttributes_default;
 attr.minimumSamplingInterval = 0.000000;
@@ -582,7 +660,7 @@ UA_Double_delete(variablenode_ns_1_i_6015_variant_DataContents);
 return retVal;
 }
 
-static UA_StatusCode function_namespace_pcmsubscriber_generated_16_finish(UA_Server *server, UA_UInt16* ns) {
+static UA_StatusCode function_namespace_pcmsubscriber_generated_18_finish(UA_Server *server, UA_UInt16* ns) {
 return UA_Server_addNode_finish(server, 
 UA_NODEID_NUMERIC(ns[1], 6015LU)
 );
@@ -590,7 +668,7 @@ UA_NODEID_NUMERIC(ns[1], 6015LU)
 
 /* LowerEnergyBound - ns=1;i=6014 */
 
-static UA_StatusCode function_namespace_pcmsubscriber_generated_17_begin(UA_Server *server, UA_UInt16* ns) {
+static UA_StatusCode function_namespace_pcmsubscriber_generated_19_begin(UA_Server *server, UA_UInt16* ns) {
 UA_StatusCode retVal = UA_STATUSCODE_GOOD;
 UA_VariableAttributes attr = UA_VariableAttributes_default;
 attr.minimumSamplingInterval = 0.000000;
@@ -620,7 +698,7 @@ UA_Double_delete(variablenode_ns_1_i_6014_variant_DataContents);
 return retVal;
 }
 
-static UA_StatusCode function_namespace_pcmsubscriber_generated_17_finish(UA_Server *server, UA_UInt16* ns) {
+static UA_StatusCode function_namespace_pcmsubscriber_generated_19_finish(UA_Server *server, UA_UInt16* ns) {
 return UA_Server_addNode_finish(server, 
 UA_NODEID_NUMERIC(ns[1], 6014LU)
 );
@@ -628,7 +706,7 @@ UA_NODEID_NUMERIC(ns[1], 6014LU)
 
 /* EnergyThreshold - ns=1;i=6013 */
 
-static UA_StatusCode function_namespace_pcmsubscriber_generated_18_begin(UA_Server *server, UA_UInt16* ns) {
+static UA_StatusCode function_namespace_pcmsubscriber_generated_20_begin(UA_Server *server, UA_UInt16* ns) {
 UA_StatusCode retVal = UA_STATUSCODE_GOOD;
 UA_VariableAttributes attr = UA_VariableAttributes_default;
 attr.minimumSamplingInterval = 0.000000;
@@ -658,7 +736,7 @@ UA_Double_delete(variablenode_ns_1_i_6013_variant_DataContents);
 return retVal;
 }
 
-static UA_StatusCode function_namespace_pcmsubscriber_generated_18_finish(UA_Server *server, UA_UInt16* ns) {
+static UA_StatusCode function_namespace_pcmsubscriber_generated_20_finish(UA_Server *server, UA_UInt16* ns) {
 return UA_Server_addNode_finish(server, 
 UA_NODEID_NUMERIC(ns[1], 6013LU)
 );
@@ -666,7 +744,7 @@ UA_NODEID_NUMERIC(ns[1], 6013LU)
 
 /* COMPort - ns=1;i=6012 */
 
-static UA_StatusCode function_namespace_pcmsubscriber_generated_19_begin(UA_Server *server, UA_UInt16* ns) {
+static UA_StatusCode function_namespace_pcmsubscriber_generated_21_begin(UA_Server *server, UA_UInt16* ns) {
 UA_StatusCode retVal = UA_STATUSCODE_GOOD;
 UA_VariableAttributes attr = UA_VariableAttributes_default;
 attr.minimumSamplingInterval = 0.000000;
@@ -696,7 +774,7 @@ UA_String_delete(variablenode_ns_1_i_6012_variant_DataContents);
 return retVal;
 }
 
-static UA_StatusCode function_namespace_pcmsubscriber_generated_19_finish(UA_Server *server, UA_UInt16* ns) {
+static UA_StatusCode function_namespace_pcmsubscriber_generated_21_finish(UA_Server *server, UA_UInt16* ns) {
 return UA_Server_addNode_finish(server, 
 UA_NODEID_NUMERIC(ns[1], 6012LU)
 );
@@ -730,6 +808,10 @@ if((retVal = function_namespace_pcmsubscriber_generated_16_begin(server, ns)) !=
 if((retVal = function_namespace_pcmsubscriber_generated_17_begin(server, ns)) != UA_STATUSCODE_GOOD) return retVal;
 if((retVal = function_namespace_pcmsubscriber_generated_18_begin(server, ns)) != UA_STATUSCODE_GOOD) return retVal;
 if((retVal = function_namespace_pcmsubscriber_generated_19_begin(server, ns)) != UA_STATUSCODE_GOOD) return retVal;
+if((retVal = function_namespace_pcmsubscriber_generated_20_begin(server, ns)) != UA_STATUSCODE_GOOD) return retVal;
+if((retVal = function_namespace_pcmsubscriber_generated_21_begin(server, ns)) != UA_STATUSCODE_GOOD) return retVal;
+if((retVal = function_namespace_pcmsubscriber_generated_21_finish(server, ns)) != UA_STATUSCODE_GOOD) return retVal;
+if((retVal = function_namespace_pcmsubscriber_generated_20_finish(server, ns)) != UA_STATUSCODE_GOOD) return retVal;
 if((retVal = function_namespace_pcmsubscriber_generated_19_finish(server, ns)) != UA_STATUSCODE_GOOD) return retVal;
 if((retVal = function_namespace_pcmsubscriber_generated_18_finish(server, ns)) != UA_STATUSCODE_GOOD) return retVal;
 if((retVal = function_namespace_pcmsubscriber_generated_17_finish(server, ns)) != UA_STATUSCODE_GOOD) return retVal;

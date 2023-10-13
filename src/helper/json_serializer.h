@@ -44,7 +44,6 @@ json_t *serialize_stream_configuration(TSN_Configuration *configuration);
 json_t *serialize_stream(TSN_Stream *stream);
 json_t *serialize_streams(TSN_Streams *streams);
 
-
 /**
  * This function generates the correct output the CNC from the OpenCNC projects expects.
  * TODO: Whicht format/data structure is correct? Is this one in the standard yet?
@@ -100,6 +99,16 @@ IEEE_ConfigList *deserialize_cnc_config_list(json_t *obj);
 
 
 // ------------------------------------
+// Communication-flow
+// ------------------------------------
+json_t *serialize_communication_flow(TSN_CommunicationFlow *communication_flow);
+json_t *serialize_communication_flows(TSN_CommunicationFlows *communication_flows);
+
+TSN_CommunicationFlow *deserialize_communication_flow(json_t *obj);
+TSN_CommunicationFlows *deserialize_communication_flows(json_t *obj);
+
+
+// ------------------------------------
 // Topology
 // ------------------------------------
 json_t *serialize_enddevice_app_ref(TSN_Enddevice_AppRef *app_ref);
@@ -127,9 +136,11 @@ json_t *serialize_apps(TSN_Apps *apps);
 json_t *serialize_image(TSN_Image *image);
 json_t *serialize_images(TSN_Images *images);
 json_t *serialize_app_stream_mapping(TSN_App_StreamMapping *mapping);
+json_t *serialize_app_communication_flow_mapping(TSN_App_CommunicationFlowMapping *mapping);
 json_t *serialize_application(TSN_Application *application);
 
 TSN_App_StreamMapping *deserialize_app_stream_mapping(json_t *obj);
+TSN_App_CommunicationFlowMapping *deserialize_app_communication_flow(json_t *obj);
 TSN_Images *deserialize_images(json_t *obj, const char *docker_host);
 TSN_Apps *deserialize_apps(json_t *obj);
 TSN_App *deserialize_app(json_t *obj);

@@ -357,6 +357,40 @@ streams_delete(char *stream_id)
 }
 
 // ----------------------------------------------
+//      FUNCTIONS - Communication-flow
+// ----------------------------------------------
+/*
+int
+communication_flow_get_all(TSN_CommunicationFlows **communication_flows)
+{
+    ret = sysrepo_get_communication_flows(communication_flows);
+    return ret;
+}
+
+int 
+communication_flow_get_id(uint32_t id, TSN_CommunicationFlow **communication_flow)
+{
+    ret = sysrepo_get_communication_flow(id, communication_flow);
+    return ret;
+}
+
+int 
+communication_flow_add(TSN_CommunicationFlow **communication_flow)
+{
+    ret = sysrepo_add_communication_flow(communication_flow);
+    return ret;
+}
+
+int 
+communication_flow_add_multiple(TSN_CommunicationFlows **communication_flows)
+{
+    ret = sysrepo_add_communication_flows(communication_flows);
+    return ret;
+}
+*/
+
+
+// ----------------------------------------------
 //      FUNCTIONS - Topology
 // ----------------------------------------------
 int
@@ -433,12 +467,27 @@ static void _application_app_put(TSN_App *app)
     free(app->id);
     free(app->name);
     free(app->description);
+    if (app->has_mac) {
+        free(app->mac);
+    }
+    free(app->iface);
     free(app->version);
-    free(app->image_ref);
+    if (app->has_image) {
+        free(app->image_ref);
+    }
+    
 
     for (i = 0; i < app->count_parameters; ++i)
         free(app->parameters[i].name);
     free(app->parameters);
+
+    for (i = 0; i <app->stream_mapping.count_egress; ++i) {
+        free(app->stream_mapping.egress[i]);
+    }
+    for (i = 0; i <app->stream_mapping.count_ingress; ++i) {
+        free(app->stream_mapping.ingress[i]);
+    }
+
 }
 
 void application_put_apps(TSN_Apps *apps)

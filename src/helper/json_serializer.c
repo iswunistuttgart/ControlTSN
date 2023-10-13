@@ -1826,6 +1826,29 @@ serialize_app_stream_mapping(TSN_App_StreamMapping *mapping)
 }
 
 json_t *
+serialize_app_communication_flow_mapping(TSN_App_CommunicationFlowMapping *mapping)
+{
+    json_t *root = NULL;
+    root = json_object();
+
+    json_t *array_egress = NULL;
+    array_egress = json_array();
+    for (int i=0; i<mapping->count_egress; ++i) {
+        json_array_append_new(array_egress, json_integer(mapping->egress[i]));
+    }
+    json_object_set_new(root, "egress", array_egress);
+
+    json_t *array_ingress = NULL;
+    array_ingress = json_array();
+    for (int i=0; i<mapping->count_ingress; ++i) {
+        json_array_append_new(array_ingress, json_integer(mapping->ingress[i]));
+    }
+    json_object_set_new(root, "ingress", array_ingress);
+
+    return root;
+}
+
+json_t *
 serialize_app(TSN_App *app)
 {
     json_t *root = NULL;
@@ -1859,6 +1882,10 @@ serialize_app(TSN_App *app)
     json_t *stream_mapping = NULL;
     stream_mapping = serialize_app_stream_mapping(&app->stream_mapping);
     json_object_set_new(root, "stream-mapping", stream_mapping);
+
+    json_t *communication_flow_mapping = NULL;
+    communication_flow_mapping = serialize_app_communication_flow_mapping(&app->communication_flow_mapping);
+    json_object_set_new(root, "communication-flow-mapping", communication_flow_mapping);
 
     return root;
 }
@@ -1938,6 +1965,30 @@ deserialize_app_stream_mapping(json_t *obj)
     mapping->ingress = malloc(sizeof(char *) * mapping->count_ingress);
     for (int i=0; i<mapping->count_ingress; ++i) {
         mapping->ingress[i] = strdup(json_string_value(json_array_get(array_ingress, i)));
+    }
+
+    return mapping;
+}
+
+TSN_App_CommunicationFlowMapping *
+deserialize_app_communication_flow_mapping(json_t *obj)
+{
+    TSN_App_CommunicationFlowMapping *mapping = malloc(sizeof(TSN_App_CommunicationFlowMapping));
+    json_t *array_egress;
+    json_t *array_ingress;
+
+    array_egress = json_object_get(obj, "egress");
+    mapping->count_egress = json_array_size(array_egress);
+    mapping->egress = malloc(sizeof(uint32_t) * mapping->count_egress);
+    for (int i=0; i<mapping->count_egress; ++i) {
+        mapping->egress[i] = json_integer_value(json_array_get(array_egress, i));
+    }
+
+    array_ingress = json_object_get(obj, "ingress");
+    mapping->count_ingress = json_array_size(array_ingress);
+    mapping->ingress = malloc(sizeof(uint32_t) * mapping->count_ingress);
+    for (int i=0; i<mapping->count_ingress; ++i) {
+        mapping->ingress[i] = json_integer_value(json_array_get(array_ingress, i));
     }
 
     return mapping;
@@ -2092,17 +2143,17 @@ TSN_App *deserialize_app(json_t *obj)
     json_t *image = json_object_get(obj, "image-ref");
     json_t *params = json_object_get(obj, "parameters");
     json_t *stream_mapping = json_object_get(obj, "stream-mapping");
+    json_t *communication_flow_mapping = json_object_get(obj, "communication-flow-mapping");
     TSN_App *app;
 
     // Invalid request
-    if (!name || !desc || !version || !image || !params)
+    if (!name || !desc || !version || !params)
         return NULL;
 
     app = malloc(sizeof(*app));
     if (!app)
         return NULL;
     memset(app, '\0', sizeof(*app));
-
     // Name
     app->name = strdup(json_string_value(name));
     if (!app->name)
@@ -2125,7 +2176,6 @@ TSN_App *deserialize_app(json_t *obj)
     if (!app->id)
         goto err3;
 
-
     app->has_mac = json_integer_value(has_mac);
     if (app->has_mac) {
         app->mac = strdup(json_string_value(mac));
@@ -2133,12 +2183,10 @@ TSN_App *deserialize_app(json_t *obj)
             goto err3_2;
         }
     }
-
     // Iface
     app->iface = strdup(json_string_value(iface));
     if (!app->iface) 
         goto err3_3;
-
     // Description
     app->description = strdup(json_string_value(desc));
     if (!app->description)
@@ -2151,7 +2199,6 @@ TSN_App *deserialize_app(json_t *obj)
         if (!app->image_ref)
             goto err5;
     }
-
     // Parameters
     uint8_t count_parameters = json_array_size(params);
     app->count_parameters = count_parameters;
@@ -2174,6 +2221,9 @@ TSN_App *deserialize_app(json_t *obj)
 
     // Stream Mapping
     app->stream_mapping = *deserialize_app_stream_mapping(stream_mapping);
+
+    // Communication flow mapping
+    app->communication_flow_mapping = *deserialize_app_communication_flow_mapping(communication_flow_mapping);
 
     return app;
 
@@ -2215,6 +2265,74 @@ serialize_application(TSN_Application *application)
 
 
 // ------------------------------------
+// Communication-flow
+// ------------------------------------
+json_t 
+*serialize_communication_flow(TSN_CommunicationFlow *communication_flow)
+{
+    json_t *root = NULL;
+    root = json_object();
+
+    json_object_set_new(root, "id", json_integer(communication_flow->id));
+    json_object_set_new(root, "traffic-class", json_integer(communication_flow->traffic_class));
+    json_object_set_new(root, "payload-size", json_integer(communication_flow->payload_size));
+    json_object_set_new(root, "ethertype", json_integer(communication_flow->ethertype));
+
+    return root;
+}
+
+json_t 
+*serialize_communication_flows(TSN_CommunicationFlows *communication_flows)
+{
+    json_t *root = NULL;
+    root = json_object();
+
+    json_t *array = NULL;
+    array = json_array();
+    for (int i=0; i<communication_flows->count_communication_flows; ++i) {
+        json_t *flow = NULL;
+        flow = serialize_communication_flow(&communication_flows->communication_flows[i]);
+        json_array_append_new(array, flow);
+    }
+    json_object_set_new(root, "communication-flows", array);
+
+    return root;
+}
+
+TSN_CommunicationFlow 
+*deserialize_communication_flow(json_t *obj)
+{
+    TSN_CommunicationFlow *communication_flow = malloc(sizeof(TSN_CommunicationFlow));
+
+    communication_flow->id = json_integer_value(json_object_get(obj, "id"));
+    communication_flow->traffic_class = json_integer_value(json_object_get(obj, "traffic-class"));
+    communication_flow->payload_size = json_integer_value(json_object_get(obj, "payload-size"));
+    communication_flow->ethertype = json_integer_value(json_object_get(obj, "ethertype"));
+
+    return communication_flow;
+}
+
+TSN_CommunicationFlows 
+*deserialize_communication_flows(json_t *obj)
+{
+    TSN_CommunicationFlows *communication_flows = malloc(sizeof(TSN_CommunicationFlows));
+
+    json_t *communication_flows_json = json_object_get(obj, "communication-flows");
+    uint32_t count_communication_flows = json_array_size(communication_flows_json);
+    communication_flows->count_communication_flows = count_communication_flows;
+    communication_flows->communication_flows = (TSN_CommunicationFlow *) malloc(sizeof(TSN_CommunicationFlow) * count_communication_flows);
+
+    for (int i=0; i<count_communication_flows; ++i) {
+        json_t *flow = json_array_get(communication_flows_json, i);
+        TSN_CommunicationFlow *f = deserialize_communication_flow(flow);
+        communication_flows->communication_flows[i] = *f;
+    }
+
+    return communication_flows;
+}
+
+
+// ------------------------------------
 // UNI
 // ------------------------------------
 json_t *
@@ -2227,6 +2345,11 @@ serialize_uni(TSN_Uni *uni)
     json_t *streams = NULL;
     streams = serialize_streams(&uni->streams);
     json_object_set_new(root, "streams", streams);
+
+    // Communication-flows
+    json_t *communication_flows = NULL;
+    communication_flows = serialize_communication_flows(&uni->communication_flows);
+    json_object_set_new(root, "communication-flows", communication_flows);
 
     // Modules
     json_t *modules = NULL;

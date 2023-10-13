@@ -90,6 +90,11 @@
         <image-ref>PCMImage_0.0.1</image-ref>
         <has-mac>1</has-mac>
         <mac>00-1B-21-ED-A9-92</mac>
+        <communication-flow-mapping>
+          <egress>3</egress>
+          <ingress>0</ingress>
+        </communication-flow-mapping>
+        <iface>eth0</iface>
       </app>
       <app>
         <id>PowerConsumer1_0.0.1</id>
@@ -101,6 +106,10 @@
         <has-mac>1</has-mac>
         <mac>48-21-0b-26-3d-8a</mac>
         <iface>enp88s0.4003</iface>
+        <communication-flow-mapping>
+          <egress>4</egress>
+          <ingress>1</ingress>
+        </communication-flow-mapping>
         <parameters>
           <parameter>
             <param-name>LowerEnergyBound</param-name>
@@ -150,6 +159,10 @@
         <has-mac>1</has-mac>
         <mac>48-21-0b-26-3f-ed</mac>
         <iface>enp88s0.4003</iface>
+        <communication-flow-mapping>
+          <egress>5</egress>
+          <ingress>2</ingress>
+        </communication-flow-mapping>
         <parameters>
           <parameter>
             <param-name>LowerEnergyBound</param-name>
@@ -189,6 +202,65 @@
           </parameter>
         </parameters>
       </app>
+      <app>
+        <id>vOSACA01_0.0.1</id>
+        <name>vOSACA01</name>
+        <desc>The machine interface of the vOSACA 01</desc>
+        <version>0.0.1</version>
+        <has-image>0</has-image>
+        <has-mac>0</has-mac>
+      </app>
+      <app>
+        <id>vOSACA02_0.0.1</id>
+        <name>vOSACA02</name>
+        <desc>The machine interface of the vOSACA 01</desc>
+        <version>0.0.1</version>
+        <has-image>0</has-image>
+        <has-mac>0</has-mac>
+      </app>
+      <app>
+        <id>vOSACA_CTRL_0.0.1</id>
+        <name>vOSACA_CTRL</name>
+        <desc>The controller of the vOSACAs</desc>
+        <version>0.0.1</version>
+        <has-image>0</has-image>
+        <has-mac>0</has-mac>
+      </app>
+      <app>
+        <id>Panda_0.0.1</id>
+        <name>Panda</name>
+        <desc>The machine interface of the Panda</desc>
+        <version>0.0.1</version>
+        <has-image>0</has-image>
+        <has-mac>0</has-mac>
+      </app>
+      <app>
+        <id>Panda_CTRL_0.0.1</id>
+        <name>Panda_CTRL</name>
+        <desc>The controller of the Panda</desc>
+        <version>0.0.1</version>
+        <has-image>0</has-image>
+        <has-mac>0</has-mac>
+      </app>
+      <app>
+        <id>EngineeringFramework_0.0.1</id>
+        <name>EngineeringFramework</name>
+        <desc>The engineering framework for orchestrating and configuring the applications and network</desc>
+        <version>0.0.1</version>
+        <has-image>1</has-image>
+        <image-ref>EngineeringFrameworkImage_0.0.1</image-ref>
+        <has-mac>1</has-mac>
+        <mac>00-00-00-00-00-01</mac>
+        <communication-flow-mapping>
+          <egress>0</egress>
+          <egress>1</egress>
+          <egress>2</egress>
+          <ingress>3</ingress>
+          <ingress>4</ingress>
+          <ingress>5</ingress>
+        </communication-flow-mapping>
+        <iface>enp8s0.4003</iface>
+      </app>
     </apps>
     <images>
       <image>
@@ -203,6 +275,12 @@
         <desc>Image of a Consumer of the PCM Data as Subscriber</desc>
         <version>0.0.1</version>
       </image>
+      <image>
+        <id>EngineeringFrameworkImage_0.0.1</id>
+        <name>EngineeringFrameworkImage</name>
+        <desc>Image of Engineering Framework</desc>
+        <version>0.0.1</version>
+      </image>
     </images>
   </application>
   <topology>
@@ -215,7 +293,12 @@
           <name>NUC 1</name>
           <num-cores>2</num-cores>
           <interface-uri>opc.tcp://localhost:62541</interface-uri>
-          <has-app>0</has-app>
+          <has-app>1</has-app>
+          <apps>
+            <app>
+              <app-ref>PowerConsumer1_0.0.1</app-ref>
+            </app>
+          </apps>
         </enddevice>
         <enddevice>
           <mac>48-21-0b-26-3f-ed</mac>
@@ -223,7 +306,12 @@
           <name>NUC 2</name>
           <num-cores>2</num-cores>
           <interface-uri>opc.tcp://localhost:62541</interface-uri>
-          <has-app>0</has-app>
+          <has-app>1</has-app>
+          <apps>
+            <app>
+              <app-ref>PowerConsumer2_0.0.1</app-ref>
+            </app>
+          </apps>
         </enddevice>
         <enddevice>
           <mac>00-1B-21-ED-A9-92</mac>
@@ -231,7 +319,12 @@
           <name>PCM Box</name>
           <num-cores>1</num-cores>
           <interface-uri>opc.tcp://localhost:62541</interface-uri>
-          <has-app>0</has-app>
+          <has-app>1</has-app>
+          <apps>
+            <app>
+              <app-ref>PCM_0.0.1</app-ref>
+            </app>
+          </apps>
         </enddevice>
 
         <!-- Edges -->
@@ -240,15 +333,20 @@
           <iface>enp8s0</iface>
           <name>Edge 1</name>
           <num-cores>4</num-cores>
-          <interface-uri></interface-uri>
-          <has-app>0</has-app>
+          <interface-uri/>
+          <has-app>1</has-app>
+          <apps>
+            <app>
+              <app-ref>EngineeringFramework_0.0.1</app-ref>
+            </app>
+          </apps>
         </enddevice>
         <enddevice>
           <mac>00-00-00-00-00-02</mac>
           <iface>enp8s0</iface>
           <name>Edge 2</name>
           <num-cores>4</num-cores>
-          <interface-uri></interface-uri>
+          <interface-uri/>
           <has-app>0</has-app>
         </enddevice>
 
@@ -287,7 +385,6 @@
           <interface-uri></interface-uri>
           <has-app>0</has-app>
         </enddevice>
-
       </enddevices>
       <switches>
         <!-- TSN Demo Setup -->
@@ -310,12 +407,12 @@
         <!-- Infrastructure -->
         <switch>
           <mac>01-02-03-04-05-09</mac>
-          <name>KSwitch D10 4 [Infrastructure]</name>
+          <name>KSwitch D10 01 [Infrastructure]</name>
           <ports-count>8</ports-count>
         </switch>
         <switch>
           <mac>01-02-03-04-05-10</mac>
-          <name>KSwitch D10 5 [Infrastructure]</name>
+          <name>KSwitch D10 02 [Infrastructure]</name>
           <ports-count>8</ports-count>
         </switch>
         <switch>
@@ -325,33 +422,108 @@
         </switch>
       </switches>
     </devices>
-    <!--
     <graph>
       <connections>
+        <connection>
+          <id>0</id>
+          <from-mac>48-21-0b-26-3d-8a</from-mac>
+          <from-port>0</from-port>
+          <to-mac>01-02-03-04-05-06</to-mac>
+          <to-port>0</to-port>
+        </connection>
         <connection>
           <id>1</id>
           <from-mac>01-02-03-04-05-06</from-mac>
           <from-port>1</from-port>
-          <to-mac>48-21-0b-26-3d-8a</to-mac>
-          <to-port>1</to-port>
+          <to-mac>01-02-03-04-05-07</to-mac>
+          <to-port>0</to-port>
         </connection>
         <connection>
           <id>2</id>
-          <from-mac>01-02-03-04-05-06</from-mac>
-          <from-port>2</from-port>
-          <to-mac>48-21-0b-26-3f-ed</to-mac>
-          <to-port>1</to-port>
+          <from-mac>01-02-03-04-05-07</from-mac>
+          <from-port>1</from-port>
+          <to-mac>01-02-03-04-05-08</to-mac>
+          <to-port>0</to-port>
         </connection>
         <connection>
           <id>3</id>
-          <from-mac>01-02-03-04-05-06</from-mac>
-          <from-port>3</from-port>
-          <to-mac>48-21-0b-26-3f-42</to-mac>
+          <from-mac>48-21-0b-26-3f-ed</from-mac>
+          <from-port>0</from-port>
+          <to-mac>01-02-03-04-05-08</to-mac>
           <to-port>1</to-port>
+        </connection>
+        <connection>
+          <id>4</id>
+          <from-mac>01-02-03-04-05-11</from-mac>
+          <from-port>0</from-port>
+          <to-mac>01-02-03-04-05-09</to-mac>
+          <to-port>0</to-port>
+        </connection>
+        <connection>
+          <id>5</id>
+          <from-mac>01-02-03-04-05-09</from-mac>
+          <from-port>1</from-port>
+          <to-mac>00-00-00-00-00-03</to-mac>
+          <to-port>0</to-port>
+        </connection>
+        <connection>
+          <id>6</id>
+          <from-mac>01-02-03-04-05-09</from-mac>
+          <from-port>3</from-port>
+          <to-mac>00-1B-21-ED-A9-92</to-mac>
+          <to-port>0</to-port>
+        </connection>
+        <connection>
+          <id>7</id>
+          <from-mac>01-02-03-04-05-09</from-mac>
+          <from-port>7</from-port>
+          <to-mac>00-00-00-00-00-01</to-mac>
+          <to-port>0</to-port>
+        </connection>
+        <connection>
+          <id>8</id>
+          <from-mac>00-00-00-00-00-04</from-mac>
+          <from-port>0</from-port>
+          <to-mac>01-02-03-04-05-09</to-mac>
+          <to-port>4</to-port>
+        </connection>
+        <connection>
+          <id>9</id>
+          <from-mac>01-02-03-04-05-06</from-mac>
+          <from-port>6</from-port>
+          <to-mac>01-02-03-04-05-09</to-mac>
+          <to-port>2</to-port>
+        </connection>
+        <connection>
+          <id>10</id>
+          <from-mac>01-02-03-04-05-09</from-mac>
+          <from-port>6</from-port>
+          <to-mac>01-02-03-04-05-10</to-mac>
+          <to-port>7</to-port>
+        </connection>
+        <connection>
+          <id>11</id>
+          <from-mac>01-02-03-04-05-10</from-mac>
+          <from-port>3</from-port>
+          <to-mac>00-00-00-00-00-06</to-mac>
+          <to-port>0</to-port>
+        </connection>
+        <connection>
+          <id>12</id>
+          <from-mac>01-02-03-04-05-10</from-mac>
+          <from-port>2</from-port>
+          <to-mac>00-00-00-00-00-05</to-mac>
+          <to-port>0</to-port>
+        </connection>
+        <connection>
+          <id>13</id>
+          <from-mac>00-00-00-00-00-02</from-mac>
+          <from-port>0</from-port>
+          <to-mac>01-02-03-04-05-10</to-mac>
+          <to-port>6</to-port>
         </connection>
       </connections>
     </graph>
-    -->
   </topology>
   <!--
   <streams>
@@ -609,5 +781,43 @@
     </stream>
   </streams>
   -->
+  <communication-flows>
+    <communication-flow>
+      <id>0</id>
+      <traffic-class>3</traffic-class>
+      <payload-size>0</payload-size>
+      <ethertype>2048</ethertype> <!-- 0x800 (IPv4) -->
+    </communication-flow>
+    <communication-flow>
+      <id>1</id>
+      <traffic-class>3</traffic-class>
+      <payload-size>0</payload-size>
+      <ethertype>2048</ethertype> <!-- 0x800 (IPv4) -->
+    </communication-flow>
+    <communication-flow>
+      <id>2</id>
+      <traffic-class>3</traffic-class>
+      <payload-size>0</payload-size>
+      <ethertype>2048</ethertype> <!-- 0x800 (IPv4) -->
+    </communication-flow>
+    <communication-flow>
+      <id>3</id>
+      <traffic-class>3</traffic-class>
+      <payload-size>0</payload-size>
+      <ethertype>2048</ethertype> <!-- 0x800 (IPv4) -->
+    </communication-flow>
+    <communication-flow>
+      <id>4</id>
+      <traffic-class>3</traffic-class>
+      <payload-size>0</payload-size>
+      <ethertype>2048</ethertype> <!-- 0x800 (IPv4) -->
+    </communication-flow>
+    <communication-flow>
+      <id>5</id>
+      <traffic-class>3</traffic-class>
+      <payload-size>0</payload-size>
+      <ethertype>2048</ethertype> <!-- 0x800 (IPv4) -->
+    </communication-flow>
+  </communication-flows>
   <plugin-running>true</plugin-running>
 </tsn-uni>

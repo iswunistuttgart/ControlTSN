@@ -2723,6 +2723,170 @@ cleanup:
     return rc;
 }
 
+
+// -------------------------------
+// Communication-flow
+// -------------------------------
+static int 
+_read_communication_flow(char *xpath, TSN_CommunicationFlow **communication_flow)
+{
+    int rc = SR_ERR_OK;
+    sr_val_t *val_id = NULL;
+    sr_val_t *val_traffic_class = NULL;
+    sr_val_t *val_payload_size = NULL;
+    sr_val_t *val_ethertype = NULL;
+    char *xpath_id = NULL;
+    char *xpath_traffic_class = NULL;
+    char *xpath_payload_size = NULL;
+    char *xpath_ethertype = NULL;
+
+    _create_xpath(xpath, "/id", &xpath_id);
+    rc = sr_get_item(session, xpath_id, 0, &val_id);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*communication_flow)->id = val_id->data.uint32_val;
+
+    _create_xpath(xpath, "/traffic-class", &xpath_traffic_class);
+    rc = sr_get_item(session, xpath_traffic_class, 0, &val_traffic_class);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*communication_flow)->traffic_class = val_traffic_class->data.uint8_val;
+
+    _create_xpath(xpath, "/payload-size", &xpath_payload_size);
+    rc = sr_get_item(session, xpath_payload_size, 0, &val_payload_size);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*communication_flow)->payload_size = val_payload_size->data.uint32_val;
+
+    _create_xpath(xpath, "/ethertype", &xpath_ethertype);
+    rc = sr_get_item(session, xpath_ethertype, 0, &val_ethertype);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*communication_flow)->ethertype = val_ethertype->data.uint16_val;
+
+cleanup:
+    sr_free_val(val_id);
+    sr_free_val(val_traffic_class);
+    sr_free_val(val_payload_size);
+    sr_free_val(val_ethertype);
+    free(xpath_id);
+    free(xpath_traffic_class);
+    free(xpath_payload_size);
+    free(xpath_ethertype);
+
+    return rc;
+}
+
+static int
+_write_communication_flow(char *xpath, TSN_CommunicationFlow *communication_flow) 
+{
+    int rc = SR_ERR_OK;
+    char *xpath_id = NULL;
+    char *xpath_traffic_class = NULL;
+    char *xpath_payload_size = NULL;
+    char *xpath_ethertype = NULL;
+
+    _create_xpath(xpath, "/id", &xpath_id);
+    sr_val_t val_id;
+    val_id.type = SR_UINT32_T;
+    val_id.data.uint32_val = communication_flow->id;
+    rc = sr_set_item(session, xpath_id, &val_id, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+    _create_xpath(xpath, "/traffic-class", &xpath_traffic_class);
+    sr_val_t val_traffic_class;
+    val_traffic_class.type = SR_UINT8_T;
+    val_traffic_class.data.uint8_val = communication_flow->traffic_class;
+    rc = sr_set_item(session, xpath_traffic_class, &val_traffic_class, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+    _create_xpath(xpath, "/payload-size", &xpath_payload_size);
+    sr_val_t val_payload_size;
+    val_payload_size.type = SR_UINT32_T;
+    val_payload_size.data.uint32_val = communication_flow->payload_size;
+    rc = sr_set_item(session, xpath_payload_size, &val_payload_size, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+    _create_xpath(xpath, "/ethertype", &xpath_ethertype);
+    sr_val_t val_ethertype;
+    val_ethertype.type = SR_UINT16_T;
+    val_ethertype.data.uint16_val = communication_flow->ethertype;
+    rc = sr_set_item(session, xpath_ethertype, &val_ethertype, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+cleanup:
+    free(xpath_id);
+    free(xpath_traffic_class);
+    free(xpath_payload_size);
+    free(xpath_ethertype);
+
+    return rc;
+}
+
+static int
+_read_communication_flows(char *xpath, TSN_CommunicationFlows **communication_flows)
+{
+    int rc = SR_ERR_OK;
+    sr_val_t *val_communication_flows = NULL;
+    char *xpath_communication_flows = NULL;
+
+    _create_xpath(xpath, "/*", &xpath_communication_flows);
+    size_t count_communication_flows = 0;
+    rc = sr_get_items(session, xpath_communication_flows, 0, 0, &val_communication_flows, &count_communication_flows);
+    (*communication_flows)->count_communication_flows = count_communication_flows;
+    (*communication_flows)->communication_flows = (TSN_CommunicationFlow *) malloc(sizeof(TSN_CommunicationFlow) * count_communication_flows);
+    for (int i=0; i<count_communication_flows; ++i) {
+        TSN_CommunicationFlow *f = malloc(sizeof(TSN_CommunicationFlow));
+        rc = _read_communication_flow((&val_communication_flows[i])->xpath, &f);
+        if (rc != SR_ERR_OK) {
+            goto cleanup;
+        }
+        (*communication_flows)->communication_flows[i] = *f;
+        free(f);
+    }
+
+cleanup:
+    sr_free_val(val_communication_flows);
+    free(xpath_communication_flows);
+
+    return rc;
+}
+
+static int
+_write_communication_flows(char *xpath, TSN_CommunicationFlows *communication_flows)
+{
+    int rc = SR_ERR_OK;
+    char *xpath_communication_flows = NULL;
+    
+    _create_xpath(xpath, "/communication-flow[id='%d']", &xpath_communication_flows);
+    for (int i=0; i<communication_flows->count_communication_flows; ++i) {
+        char *xpath_entry = NULL;
+        _create_xpath_id(xpath_communication_flows, communication_flows->communication_flows[i].id, &xpath_entry);
+        rc = _write_communication_flow(xpath_entry, &(communication_flows->communication_flows[i]));
+        free(xpath_entry);
+        if (rc != SR_ERR_OK) {
+            goto cleanup;
+        }
+    }
+
+cleanup:
+    free(xpath_communication_flows);
+
+    return rc;
+}
+
 // -------------------------------
 // Modules
 // -------------------------------
@@ -4042,6 +4206,41 @@ cleanup:
     return rc;
 }
 
+static int _write_app_communication_flow_mapping(char *xpath, TSN_App_CommunicationFlowMapping *mapping)
+{
+    char *xpath_egress = NULL;
+    char *xpath_ingress = NULL;
+    int rc;
+
+    _create_xpath(xpath, "/egress", &xpath_egress);
+    for (int i=0; i<mapping->count_egress; ++i) {
+        sr_val_t val_id;
+        val_id.type = SR_UINT32_T;
+        val_id.data.uint32_val = mapping->egress[i];
+        rc = sr_set_item(session, xpath_egress, &val_id, 0);
+        if (rc != SR_ERR_OK) {
+            goto cleanup;
+        }
+    }
+
+    _create_xpath(xpath, "/ingress", &xpath_ingress);
+    for (int i=0; i<mapping->count_ingress; ++i) {
+        sr_val_t val_id;
+        val_id.type = SR_UINT32_T;
+        val_id.data.uint32_val = mapping->ingress[i];
+        rc = sr_set_item(session, xpath_ingress, &val_id, 0);
+        if (rc != SR_ERR_OK) {
+            goto cleanup;
+        }
+    }
+
+cleanup:
+    free(xpath_egress);
+    free(xpath_ingress);
+
+    return rc;
+}
+
 static int _write_app(char *xpath, TSN_App *app)
 {
     char *xpath_parameters_delete = NULL;
@@ -4056,6 +4255,7 @@ static int _write_app(char *xpath, TSN_App *app)
     char *xpath_desc = NULL;
     char *xpath_id = NULL;
     char *xpath_stream_mapping = NULL;
+    char *xpath_communication_flow_mapping = NULL;
     sr_val_t has_image;
     sr_val_t has_mac;
     int ret, i;
@@ -4151,6 +4351,13 @@ static int _write_app(char *xpath, TSN_App *app)
         goto cleanup;
     }
 
+    // Communication-flow
+    _create_xpath(xpath, "/communication-flow-mapping", &xpath_communication_flow_mapping);
+    rc = _write_app_communication_flow_mapping(xpath_communication_flow_mapping, &app->communication_flow_mapping);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
 cleanup:
     free(xpath_id);
     free(xpath_name);
@@ -4164,6 +4371,7 @@ cleanup:
     free(xpath_parameters);
     free(xpath_parameters_delete);
     free(xpath_stream_mapping);
+    free(xpath_communication_flow_mapping);
 
     return ret;
 }
@@ -4334,6 +4542,50 @@ cleanup:
 }
 
 static int
+_read_app_communication_flow_mapping(char *xpath, TSN_App_CommunicationFlowMapping **mapping)
+{
+    int rc = SR_ERR_OK;
+
+    sr_val_t *val_egress = NULL;
+    sr_val_t *val_ingress = NULL;
+    char *xpath_egress = NULL;
+    char *xpath_ingress = NULL;
+
+    _create_xpath(xpath, "/egress", &xpath_egress);
+    ssize_t count_egress = 0;
+    rc = sr_get_items(session, xpath_egress, 0, 0, &val_egress, &count_egress);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*mapping)->count_egress = count_egress;
+    (*mapping)->egress = malloc(sizeof(uint32_t) * count_egress);
+    for (int i=0; i<count_egress; ++i) {
+        (*mapping)->egress[i] = val_egress[i].data.uint32_val;
+    }
+
+    _create_xpath(xpath, "/ingress", &xpath_ingress);
+    ssize_t count_ingress = 0;
+    rc = sr_get_items(session, xpath_ingress, 0, 0, &val_ingress, &count_ingress);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*mapping)->count_ingress = count_ingress;
+    (*mapping)->ingress = malloc(sizeof(uint32_t) * count_ingress);
+    for (int i=0; i<count_ingress; ++i) {
+        (*mapping)->ingress[i] = val_ingress[i].data.uint32_val;
+    }
+
+
+cleanup:
+    sr_free_val(val_egress);
+    sr_free_val(val_ingress);
+    free(xpath_egress);
+    free(xpath_ingress);
+
+    return rc;
+}
+
+static int
 _read_app(char *xpath, TSN_App **app)
 {
     int rc = SR_ERR_OK;
@@ -4358,6 +4610,7 @@ _read_app(char *xpath, TSN_App **app)
     char *xpath_image_ref = NULL;
     char *xpath_parameters = NULL;
     char *xpath_stream_mapping = NULL;
+    char *xpath_communication_flow_mapping = NULL;
 
     // ID
     _create_xpath(xpath, "/id", &xpath_id);
@@ -4452,12 +4705,21 @@ _read_app(char *xpath, TSN_App **app)
 
     // Stream Mapping
     _create_xpath(xpath, "/stream-mapping", &xpath_stream_mapping);
-    TSN_App_StreamMapping *mapping = malloc(sizeof(TSN_App_StreamMapping));
-    rc = _read_app_stream_mapping(xpath_stream_mapping, &mapping);
+    TSN_App_StreamMapping *stream_mapping = malloc(sizeof(TSN_App_StreamMapping));
+    rc = _read_app_stream_mapping(xpath_stream_mapping, &stream_mapping);
     if (rc != SR_ERR_OK) {
         goto cleanup;
     }
-    (*app)->stream_mapping = *mapping;
+    (*app)->stream_mapping = *stream_mapping;
+
+    // Communication Flow Mapping
+    _create_xpath(xpath, "/communication-flow-mapping", &xpath_communication_flow_mapping);
+    TSN_App_CommunicationFlowMapping *communication_flow_mapping = malloc(sizeof(TSN_App_CommunicationFlowMapping));
+    rc = _read_app_communication_flow_mapping(xpath_communication_flow_mapping, &communication_flow_mapping);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*app)->communication_flow_mapping = *communication_flow_mapping;
 
 cleanup:
     sr_free_val(val_id);
@@ -4481,6 +4743,7 @@ cleanup:
     free(xpath_image_ref);
     free(xpath_parameters);
     free(xpath_stream_mapping);
+    free(xpath_communication_flow_mapping);
 
     return rc;
 }
@@ -4649,6 +4912,7 @@ _read_uni(char *xpath, TSN_Uni **uni)
 {
     int rc = SR_ERR_OK;
     char *xpath_streams = NULL;
+    char *xpath_communication_flows = NULL;
     char *xpath_modules = NULL;
     char *xpath_topology = NULL;
     char *xpath_application = NULL;
@@ -4663,6 +4927,17 @@ _read_uni(char *xpath, TSN_Uni **uni)
     }
     (*uni)->streams = *streams;
     free(streams);
+
+    // Communication-flows
+    _create_xpath(xpath, "/communication-flows", &xpath_communication_flows);
+    TSN_CommunicationFlows *communication_flows = NULL;
+    communication_flows = malloc(sizeof(TSN_CommunicationFlows));
+    rc = _read_communication_flows(xpath_communication_flows, &communication_flows);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    (*uni)->communication_flows = *communication_flows;
+    free(communication_flows);
 
     // Modules
     _create_xpath(xpath, "/modules", &xpath_modules);
@@ -4700,6 +4975,7 @@ _read_uni(char *xpath, TSN_Uni **uni)
 cleanup:
 
     free(xpath_streams);
+    free(xpath_communication_flows);
     free(xpath_modules);
     free(xpath_topology);
     free(xpath_application);
@@ -5460,6 +5736,152 @@ cleanup:
     free(apps);
     free(xpath_mapping_entry);
     free(xpath_stream);
+
+    return rc ? EXIT_FAILURE : EXIT_SUCCESS;
+}
+
+
+// -------------------------------------------------------- //
+//  Communication-flow handling
+// -------------------------------------------------------- //
+int 
+sysrepo_get_communication_flows(TSN_CommunicationFlows **communication_flows)
+{
+    rc = _read_communication_flows("/control-tsn-uni:tsn-uni/communication-flows", communication_flows);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+cleanup:
+    return rc ? EXIT_FAILURE : EXIT_SUCCESS;
+}
+
+int 
+sysrepo_get_communication_flow(uint32_t id, TSN_CommunicationFlow **communication_flow)
+{
+    char *xpath_communication_flow = NULL;
+    _create_xpath_id("/control-tsn-uni:tsn-uni/communication-flows/communication-flow[id='%d']", id, &xpath_communication_flow);
+    rc = _read_communication_flow(xpath_communication_flow, communication_flow);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+cleanup:
+    free(xpath_communication_flow);
+
+    return rc ? EXIT_FAILURE : EXIT_SUCCESS;
+}
+
+int 
+sysrepo_add_communication_flow(TSN_CommunicationFlow **communication_flow)
+{
+    int is_failure = 0;
+    char *xpath_communication_flow = NULL;
+
+    // Get all flows to determine the new id
+    TSN_CommunicationFlows *stored_flows = NULL;
+    stored_flows = malloc(sizeof(TSN_CommunicationFlows));
+    rc = _read_communication_flows("/control-tsn-uni:tsn-uni/communication-flows", &stored_flows);
+    if (rc != SR_ERR_OK) {
+        is_failure = 1;
+        goto cleanup;
+    }
+
+    int highest_used_id = 0;
+    for (int i=0; i<stored_flows->count_communication_flows; ++i) {
+        if (stored_flows->communication_flows[i].id > highest_used_id) {
+            highest_used_id = stored_flows->communication_flows[i].id;
+        }
+    }
+
+    (*communication_flow)->id = (highest_used_id + 1);
+    _create_xpath_id("/control-tsn-uni:tsn-uni/communication-flows/communication-flow[id='%d']", (*communication_flow)->id, &xpath_communication_flow);
+    rc = _write_communication_flow(xpath_communication_flow, (*communication_flow));
+    if (rc != SR_ERR_OK) {
+        printf("[SYSREPO] Error adding a new communication-flow to the list!\n");
+        is_failure = 1;
+        goto cleanup;
+    }
+
+    // Apply the changes
+    rc = sr_apply_changes(session, 0, 1);
+    if (rc != SR_ERR_OK) {
+        is_failure = 1;
+        goto cleanup;
+    }
+
+cleanup:
+    free(stored_flows);
+    free(xpath_communication_flow);
+
+    return is_failure ? EXIT_FAILURE : EXIT_SUCCESS;
+}
+
+int 
+sysrepo_add_communication_flows(TSN_CommunicationFlows **communication_flows)
+{
+    int is_failure = 0;
+
+    // Get all flows to determine the new id
+    TSN_CommunicationFlows *stored_flows = NULL;
+    stored_flows = malloc(sizeof(TSN_CommunicationFlows));
+    rc = _read_communication_flows("/control-tsn-uni:tsn-uni/communication-flows", &stored_flows);
+    if (rc != SR_ERR_OK) {
+        is_failure = 1;
+        goto cleanup;
+    }
+
+    int highest_used_id = 0;
+    for (int i=0; i<stored_flows->count_communication_flows; ++i) {
+        if (stored_flows->communication_flows[i].id > highest_used_id) {
+            highest_used_id = stored_flows->communication_flows[i].id;
+        }
+    }
+
+    int new_id = highest_used_id + 1;
+    for (int i=0; i<(*communication_flows)->count_communication_flows; ++i) {
+        char *xpath_entry = NULL;
+        (*communication_flows)->communication_flows[i].id = new_id;
+        _create_xpath_id("/control-tsn-uni:tsn-uni/communication-flows/communication-flow[id='%d']", new_id, &xpath_entry);
+        rc = _write_communication_flow(xpath_entry, &((*communication_flows)->communication_flows[i]));
+        free(xpath_entry);
+        if (rc != SR_ERR_OK) {
+            is_failure = 1;
+            goto cleanup;
+        }
+        new_id++;
+    }
+
+    // Apply the changes
+    rc = sr_apply_changes(session, 0, 1);
+    if (rc != SR_ERR_OK) {
+        is_failure = 1;
+        goto cleanup;
+    }
+
+cleanup:
+    free(stored_flows);
+
+    return is_failure ? EXIT_FAILURE : EXIT_SUCCESS;
+}
+
+int 
+sysrepo_delete_communication_flow(uint32_t id) 
+{
+    char *xpath_communication_flow = NULL;
+    _create_xpath_id("/control-tsn-uni:tsn-uni/communication-flows/communication-flow[id='%d']", id, &xpath_communication_flow);
+    rc = sr_delete_item(session, xpath_communication_flow, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+    rc = sr_apply_changes(session, 0, 1);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+cleanup:
+    free(xpath_communication_flow);
 
     return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }

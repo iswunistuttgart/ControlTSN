@@ -73,6 +73,33 @@ module control-tsn-uni {
     }
 
     // =============================================================
+    // ===  Communication-flow groupings
+    // =============================================================
+    grouping communication-flow {
+        leaf id {
+            type uint32;    // Is a number sufficient?
+        }
+        leaf traffic-class {
+            type uint8 {
+                range "0 .. 7";
+            }
+        }
+        leaf payload-size {
+            type uint32;
+            default "0";
+            description "Defines the payload of this flow in bytes.
+                A value of 0 means that no information about the payload is available.";
+        }
+        leaf ethertype {
+            type uint16;
+            default 0;      // Hex notation doesn't seem to work...
+            description "Defines the uses EtherType of this flow in hexadecimal notation.
+                A value of 0 means that no information about the EtherType is available.";
+        }
+        // Communication type? (C/S, Pub/Sub, ...)
+    }
+
+    // =============================================================
     // ===  Modules groupings
     // =============================================================
     grouping module-data-def {
@@ -347,6 +374,21 @@ module control-tsn-uni {
                 }
             }
         }
+
+        container communication-flow-mapping {
+            leaf-list egress {
+                type leafref {
+                    path "/control-tsn-uni:tsn-uni/communication-flows/communication-flow/id";
+                    require-instance "true";
+                }
+            }
+            leaf-list ingress {
+                type leafref {
+                    path "/control-tsn-uni:tsn-uni/communication-flows/communication-flow/id";
+                    require-instance "true";
+                }
+            }
+        }
     }
 
     grouping image {
@@ -389,6 +431,17 @@ module control-tsn-uni {
             list stream {
                 key "stream-id";
                 uses stream;
+            }
+        }
+
+        // Other traffic except of streams
+        // TODO: In principle, a stream also belongs to the communication flow. 
+        // How should the two be merged? 
+        // Maybe communication-flow as parent and below "Streams" and "other (not the right wording)".
+        container communication-flows {
+            list communication-flow {
+                key "id";
+                uses communication-flow;
             }
         }
 

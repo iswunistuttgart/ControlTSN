@@ -58,6 +58,12 @@ const char *API_STREAMS_REQUEST_SIMPLIFIED  = "/streams/request-simplified";
 const char *API_STREAMS_COMPUTE             = "/streams/compute";
 const char *API_STREAMS_ID_DEPLOY           = "/streams/:stream-id/deploy";
 
+// Communication-flows
+const char *API_COMMUNICATION_FLOWS                 = "/communication-flows";
+const char *API_COMMUNICATION_FLOWS_ID              = "/communication-flows/:id";
+const char *API_COMMUNICATION_FLOWS_ADD             = "/communication-flows/add";
+const char *API_COMMUNICATION_FLOWS_ADD_MULTIPLE    = "/communication-flows/add-multiple";
+
 // Application
 const char *API_APPLICATION             = "/application";
 const char *API_APPLICATION_DISCOVER	= "/application/discover";
