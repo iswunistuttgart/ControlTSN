@@ -61,6 +61,7 @@ const char *API_STREAMS_ID_DEPLOY           = "/streams/:stream-id/deploy";
 // Communication-flows
 const char *API_COMMUNICATION_FLOWS                 = "/communication-flows";
 const char *API_COMMUNICATION_FLOWS_ID              = "/communication-flows/:id";
+const char *API_COMMUNICATION_FLOWS_DELETE          = "/communication-flows/:id/delete";
 const char *API_COMMUNICATION_FLOWS_ADD             = "/communication-flows/add";
 const char *API_COMMUNICATION_FLOWS_ADD_MULTIPLE    = "/communication-flows/add-multiple";
 

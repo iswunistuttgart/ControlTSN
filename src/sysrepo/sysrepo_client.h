@@ -177,6 +177,12 @@ int sysrepo_get_communication_flows(TSN_CommunicationFlows **communication_flows
 */
 int sysrepo_get_communication_flow(uint32_t id, TSN_CommunicationFlow **communication_flow);
 /**
+ * @brief Delete a specific communication-flow
+ * @param id The id of the communication-flow
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+*/
+int sysrepo_delete_communication_flow(uint32_t id);
+/**
  * @brief Add a new communication-flow
  * @param communication_flow The struct of the to be added communication-flow
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)

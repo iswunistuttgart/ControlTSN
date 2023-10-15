@@ -160,6 +160,7 @@ _api_index_get(const struct _u_request *request, struct _u_response *response, v
                        "<tr><th>Communication-flows</th></tr>" \
                        "<tr><td><a href='/communication-flows'>/communication-flows</a></td><td>GET</td><td>Get all communication-flows</td></tr>" \
                        "<tr><td><a href='/communication-flows/0'>/communication-flows/:id</a></td><td>GET</td><td>Get a specific communication-flows</td></tr>" \
+                       "<tr><td><a href='/communication-flows/0/delete'>/communication-flows/:id/delete</a></td><td>POST</td><td>Delete a specific communication-flows</td></tr>" \
                        "<tr><td><a href='/communication-flows/add'>/communication-flows/add</a></td><td>POST</td><td>Add a new communication-flows</td><td>traffic-class (uint8), payload-size (uint32), ethertype (uint16)</td></tr>" \
                        "<tr><td><a href='/communication-flows/add-multiple'>/communication-flows/add-multiple</a></td><td>POST</td><td>Add multiple new communication-flows at once</td><td></td></tr>" \
                        // Applications
@@ -1226,6 +1227,23 @@ _api_communication_flows_get_id(const struct _u_request *request, struct _u_resp
 }
 
 static int
+_api_communication_flows_delete(const struct _u_request *request, struct _u_response *response, void *user_data)
+{
+    const char *url_id = u_map_get(request->map_url, "id");
+    int id = atoi(url_id);
+    if (id <= 0) {
+        return U_CALLBACK_ERROR;
+    }
+    
+    rc = sysrepo_delete_communication_flow(id);
+    if (rc == EXIT_FAILURE) {
+        return U_CALLBACK_ERROR;
+    }
+
+    return U_CALLBACK_COMPLETE;
+}
+
+static int
 _api_communication_flows_add(const struct _u_request *request, struct _u_response *response, void *user_data)
 {
     json_error_t json_error;
@@ -1532,6 +1550,7 @@ _init_server()
     // Communication-flows
     ulfius_add_endpoint_by_val(&server_instance, "GET",     API_PREFIX, API_COMMUNICATION_FLOWS,                0, &_api_communication_flows_get,           NULL);
     ulfius_add_endpoint_by_val(&server_instance, "GET",     API_PREFIX, API_COMMUNICATION_FLOWS_ID,             0, &_api_communication_flows_get_id,        NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_COMMUNICATION_FLOWS_DELETE,         0, &_api_communication_flows_delete,        NULL);
     ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_COMMUNICATION_FLOWS_ADD,            0, &_api_communication_flows_add,           NULL);
     ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_COMMUNICATION_FLOWS_ADD_MULTIPLE,   0, &_api_communication_flows_add_multiple,  NULL);
     // Topology

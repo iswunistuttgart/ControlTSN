@@ -236,6 +236,14 @@ _create_xpath_key_multi(char *xpath_base, char *key1, char *key2, char **result)
     sprintf((*result), xpath_base, key1, key2);
 }
 
+void
+_create_xpath_key_multi_id(char *xpath_base, char *key1, int id, char **result)
+{
+    size_t size_needed = snprintf(NULL, 0, xpath_base, key1, id) + 1;
+    (*result) = malloc(size_needed);
+    sprintf((*result), xpath_base, key1, id);
+}
+
 
 // -------------------------------------------------------- //
 //  Stream ID generation method
@@ -5868,6 +5876,39 @@ cleanup:
 int 
 sysrepo_delete_communication_flow(uint32_t id) 
 {
+
+    // Remove the mapping ref of apps
+    TSN_Apps *apps = NULL;
+    apps = malloc(sizeof(TSN_Apps));
+    rc = _read_apps("/control-tsn-uni:tsn-uni/application/apps", &apps);
+    char *xpath_mapping_entry = NULL;
+    for (int i=0; i<apps->count_apps; ++i) {
+        // egress
+        for (int j=0; j<apps->apps[i].communication_flow_mapping.count_egress; ++j) {
+            if (id == apps->apps[i].communication_flow_mapping.egress[j]) {
+                // Remove mapping entry
+                _create_xpath_key_multi_id("/control-tsn-uni:tsn-uni/application/apps/app[id='%s']/communication-flow-mapping/egress[.='%d']", apps->apps[i].id, apps->apps[i].communication_flow_mapping.egress[j], &xpath_mapping_entry);
+                printf("----------> %s\n", xpath_mapping_entry);
+                rc = sr_delete_item(session, xpath_mapping_entry, 0);
+                if (rc != SR_ERR_OK) {
+                    goto cleanup;
+                }
+            }
+        }
+        // ingress
+        for (int j=0; j<apps->apps[i].communication_flow_mapping.count_ingress; ++j) {
+            if (id == apps->apps[i].communication_flow_mapping.ingress[j]) {
+                // Remove mapping entry
+                _create_xpath_key_multi_id("/control-tsn-uni:tsn-uni/application/apps/app[id='%s']/communication-flow-mapping/ingress[.='%d']", apps->apps[i].id, apps->apps[i].communication_flow_mapping.ingress[j], &xpath_mapping_entry);
+                rc = sr_delete_item(session, xpath_mapping_entry, 0);
+                if (rc != SR_ERR_OK) {
+                    goto cleanup;
+                }
+            }
+        }
+    }
+
+
     char *xpath_communication_flow = NULL;
     _create_xpath_id("/control-tsn-uni:tsn-uni/communication-flows/communication-flow[id='%d']", id, &xpath_communication_flow);
     rc = sr_delete_item(session, xpath_communication_flow, 0);
