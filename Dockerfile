@@ -61,7 +61,8 @@ RUN apt-get update && \
     apt-get install -y libjansson-dev=2.12-1build1 && \
     apt-get install -y libulfius-dev=2.5.2-4 && \
     apt-get install -y uwsc && \
-    apt-get install -y sudo
+    apt-get install -y sudo && \
+    apt-get install -y supervisor
 
 #COPY --from=build /install/lib /usr/local/lib
 #COPY --from=build /install/bin /usr/local/bin
@@ -80,6 +81,7 @@ RUN ldconfig
 COPY . /engineeringframework/
 
 RUN rm -rf /engineeringframework/build
+
 WORKDIR /engineeringframework/build
 RUN cmake .. && make
 
@@ -97,6 +99,8 @@ RUN sysrepoctl -i control-tsn-uni.yang
 RUN sysrepocfg --import=sps_2023.xml -m control-tsn-uni -d startup
 RUN sysrepocfg --import=sps_2023.xml -m control-tsn-uni -d running
 
+# Use Supervisord to start the Framework itself and the CNC Prototype
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
 WORKDIR /engineeringframework/build
-#ENTRYPOINT [ "/build/MainModule" ]
-CMD [ "./MainModule" ]
+CMD ["supervisord"]
