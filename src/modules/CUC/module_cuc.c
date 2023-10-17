@@ -94,8 +94,8 @@ cnc_compute_requests(TSN_Streams *streams)
     ulfius_init_request(&request);
     ulfius_init_response(&response);
 
-    //request.http_url = _concat_strings(cnc_url, CNC_INTERFACE_COMPUTE_REQUESTS);
-    request.http_url = strdup(cnc_url);
+    request.http_url = _concat_strings(cnc_url, CNC_INTERFACE_COMPUTE_REQUESTS);
+    //request.http_url = strdup(cnc_url);
     request.http_verb = strdup("POST");
 
     json_t *body = NULL;
@@ -126,7 +126,7 @@ cnc_compute_requests(TSN_Streams *streams)
             for (int i=0; i<streams->count_streams; ++i) {
                 rc = stream_set_computed(streams->streams[i].stream_id, streams->streams[i].configuration);
                 if (rc != EXIT_SUCCESS) {
-                    printf("[CUC] Error writing stream configuration to the datastore!\n");
+                    printf("[CUC] Error writing stream (ID: %s) configuration to the datastore!\n", streams->streams[i].stream_id);
                 }
             }
         }

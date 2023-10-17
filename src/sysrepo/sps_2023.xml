@@ -28,7 +28,7 @@
         <entry>
           <data-name>cnc_url</data-name>
           <data-type>string</data-type>
-          <data-value>http://localhost:11067/streams/compute_requests</data-value>
+          <data-value>http://localhost:11068</data-value>
         </entry>
       </data>
     </mod>
