@@ -12,7 +12,7 @@
         <entry>
           <data-name>export_rest_api</data-name>
           <data-type>string</data-type>
-          <data-value>http://localhost:11068/export</data-value>
+          <data-value>http://localhost:11069/export</data-value>
         </entry>
       </data>
     </mod>

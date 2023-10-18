@@ -13,6 +13,8 @@
 #include "../../events_definitions.h"
 #include "module_rest.h"
 #include "../../helper/json_serializer.h"
+//#include <arpa/inet.h>
+//#include <netinet/in.h>
 
 static int rc;
 volatile sig_atomic_t is_running = 1;
@@ -1514,10 +1516,24 @@ cleanup:
 static int
 _init_server()
 {
+    //struct sockaddr_in address;
+    //memset(&address, 0, sizeof(struct sockaddr_in));
+    //address.sin_family = AF_INET;
+    //address.sin_addr.s_addr = inet_addr("127.0.0.1");
+    //address.sin_port = htons(PORT);
+
+    //if (ulfius_init_instance(&server_instance, PORT, &address, NULL) != U_OK) {
     if (ulfius_init_instance(&server_instance, PORT, NULL, NULL) != U_OK) {
         printf("[REST] Error initializing server instance!\n");
         return EXIT_FAILURE;
     }
+
+    // Set CORS Default header
+    //u_map_put((&server_instance)->default_headers, "Access-Control-Allow-Origin", "*");
+    //u_map_put((&server_instance)->default_headers, "Access-Control-Allow-Origin", "http://dashboard.isw.uni-stuttgart.de");
+    //u_map_put((&server_instance)->default_headers, "Access-Control-Allow-Methods", "GET, POST");
+    //u_map_put((&server_instance)->default_headers, "Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+
 
     // Add the API endpoints to the server
     ulfius_add_endpoint_by_val(&server_instance, "GET", API_PREFIX, API_INDEX, 0, &_api_index_get, NULL);
