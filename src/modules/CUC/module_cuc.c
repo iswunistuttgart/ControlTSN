@@ -686,9 +686,8 @@ cleanup:
  *  
 */
 static void
-deploy_communication_engineering(UA_Client *client, bool is_listener, uint16_t listener_nr, TSN_Stream *stream)
+deploy_communication_engineering(UA_Client *client, bool is_listener, uint16_t listener_nr, TSN_Stream *stream, TSN_Enddevice *enddevice)
 {
-    
     int rc;
     UA_StatusCode ret;
     UA_Variant *variant;
@@ -797,12 +796,19 @@ deploy_communication_engineering(UA_Client *client, bool is_listener, uint16_t l
         // Interface
         nodeId = UA_NODEID_NUMERIC(7, UA_TSNDEP_ID_PUBSUBENGINEERING_INTERFACE);
         UA_String interface;
-        // Find the Talker App to get the specified interface
+        // Find the Listener App to get the specified interface
         for (int i=0; i<all_apps->count_apps; ++i) {
             for (int j=0; j<all_apps->apps[i].stream_mapping.count_ingress; ++j) {
                 if (strcmp(all_apps->apps[i].stream_mapping.ingress[j], stream->stream_id) == 0) {
                     app_listener = &all_apps->apps[i];
-                    interface = UA_String_fromChars(app_listener->iface);
+                    //interface = UA_String_fromChars(app_listener->iface);
+                    //app_listener = &all_apps->apps[i];
+                    // also check if the app is part of the enddevice
+                    for (int k=0; k<enddevice->count_apps; ++k) {
+                        if (strcmp(enddevice->apps[k].app_ref, app_listener->id) == 0) {
+                            interface = UA_String_fromChars(app_listener->iface);
+                        }
+                    }
                 }
             }
         }
@@ -910,15 +916,12 @@ deploy_configuration(TSN_Enddevice *enddevice, bool is_listener, uint16_t listen
 
     // Deploy Engineering configuration base on Endpoint concept (spliited into Configuration for communication, application and deployment)
     // see e.g. conference Paper IEEE CAMAD
-    deploy_communication_engineering(client, is_listener, listener_nr, stream);
+    deploy_communication_engineering(client, is_listener, listener_nr, stream, enddevice);
 
 cleanup:
 
     UA_Client_delete(client);
     printf("[CUC] OPC UA client closed\n");
-
-    // Send out an event to indicate the deployed stream
-    rc = sysrepo_send_notification(EVENT_STREAM_DEPLOYED, stream->stream_id, "stream configuration deployed!");
 
     return EXIT_SUCCESS;
 }
@@ -1024,6 +1027,8 @@ _cb_event(TSN_Event_CB_Data data)
         //    printf("[CUC][CB] Deploy configuration of stream '%s' to the enddevices \n", data.entry_id);
         //}
         printf("[CUC][CB] Deploy configuration of stream '%s' to the enddevices \n", data.entry_id);
+
+        uint16_t success_counter = 0;
         
         TSN_Stream *configured_stream = malloc(sizeof(TSN_Stream));
         rc = sysrepo_get_stream(data.entry_id, &configured_stream);
@@ -1042,12 +1047,14 @@ _cb_event(TSN_Event_CB_Data data)
             rc = deploy_configuration(talker, false, 0, configured_stream, "N/A");
             if (rc != EXIT_SUCCESS) {
                 printf("[CUC][CB][ERROR] Could not deploy stream configuration to enddevice (talker, %s)!\n", configured_stream->configuration->talker.interface_configuration.interface_list[0].mac_address);
+            } else {
+                success_counter++;
             }
             free(talker);
 
+            TSN_Enddevice *listener = malloc(sizeof(TSN_Enddevice));
             // Listeners
             for (uint16_t i=0; i<configured_stream->configuration->count_listeners; ++i) {
-                TSN_Enddevice *listener = malloc(sizeof(TSN_Enddevice));
                 rc = sysrepo_get_enddevice(configured_stream->configuration->listener_list[i].interface_configuration.interface_list[0].mac_address, &listener);
                 if (rc != EXIT_SUCCESS) {
                     printf("[CUC][CB][ERROR] Could not read enddevice (listener #%d) with MAC '%s' from the datastore!\n", i, configured_stream->configuration->listener_list[i].interface_configuration.interface_list[0].mac_address);
@@ -1056,12 +1063,20 @@ _cb_event(TSN_Event_CB_Data data)
                 rc = deploy_configuration(listener, true, i, configured_stream, "N/A");
                 if (rc != EXIT_SUCCESS) {
                     printf("[CUC][CB][ERROR] Could not deploy stream configuration to enddevice (listener #%d, %s)!\n", i, configured_stream->configuration->listener_list[i].interface_configuration.interface_list[0].mac_address);
+                } else {
+                    success_counter++;
                 }
-                free(listener);
             }
+            free(listener);
 
         } else {
             printf("[CUC][CB][ERROR] Could not read applications from the datastore!\n");
+        }
+
+        uint16_t participants_count = configured_stream->configuration->count_listeners + 1;
+        if (participants_count == success_counter) {
+            // Send out an event to indicate the deployed stream
+            rc = sysrepo_send_notification(EVENT_STREAM_DEPLOYED, configured_stream->stream_id, "stream configuration deployed!");
         }
 
         free(configured_stream);
