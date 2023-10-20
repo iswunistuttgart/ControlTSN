@@ -130,7 +130,18 @@ _test_emulate_stream_computation(TSN_Streams *streams)
                 cl->field_type = CONFIG_LIST_MAC_ADDRESSES;
                 cl->ieee802_mac_addresses = malloc(sizeof(IEEE_MacAddresses));
                 cl->ieee802_mac_addresses->source_mac_address = strdup(stream->request.talker.data_frame_specification[i].ieee802_mac_addresses->source_mac_address);
-                cl->ieee802_mac_addresses->destination_mac_address = strdup(stream->request.talker.data_frame_specification[i].ieee802_mac_addresses->destination_mac_address);
+                //cl->ieee802_mac_addresses->destination_mac_address = strdup(stream->request.talker.data_frame_specification[i].ieee802_mac_addresses->destination_mac_address);
+                //cl->ieee802_mac_addresses->destination_mac_address = strdup("FF-FF-FF-FF-FF-FF");
+
+                // Distinguish between 1:1 and 1:n connections
+                if (stream->request.count_listeners == 1) {
+                    cl->ieee802_mac_addresses->destination_mac_address = strdup(stream->request.talker.data_frame_specification[i].ieee802_mac_addresses->destination_mac_address);
+                } else {
+                    // In case of multiple listeners send as broadcast 
+                    // TODO: Should be multicast?!
+                    cl->ieee802_mac_addresses->destination_mac_address = strdup("FF-FF-FF-FF-FF-FF");
+                }
+
                 interface_list_talker->config_list[i] = *cl;
             }
             else if (stream->request.talker.data_frame_specification[i].field_type == CONFIG_LIST_VLAN_TAG) {
@@ -185,7 +196,21 @@ _test_emulate_stream_computation(TSN_Streams *streams)
                     cl->index = index;
                     cl->field_type = CONFIG_LIST_MAC_ADDRESSES;
                     cl->ieee802_mac_addresses = malloc(sizeof(IEEE_MacAddresses));
-                    cl->ieee802_mac_addresses->source_mac_address = strdup(interface_list_talker->config_list[j].ieee802_mac_addresses->source_mac_address);
+                    //cl->ieee802_mac_addresses->source_mac_address = strdup(interface_list_talker->config_list[j].ieee802_mac_addresses->source_mac_address);
+                    //cl->ieee802_mac_addresses->source_mac_address = strdup("FF-FF-FF-FF-FF-FF");
+                    
+                    // Distinguish between 1:1 and 1:n connections
+                    if (stream->request.count_listeners == 1) {
+                        cl->ieee802_mac_addresses->source_mac_address = strdup(interface_list_talker->config_list[j].ieee802_mac_addresses->source_mac_address);
+                    } else {
+                        // In case of multiple listeners send as broadcast 
+                        // TODO: Should be multicast?!
+
+                        // NOTE: In order for PubSub the subscribers need to listen to the Destination MAC of the Publisher
+                    // --> Therefore in case of broadcast the publisher sends to FF-FF ... So the listeners need to set sourcmac to boradcast too
+                        cl->ieee802_mac_addresses->source_mac_address = strdup("FF-FF-FF-FF-FF-FF");
+                    }
+                    
                     cl->ieee802_mac_addresses->destination_mac_address = strdup(interface_list_talker->config_list[j].ieee802_mac_addresses->destination_mac_address);
                     interface_list_listener->config_list[index] = *cl;
                     index++;

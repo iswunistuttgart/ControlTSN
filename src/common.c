@@ -173,7 +173,6 @@ module_start(int module_id)
     printf("[COMMON] Successfully started module '%s' with PID %d\n", module->name, pid);
     */
 
-
     return EXIT_SUCCESS;
 }
 

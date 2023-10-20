@@ -158,6 +158,8 @@ _api_index_get(const struct _u_request *request, struct _u_response *response, v
                        "<tr><td><a href='/streams/00-00-00-00-00-00:00-01/deploy'>/streams/:stream-id/deploy</a></td><td>POST</td><td>Deploy a specific stream configuration to the enddevices</td></tr>" \
                        "<tr><td><a href='/streams/request'>/streams/request</a></td><td>POST</td><td>Request a new stream</td><td>request (TSN_Request)</td></tr>" \
                        "<tr><td><a href='/streams/compute'>/streams/compute</a></td><td>POST</td><td>Trigger the computation of all stream requests</td><td></td></tr>" \
+                       "<tr><td><a href='/streams/00-00-00-00-00-00:00-01/join-listener'>/streams/:stream-id/join-listener</a></td><td>POST</td><td>Join one or more listeners to an existing stream</td>TSN_Listener[]</tr>" \
+                       "<tr><td><a href='/streams/00-00-00-00-00-00:00-01/leave-listener'>/streams/:stream-id/leave-listener</a></td><td>POST</td><td>Remove listeners from an existing stream</td>listener_indices (uint16[])</tr>" \
                        // Communication-flows
                        "<tr><th>Communication-flows</th></tr>" \
                        "<tr><td><a href='/communication-flows'>/communication-flows</a></td><td>GET</td><td>Get all communication-flows</td></tr>" \
@@ -624,6 +626,48 @@ _api_streams_request(const struct _u_request *request, struct _u_response *respo
     }
 
     return U_CALLBACK_ERROR;
+}
+
+static int
+_api_streams_join_listener(const struct _u_request *request, struct _u_response *response, void *user_data)
+{
+    // Get the stream id
+    const char *url_id = u_map_get(request->map_url, "stream-id");
+    if (url_id == NULL) {
+        return U_CALLBACK_ERROR;
+    }
+    char *stream_id = strdup(url_id);
+
+    // Get the TSN_Listener request from the json body
+    json_t *json_post_body = ulfius_get_json_body_request(request, NULL);
+    if (json_post_body == NULL) {
+        return U_CALLBACK_ERROR;
+    }
+
+    uint16_t count_listeners = json_array_size(json_post_body);
+    TSN_Listener *listeners = (TSN_Listener *) malloc(sizeof(TSN_Listener) * count_listeners);
+    for (int i=0; i<count_listeners; ++i) {
+        json_t *l = json_array_get(json_post_body, i);
+        TSN_Listener *x = deserialize_listener(l);
+        listeners[i] = *x;
+    }
+
+    // Update existing stream request in sysrepo
+    rc = sysrepo_update_stream_request_new_listeners(stream_id, listeners, count_listeners);
+    if (rc == EXIT_SUCCESS) {
+
+        return U_CALLBACK_COMPLETE;
+    }
+
+
+    return U_CALLBACK_ERROR;
+}
+
+
+static int
+_api_streams_leave_listener(const struct _u_request *request, struct _u_response *response, void *user_data)
+{
+
 }
 
 
@@ -1233,7 +1277,7 @@ _api_communication_flows_delete(const struct _u_request *request, struct _u_resp
 {
     const char *url_id = u_map_get(request->map_url, "id");
     int id = atoi(url_id);
-    if (id <= 0) {
+    if (id < 0) {
         return U_CALLBACK_ERROR;
     }
     
@@ -1562,7 +1606,8 @@ _init_server()
     ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_STREAMS_REQUEST_SIMPLIFIED, 0, &_api_streams_request_simplified,    NULL);
     ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_STREAMS_ID_DELETE,          0, &_api_streams_delete,                NULL);
     ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_STREAMS_COMPUTE,            0, &_api_streams_compute,               NULL);
-    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_STREAMS_ID_DEPLOY,          0, &_api_streams_deploy,                NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_STREAMS_JOIN_LISTENER,      0, &_api_streams_join_listener,         NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_STREAMS_LEAVE_LISTENER,     0, &_api_streams_leave_listener,        NULL);
     // Communication-flows
     ulfius_add_endpoint_by_val(&server_instance, "GET",     API_PREFIX, API_COMMUNICATION_FLOWS,                0, &_api_communication_flows_get,           NULL);
     ulfius_add_endpoint_by_val(&server_instance, "GET",     API_PREFIX, API_COMMUNICATION_FLOWS_ID,             0, &_api_communication_flows_get_id,        NULL);

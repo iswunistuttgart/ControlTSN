@@ -965,6 +965,37 @@ _cb_event(TSN_Event_CB_Data data)
         free(streams);
     }
 
+    else if (data.event_id == EVENT_STREAM_REQUESTED) {
+        // Check for join/leave Listener on an configured stream 
+        // by comparing the listener count of the request and the count of the configuration
+        TSN_Stream *stream = malloc(sizeof(TSN_Stream));
+        rc = streams_get(data.entry_id, &stream); 
+        if (rc == EXIT_SUCCESS) {
+            if (stream->configured == 1) {
+                if (stream->request.count_listeners > stream->configuration->count_listeners) {
+                    // Listeners joint
+                    rc = sysrepo_set_stream_unconfigured(stream->stream_id);
+                    if (rc == EXIT_SUCCESS) {
+                        TSN_Streams *streams = malloc(sizeof(TSN_Streams));
+                        streams->count_streams = 1;
+                        streams->streams = malloc(sizeof(TSN_Stream));
+                        streams->streams[0] = *stream;
+                        printf("[CUC][CB] Listener(s) joint! Sending new request to CNC\n");
+                        cnc_compute_requests(streams);
+
+                        free(streams);
+                    }
+
+                } else if (stream->request.count_listeners < stream->configuration->count_listeners) {
+                    // Listeners left
+                    // TODO
+                    printf("Not implemented yet!\n");
+                }
+            }
+        }
+        free(stream);
+    }
+
     else if (data.event_id == EVENT_STREAM_DELETED) {
         printf("[CUC][CB] Stream was deleted!\n");
         // TODO: Handle deleted stream --> inform CNC?

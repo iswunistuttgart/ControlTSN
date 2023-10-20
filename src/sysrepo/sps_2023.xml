@@ -21,7 +21,7 @@
       <name>CUC</name>
       <desc>Represents the Central User Controller in the network based on the central configuration approach of TSN</desc>
       <executable-path>./CUCModule</executable-path>
-      <subscribed-events-mask>50331753</subscribed-events-mask>
+      <subscribed-events-mask>50331755</subscribed-events-mask>
       <registered>1</registered>
       <pid>0</pid>
       <data>

@@ -57,6 +57,8 @@ const char *API_STREAMS_REQUEST             = "/streams/request";
 const char *API_STREAMS_REQUEST_SIMPLIFIED  = "/streams/request-simplified";
 const char *API_STREAMS_COMPUTE             = "/streams/compute";
 const char *API_STREAMS_ID_DEPLOY           = "/streams/:stream-id/deploy";
+const char *API_STREAMS_JOIN_LISTENER       = "/streams/:stream-id/join-listener";
+const char *API_STREAMS_LEAVE_LISTENER      = "/streams/:stream-id/leave-listener";
 
 // Communication-flows
 const char *API_COMMUNICATION_FLOWS                 = "/communication-flows";

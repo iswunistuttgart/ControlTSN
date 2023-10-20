@@ -21,8 +21,8 @@
 #define EVENT_STREAM_COMPUTATION_REQUESTED              0x0000000000000020 // 32
 #define EVENT_STREAM_DEPLOY                             0x0000000000000040 // 64
 #define EVENT_STREAM_DEPLOYED                           0x0000000000000080 // 128
-//#define ...                                           0x0000000000000100 // 256
-//#define ...                                           0x0000000000000200 // 512
+#define EVENT_STREAM_LISTENER_JOINED                    0x0000000000000100 // 256
+#define EVENT_STREAM_LISTENER_LEFT                      0x0000000000000200 // 512
 //#define ...                                           0x0000000000000400 // 1024
 //#define ...                                           0x0000000000000800 // 2048
 

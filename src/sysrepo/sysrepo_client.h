@@ -137,12 +137,38 @@ int sysrepo_get_all_streams(TSN_Streams **streams, uint8_t without_configured_on
 int sysrepo_write_stream_request(TSN_Request *request, char **generated_stream_id);
 
 /**
+ * @brief Update an existing stream request with joining listeners.
+ * @param stream_id The stream id of the existing stream
+ * @param new_listeners The list of joining listeners
+ * @param count_listeners The count of new listeners
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+*/
+int sysrepo_update_stream_request_new_listeners(char *stream_id, TSN_Listener *new_listeners, uint16_t count_listeners);
+
+/**
+ * @brief Remove listeners from an existing stream.
+ * @param stream_id The stream id of the existing stream
+ * @param listener_indices The indices of the listeners to be removed
+ * @param count_listeners The count of listeners to be removed
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
+*/
+int sysrepo_update_stream_request_remove_listeners(char *stream_id, uint16_t* listener_indices, uint16_t count_listeners);
+
+
+/**
  * @brief Writes the computed configuration to an existing stream in the datastore.
  * @param stream_id The ID of the stream for which the configuration was calculated
  * @param configuration The computed configuration
  * @return EXIT_SUCCESS (0) or EXIT_FAILURE (1)
  */
 int sysrepo_write_stream_configuration(char *stream_id, TSN_Configuration *configuration);
+
+/**
+ * @brief Sets the configured flag of an stream back to false. Thats the case for joint/left listeners e.g.
+ * @param stream_id The ID of the stream
+ * @return EXIT_SUCCESS (0) or EXIT_FAILURE(1)
+*/
+int sysrepo_set_stream_unconfigured(char *stream_id);
 
 /**
  * @brief Gets a specific stream from the list of streams.

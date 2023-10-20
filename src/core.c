@@ -84,7 +84,7 @@ int main(void)
     }
     for (int i=0; i<modules_after->count_modules; ++i) {
         if (modules_after->modules[i].registered) {
-            printf("[MAIN] Stopping module '%s' ...\n", modules_after->modules[i].name);
+            printf("[MAIN] Stopping module '%s' with PID '%d' ...\n", modules_after->modules[i].name, modules_after->modules[i].p_id);
             ret = module_stop(modules_after->modules[i].id);
             if (ret) {
                 printf("[MAIN] Could not stop module '%s' ...\n", modules_after->modules[i].name);

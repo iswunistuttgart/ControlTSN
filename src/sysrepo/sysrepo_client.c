@@ -1965,6 +1965,25 @@ cleanup:
     return rc;
 }
 
+
+static int
+_write_request_join_listener(char *xpath, TSN_Listener *listener)
+{
+    int rc = SR_ERR_OK;
+
+    char *xpath_listener = NULL;
+    _create_xpath_id(xpath, listener->index, &xpath_listener);
+    rc = _write_listener(xpath_listener, listener);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+cleanup:
+    free(xpath_listener);
+
+    return rc;
+}
+
 static int
 _read_config_list(char *xpath, IEEE_ConfigList **cl)
 {
@@ -5637,6 +5656,98 @@ cleanup:
 }
 
 int
+sysrepo_update_stream_request_new_listeners(char *stream_id, TSN_Listener *new_listeners, uint16_t count_listeners)
+{
+    int rc = SR_ERR_OK;
+    char *xpath_stream_root = NULL;
+    char *xpath_request = NULL;
+    char *xpath_listeners = NULL;
+    char *xpath_configured = NULL;
+    sr_val_t *val_configured = NULL;
+
+    _create_xpath_key("/control-tsn-uni:tsn-uni/streams/stream[stream-id='%s']", stream_id, &xpath_stream_root);
+    _create_xpath(xpath_stream_root, "/request", &xpath_request);
+
+    // Add the listeners to the stream
+    _create_xpath(xpath_request, "/listener-list/listener[index='%d']", &xpath_listeners);
+    for (int i=0; i<count_listeners; ++i) {
+        rc = _write_request_join_listener(xpath_listeners, &(new_listeners[i]));
+        if (rc != EXIT_SUCCESS) {
+            goto cleanup;
+        }
+    }
+
+    //// Check if the stream was already configured
+    //_create_xpath(xpath_stream_root, "/configured", &xpath_configured);
+    //rc = sr_get_item(session, xpath_configured, 0, &val_configured);
+    //if (rc != SR_ERR_OK) {
+    //    goto cleanup;
+    //}
+    //uint8_t is_configured = val_configured->data.uint8_val;
+    //if (is_configured == 1) {
+    //    // Stream was already configured --> Send a EVENT to trigger CNC
+    //
+    //    // TODO: Should be done by the plugin!!
+    //    rc = sysrepo_send_notification(EVENT_STREAM_LISTENER_JOINED, stream_id, "Listener(s) joined existing Stream");
+    //    if (rc != EXIT_SUCCESS) {
+    //        printf("[SYSREPO] Error sending notification 'EVENT_STREAM_LISTENER_JOINED'!\n");
+    //    }
+    //}
+
+    // Apply the changes
+    rc = sr_apply_changes(session, 0, 1);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+cleanup:
+    free(xpath_stream_root);
+    free(xpath_request);
+    free(xpath_configured);
+    free(xpath_listeners);
+    sr_free_val(val_configured);
+
+    return rc ? EXIT_FAILURE : EXIT_SUCCESS; 
+}
+
+int 
+sysrepo_update_stream_request_remove_listeners(char *stream_id, uint16_t* listener_indices, uint16_t count_listeners)
+{
+
+}
+
+int 
+sysrepo_set_stream_unconfigured(char *stream_id)
+{
+    char *xpath_stream_root = NULL;
+    char *xpath_configured = NULL;
+
+    _create_xpath_key("/control-tsn-uni:tsn-uni/streams/stream[stream-id='%s']", stream_id, &xpath_stream_root);
+
+    // Set the 'configured' flag to false
+    _create_xpath(xpath_stream_root, "/configured", &xpath_configured);
+    sr_val_t val_configured;
+    val_configured.type = SR_UINT8_T;
+    val_configured.data.uint8_val = 0;
+    rc = sr_set_item(session, xpath_configured, &val_configured, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+    // Apply the changes
+    rc = sr_apply_changes(session, 0, 1);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+cleanup:
+    free(xpath_stream_root);
+    free(xpath_configured);
+
+    return rc ? EXIT_FAILURE : EXIT_SUCCESS;
+}
+
+int
 sysrepo_write_stream_configuration(char *stream_id, TSN_Configuration *configuration)
 {
     char *xpath_stream_root = NULL;
@@ -5888,7 +5999,6 @@ sysrepo_delete_communication_flow(uint32_t id)
             if (id == apps->apps[i].communication_flow_mapping.egress[j]) {
                 // Remove mapping entry
                 _create_xpath_key_multi_id("/control-tsn-uni:tsn-uni/application/apps/app[id='%s']/communication-flow-mapping/egress[.='%d']", apps->apps[i].id, apps->apps[i].communication_flow_mapping.egress[j], &xpath_mapping_entry);
-                printf("----------> %s\n", xpath_mapping_entry);
                 rc = sr_delete_item(session, xpath_mapping_entry, 0);
                 if (rc != SR_ERR_OK) {
                     goto cleanup;
