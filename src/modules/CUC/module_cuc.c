@@ -965,6 +965,7 @@ _cb_event(TSN_Event_CB_Data data)
         free(streams);
     }
 
+    /*
     else if (data.event_id == EVENT_STREAM_REQUESTED) {
         // Check for join/leave Listener on an configured stream 
         // by comparing the listener count of the request and the count of the configuration
@@ -991,6 +992,34 @@ _cb_event(TSN_Event_CB_Data data)
                     // TODO
                     printf("Not implemented yet!\n");
                 }
+            }
+        }
+        free(stream);
+    }
+    */
+
+    else if (data.event_id == EVENT_STREAM_LISTENER_JOINED
+             || data.event_id == EVENT_STREAM_LISTENER_LEFT) {
+        
+        TSN_Stream *stream = malloc(sizeof(TSN_Stream));
+        rc = streams_get(data.entry_id, &stream); 
+        if (rc == EXIT_SUCCESS) {
+            // Reset the configured flag first
+            rc = sysrepo_set_stream_unconfigured(stream->stream_id);
+            if (rc == EXIT_SUCCESS) {
+                // Send updated request to CNC for computation
+                TSN_Streams *streams = malloc(sizeof(TSN_Streams));
+                streams->count_streams = 1;
+                streams->streams = malloc(sizeof(TSN_Stream));
+                streams->streams[0] = *stream;
+                if (data.event_id == EVENT_STREAM_LISTENER_JOINED) {
+                    printf("[CUC][CB] Listener(s) joint! Sending updated request to CNC\n");
+                } else {
+                    printf("[CUC][CB] Listener(s) left! Sending updated request to CNC\n");
+                }
+                cnc_compute_requests(streams);
+
+                free(streams);
             }
         }
         free(stream);

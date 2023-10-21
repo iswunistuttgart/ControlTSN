@@ -152,6 +152,12 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
     // TSN_Event_CB_Data notif_data;
     // char *notif_data_event_name = NULL;
 
+    // Flag to distinguish between an completely new stream request and joining/leaving listeners
+    bool is_root_request = false;
+    bool was_stream_related = false;
+    bool is_joining_listener = false;
+    bool is_leaving_listener = false;
+
     rc = sr_get_changes_iter(session, "//.", &iter);
     if (rc != SR_ERR_OK)
     {
@@ -178,6 +184,7 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
         // STREAM ---------------------------------------------------
         if (strstr(val->xpath, "/streams/") != NULL)
         {
+            was_stream_related = true;
             // Deleted
             if ((strstr(val->xpath, "/stream-id") != NULL) &&
                 (op == SR_OP_DELETED))
@@ -198,9 +205,9 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
             }
 
             // Requested
-            if ((strstr(val->xpath, "/request/") != NULL) &&
-                (op == SR_OP_CREATED))
+            if (strstr(val->xpath, "/request/") != NULL)
             {
+                /*
                 if ((already_send_mask & EVENT_STREAM_REQUESTED) == 0)
                 {
                     char *key = _extract_key(val->xpath, "stream-id");
@@ -214,12 +221,37 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
                         already_send_mask |= EVENT_STREAM_REQUESTED;
                     }
                 }
+                */
+
+                if (!strcmp(val->xpath + strlen(val->xpath) - strlen("/listener-list"), "/listener-list")) {
+                    // When a completely new request is saved then the node "listener-list" is created
+                    if (op == SR_OP_CREATED) {
+                        char *key = _extract_key(val->xpath, "stream-id");
+                        rc = _send_notification(session, EVENT_STREAM_REQUESTED, key, "stream request added");
+                        if (rc == EXIT_FAILURE)
+                        {
+                            printf("[PLUGIN] Failed to send notification 'EVENT_STREAM_REQUESTED'!\n");
+                        }
+                        else
+                        {
+                            already_send_mask |= EVENT_STREAM_REQUESTED;
+                        }
+                    }
+
+                } else {
+                    // Otherwise in case of a joining (or leaving) listener, the "/listener-list" node is NOT created
+                    // That means here we can distringuish between new listeners (SR_OP_CREATED) and removed listeners (SR_OP_DELETED)
+                    if (op == SR_OP_CREATED) {
+                        is_joining_listener = true;
+                    } else if (op == SR_OP_DELETED) {
+                        is_leaving_listener = true;
+                    }
+                }
             }
 
             // Configured
             if ((!strcmp(val->xpath + strlen(val->xpath) - strlen("/configured"), "/configured")) && (op == SR_OP_MODIFIED || op == SR_OP_CREATED) && (val->data.bool_val == 1))
             {
-
                 if ((already_send_mask & EVENT_STREAM_CONFIGURED) == 0)
                 {
                     char *key = _extract_key(val->xpath, "stream-id");
@@ -374,10 +406,49 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
         }
     }
 
-    // rc = _send_notification(session, notif_data.event_id, notif_data.entry_id, notif_data.msg);
-    // if (rc == EXIT_FAILURE) {
-    //     printf("[PLUGIN] Failed to send notification '%s'!\n", notif_data_event_name);
-    // }
+    // Handle LISTENER_JOINED and LISTENER_LEFT here
+    // because in the loop it cannot be distringuished between them
+    // (At least i cannot think of a nice method for it)
+    // TODO: find a nicer solution
+    if (was_stream_related) {
+        // Check if the whole stream was deleted
+        if ((already_send_mask & EVENT_STREAM_DELETED) == 0) {
+            if ((already_send_mask & EVENT_STREAM_REQUESTED) == 0) {
+                if (!is_root_request) {
+                    // Send the events only for already configured streams
+                    char *key = _extract_key(val->xpath, "stream-id");
+                    sr_val_t *val_is_configured = NULL;
+                    size_t size_needed = snprintf(NULL, 0, "/control-tsn-uni:tsn-uni/streams/stream[stream-id='%s']/configured", key) + 1;
+                    char *xpath_configured = NULL;
+                    xpath_configured = malloc(size_needed);
+                    sprintf(xpath_configured, "/control-tsn-uni:tsn-uni/streams/stream[stream-id='%s']/configured", key);
+                    rc = sr_get_item(session, xpath_configured, 0, &val_is_configured);
+                    if (rc == SR_ERR_OK) {
+                        if (val_is_configured->data.uint8_val == 1) {
+                            if (is_joining_listener) {
+                                rc = _send_notification(session, EVENT_STREAM_LISTENER_JOINED, key, "listener(s) joined stream");
+                                if (rc == EXIT_FAILURE) {
+                                    printf("[PLUGIN] Failed to send notification 'EVENT_STREAM_LISTENER_JOINED'!\n");
+                                } else {
+                                    already_send_mask |= EVENT_STREAM_LISTENER_JOINED;
+                                }
+
+                            } else if (is_leaving_listener) {
+                                rc = _send_notification(session, EVENT_STREAM_LISTENER_LEFT, key, "listener(s) left stream");
+                                if (rc == EXIT_FAILURE) {
+                                    printf("[PLUGIN] Failed to send notification 'EVENT_STREAM_LISTENER_LEFT'!\n");
+                                } else {
+                                    already_send_mask |= EVENT_STREAM_LISTENER_LEFT;
+                                }
+                            }
+                        }
+                    }
+                    free(xpath_configured);
+                    sr_free_val(val_is_configured);
+                }
+            }
+        }
+    }
 
 cleanup:
     return rc;

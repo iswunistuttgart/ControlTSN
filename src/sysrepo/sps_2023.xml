@@ -5,7 +5,7 @@
       <name>REST</name>
       <desc>Exposes a REST API to interact with the framework</desc>
       <executable-path>./RESTModule</executable-path>
-      <subscribed-events-mask>4223155493794047</subscribed-events-mask>
+      <subscribed-events-mask>4223155493794815</subscribed-events-mask>
       <registered>1</registered>
       <pid>0</pid>
       <data>
