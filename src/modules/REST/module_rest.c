@@ -748,6 +748,7 @@ _api_streams_deploy(const struct _u_request *request, struct _u_response *respon
         return U_CALLBACK_ERROR;
     }
     char *stream_id = strdup(url_id);
+    
     rc = sysrepo_send_notification(EVENT_STREAM_DEPLOY, stream_id, "deploy stream configuration");
     if (rc == EXIT_FAILURE) {
         return U_CALLBACK_ERROR;
@@ -1606,6 +1607,7 @@ _init_server()
     ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_STREAMS_REQUEST_SIMPLIFIED, 0, &_api_streams_request_simplified,    NULL);
     ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_STREAMS_ID_DELETE,          0, &_api_streams_delete,                NULL);
     ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_STREAMS_COMPUTE,            0, &_api_streams_compute,               NULL);
+    ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_STREAMS_ID_DEPLOY,          0, &_api_streams_deploy,                NULL);
     ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_STREAMS_JOIN_LISTENER,      0, &_api_streams_join_listener,         NULL);
     ulfius_add_endpoint_by_val(&server_instance, "POST",    API_PREFIX, API_STREAMS_LEAVE_LISTENER,     0, &_api_streams_leave_listener,        NULL);
     // Communication-flows
