@@ -4372,14 +4372,26 @@ static int _write_app(char *xpath, TSN_App *app)
     }
 
     // Stream Mapping
+    // Since this function is also used for updates, all mapping entries must first be removed before the new ones can be saved.
     _create_xpath(xpath, "/stream-mapping", &xpath_stream_mapping);
+    rc = sr_delete_item(session, xpath_stream_mapping, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    rc = sr_apply_changes(session, 0, 1);
     rc = _write_app_stream_mapping(xpath_stream_mapping, &app->stream_mapping);
     if (rc != SR_ERR_OK) {
         goto cleanup;
     }
 
     // Communication-flow
+     // Since this function is also used for updates, all mapping entries must first be removed before the new ones can be saved.
     _create_xpath(xpath, "/communication-flow-mapping", &xpath_communication_flow_mapping);
+    rc = sr_delete_item(session, xpath_communication_flow_mapping, 0);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    rc = sr_apply_changes(session, 0, 1);
     rc = _write_app_communication_flow_mapping(xpath_communication_flow_mapping, &app->communication_flow_mapping);
     if (rc != SR_ERR_OK) {
         goto cleanup;
@@ -5663,7 +5675,6 @@ sysrepo_update_stream_request_new_listeners(char *stream_id, TSN_Listener *new_l
     char *xpath_request = NULL;
     char *xpath_listeners = NULL;
     char *xpath_configured = NULL;
-    sr_val_t *val_configured = NULL;
 
     _create_xpath_key("/control-tsn-uni:tsn-uni/streams/stream[stream-id='%s']", stream_id, &xpath_stream_root);
     _create_xpath(xpath_stream_root, "/request", &xpath_request);
@@ -5705,7 +5716,6 @@ cleanup:
     free(xpath_request);
     free(xpath_configured);
     free(xpath_listeners);
-    sr_free_val(val_configured);
 
     return rc ? EXIT_FAILURE : EXIT_SUCCESS; 
 }
@@ -5713,7 +5723,63 @@ cleanup:
 int 
 sysrepo_update_stream_request_remove_listeners(char *stream_id, uint16_t* listener_indices, uint16_t count_listeners)
 {
+    int rc = SR_ERR_OK;
+    char *xpath_stream_root = NULL;
+    char *xpath_request = NULL;
+    char *xpath_configuration = NULL;
+    char *xpath_listeners = NULL;
+    char *xpath_configured = NULL;
+    sr_val_t *val_configured = NULL;
 
+    _create_xpath_key("/control-tsn-uni:tsn-uni/streams/stream[stream-id='%s']", stream_id, &xpath_stream_root);
+    _create_xpath(xpath_stream_root, "/request", &xpath_request);
+
+    // Remove listeners from the stream request
+    _create_xpath(xpath_request, "/listener-list/listener[index='%d']", &xpath_listeners);
+    for (int i=0; i<count_listeners; ++i) {
+        char *xpath_entry = NULL;
+        _create_xpath_id(xpath_listeners, listener_indices[i], &xpath_entry);
+        rc = sr_delete_item(session, xpath_entry, 0);
+        free(xpath_entry);
+        if (rc != SR_ERR_OK) {
+            goto cleanup;
+        }
+    }
+
+    _create_xpath(xpath_stream_root, "/configured", &xpath_configured);
+    rc = sr_get_item(session, xpath_configured, 0, &val_configured);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    if (val_configured->data.uint8_val == 1) {
+        // Remove listeners from the stream configuration
+        _create_xpath(xpath_stream_root, "/configuration", &xpath_configuration);
+        _create_xpath(xpath_configuration, "/listener-list/listener[index='%d']", &xpath_listeners);
+        for (int i=0; i<count_listeners; ++i) {
+            char *xpath_entry = NULL;
+            _create_xpath_id(xpath_listeners, listener_indices[i], &xpath_entry);
+            rc = sr_delete_item(session, xpath_entry, 0);
+            free(xpath_entry);
+            if (rc != SR_ERR_OK) {
+                goto cleanup;
+            }
+        }
+    }
+
+    // Apply the changes
+    rc = sr_apply_changes(session, 0, 1);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+
+cleanup:
+    free(xpath_stream_root);
+    free(xpath_request);
+    free(xpath_configured);
+    free(xpath_listeners);
+    sr_free_val(val_configured);
+
+    return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
 int 

@@ -158,8 +158,8 @@ _api_index_get(const struct _u_request *request, struct _u_response *response, v
                        "<tr><td><a href='/streams/00-00-00-00-00-00:00-01/deploy'>/streams/:stream-id/deploy</a></td><td>POST</td><td>Deploy a specific stream configuration to the enddevices</td></tr>" \
                        "<tr><td><a href='/streams/request'>/streams/request</a></td><td>POST</td><td>Request a new stream</td><td>request (TSN_Request)</td></tr>" \
                        "<tr><td><a href='/streams/compute'>/streams/compute</a></td><td>POST</td><td>Trigger the computation of all stream requests</td><td></td></tr>" \
-                       "<tr><td><a href='/streams/00-00-00-00-00-00:00-01/join-listener'>/streams/:stream-id/join-listener</a></td><td>POST</td><td>Join one or more listeners to an existing stream</td>TSN_Listener[]</tr>" \
-                       "<tr><td><a href='/streams/00-00-00-00-00-00:00-01/leave-listener'>/streams/:stream-id/leave-listener</a></td><td>POST</td><td>Remove listeners from an existing stream</td>listener_indices (uint16[])</tr>" \
+                       "<tr><td><a href='/streams/00-00-00-00-00-00:00-01/join-listener'>/streams/:stream-id/join-listener</a></td><td>POST</td><td>Join one or more listeners to an existing stream</td><td>TSN_Listener[]</td></tr>" \
+                       "<tr><td><a href='/streams/00-00-00-00-00-00:00-01/leave-listener'>/streams/:stream-id/leave-listener</a></td><td>POST</td><td>Remove listeners from an existing stream</td><td>listener_indices (uint16[])</td></tr>" \
                        // Communication-flows
                        "<tr><th>Communication-flows</th></tr>" \
                        "<tr><td><a href='/communication-flows'>/communication-flows</a></td><td>GET</td><td>Get all communication-flows</td></tr>" \
@@ -655,7 +655,6 @@ _api_streams_join_listener(const struct _u_request *request, struct _u_response 
     // Update existing stream request in sysrepo
     rc = sysrepo_update_stream_request_new_listeners(stream_id, listeners, count_listeners);
     if (rc == EXIT_SUCCESS) {
-
         return U_CALLBACK_COMPLETE;
     }
 
@@ -667,7 +666,33 @@ _api_streams_join_listener(const struct _u_request *request, struct _u_response 
 static int
 _api_streams_leave_listener(const struct _u_request *request, struct _u_response *response, void *user_data)
 {
+    // Get the stream id
+    const char *url_id = u_map_get(request->map_url, "stream-id");
+    if (url_id == NULL) {
+        return U_CALLBACK_ERROR;
+    }
+    char *stream_id = strdup(url_id);
 
+    // Get the indices of the listeners to remove
+    json_t *json_post_body = ulfius_get_json_body_request(request, NULL);
+    if (json_post_body == NULL) {
+        return U_CALLBACK_ERROR;
+    } 
+
+    uint16_t count_indices = json_array_size(json_post_body);
+    uint16_t *indices = (uint16_t *) malloc(sizeof(uint16_t));
+    for (int i=0; i<count_indices; ++i) {
+        json_t *index = json_array_get(json_post_body, i);
+        indices[i] = json_integer_value(index);
+    }
+
+    // Update existing stream request in sysrepo
+    rc = sysrepo_update_stream_request_remove_listeners(stream_id, indices, count_indices);
+    if (rc == EXIT_SUCCESS) {
+        return U_CALLBACK_COMPLETE;
+    }
+
+    return U_CALLBACK_ERROR;
 }
 
 

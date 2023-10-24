@@ -21,7 +21,7 @@
       <name>CUC</name>
       <desc>Represents the Central User Controller in the network based on the central configuration approach of TSN</desc>
       <executable-path>./CUCModule</executable-path>
-      <subscribed-events-mask>50331755</subscribed-events-mask>
+      <subscribed-events-mask>50332523</subscribed-events-mask>
       <registered>1</registered>
       <pid>0</pid>
       <data>
@@ -89,12 +89,8 @@
         <has-image>1</has-image>
         <image-ref>PCMImage_0.0.1</image-ref>
         <has-mac>1</has-mac>
-        <mac>00-1B-21-ED-A9-92</mac>
-        <communication-flow-mapping>
-          <egress>3</egress>
-          <ingress>0</ingress>
-        </communication-flow-mapping>
-        <iface>eth0</iface>
+        <mac>48-21-0b-26-3f-ed</mac>
+        <iface>enp88s0.4003</iface>
       </app>
       <app>
         <id>PowerConsumer1_0.0.1</id>
@@ -104,35 +100,31 @@
         <has-image>1</has-image>
         <image-ref>PowerConsumerImage_0.0.1</image-ref>
         <has-mac>1</has-mac>
-        <mac>48-21-0b-26-3d-8a</mac>
-        <iface>enp88s0.4003</iface>
-        <communication-flow-mapping>
-          <egress>4</egress>
-          <ingress>1</ingress>
-        </communication-flow-mapping>
+        <mac>00-00-00-00-00-02</mac>
+        <iface>enp7s0.4003</iface>
         <parameters>
           <parameter>
             <param-name>LowerEnergyBound</param-name>
             <param-type>decimal64</param-type>
-            <param-value>0.0000000000</param-value>
+            <param-value>2000.0000000000</param-value>
             <param-desc>The lower limit of the energy value to be monitored</param-desc>
           </parameter>
           <parameter>
             <param-name>UpperEnergyBound</param-name>
             <param-type>decimal64</param-type>
-            <param-value>500.0000000000</param-value>
+            <param-value>4000.0000000000</param-value>
             <param-desc>The upper limit of the energy value to be monitored</param-desc>
           </parameter>
           <parameter>
             <param-name>EnergyThreshold</param-name>
             <param-type>decimal64</param-type>
-            <param-value>400.0000000000</param-value>
+            <param-value>3500.0000000000</param-value>
             <param-desc>The threshold value of the energy from when a warning should be emitted</param-desc>
           </parameter>
           <parameter>
             <param-name>COMPort</param-name>
             <param-type>string</param-type>
-            <param-value>/dev/ttyUSB0</param-value>
+            <param-value>/dev/ttyACM1</param-value>
             <param-desc>The COM port to be used for communication with the microcontroller</param-desc>
           </parameter>
           <parameter>
@@ -157,12 +149,8 @@
         <has-image>1</has-image>
         <image-ref>PowerConsumerImage_0.0.1</image-ref>
         <has-mac>1</has-mac>
-        <mac>48-21-0b-26-3f-ed</mac>
+        <mac>00-00-00-00-00-02</mac>
         <iface>enp88s0.4003</iface>
-        <communication-flow-mapping>
-          <egress>5</egress>
-          <ingress>2</ingress>
-        </communication-flow-mapping>
         <parameters>
           <parameter>
             <param-name>LowerEnergyBound</param-name>
@@ -251,14 +239,6 @@
         <image-ref>EngineeringFrameworkImage_0.0.1</image-ref>
         <has-mac>1</has-mac>
         <mac>00-00-00-00-00-01</mac>
-        <communication-flow-mapping>
-          <egress>0</egress>
-          <egress>1</egress>
-          <egress>2</egress>
-          <ingress>3</ingress>
-          <ingress>4</ingress>
-          <ingress>5</ingress>
-        </communication-flow-mapping>
         <iface>enp8s0.4003</iface>
       </app>
     </apps>
@@ -285,40 +265,21 @@
   </application>
   <topology>
     <devices>
-      <!-- TSN Demo Setup -->
       <enddevices>
         <enddevice>
           <mac>48-21-0b-26-3d-8a</mac>
-          <iface>enp88s0</iface>
+          <iface>enp88s0.4003</iface>
           <name>NUC 1</name>
           <num-cores>2</num-cores>
-          <interface-uri>opc.tcp://localhost:62541</interface-uri>
-          <has-app>1</has-app>
-          <apps>
-            <app>
-              <app-ref>PowerConsumer1_0.0.1</app-ref>
-            </app>
-          </apps>
+          <interface-uri>opc.tcp://172.28.205.68:4840</interface-uri>
+          <has-app>0</has-app>
         </enddevice>
         <enddevice>
           <mac>48-21-0b-26-3f-ed</mac>
-          <iface>enp88s0</iface>
+          <iface>enp88s0.4003</iface>
           <name>NUC 2</name>
           <num-cores>2</num-cores>
-          <interface-uri>opc.tcp://localhost:62541</interface-uri>
-          <has-app>1</has-app>
-          <apps>
-            <app>
-              <app-ref>PowerConsumer2_0.0.1</app-ref>
-            </app>
-          </apps>
-        </enddevice>
-        <enddevice>
-          <mac>00-1B-21-ED-A9-92</mac>
-          <iface>eth0</iface>
-          <name>PCM Box</name>
-          <num-cores>1</num-cores>
-          <interface-uri>opc.tcp://localhost:62541</interface-uri>
+          <interface-uri>opc.tcp://10.43.8.81:4840</interface-uri>
           <has-app>1</has-app>
           <apps>
             <app>
@@ -326,8 +287,14 @@
             </app>
           </apps>
         </enddevice>
-
-        <!-- Edges -->
+        <enddevice>
+          <mac>00-1B-21-ED-A9-92</mac>
+          <iface>enp7s0.4003</iface>
+          <name>PCM Box</name>
+          <num-cores>1</num-cores>
+          <interface-uri>opc.tcp://10.43.8.92:4840</interface-uri>
+          <has-app>0</has-app>
+        </enddevice>
         <enddevice>
           <mac>00-00-00-00-00-01</mac>
           <iface>enp8s0</iface>
@@ -343,30 +310,34 @@
         </enddevice>
         <enddevice>
           <mac>00-00-00-00-00-02</mac>
-          <iface>enp8s0</iface>
+          <iface>enp7s0.4003</iface>
           <name>Edge 2</name>
           <num-cores>4</num-cores>
-          <interface-uri/>
-          <has-app>0</has-app>
+          <interface-uri>opc.tcp://10.43.8.92:4840</interface-uri>
+          <has-app>1</has-app>
+          <apps>
+            <app>
+              <app-ref>PowerConsumer1_0.0.1</app-ref>
+            </app>
+            <app>
+              <app-ref>PowerConsumer2_0.0.1</app-ref>
+            </app>
+          </apps>
         </enddevice>
-
-        <!-- Router -->
         <enddevice>
           <mac>00-00-00-00-00-03</mac>
           <iface>eth0</iface>
           <name>Router</name>
           <num-cores>1</num-cores>
-          <interface-uri></interface-uri>
+          <interface-uri/>
           <has-app>0</has-app>
         </enddevice>
-
-        <!-- Machines -->
         <enddevice>
           <mac>00-00-00-00-00-04</mac>
           <iface>eth0</iface>
           <name>Panda</name>
           <num-cores>1</num-cores>
-          <interface-uri></interface-uri>
+          <interface-uri/>
           <has-app>0</has-app>
         </enddevice>
         <enddevice>
@@ -374,7 +345,7 @@
           <iface>eth0</iface>
           <name>vOSACA 1</name>
           <num-cores>1</num-cores>
-          <interface-uri></interface-uri>
+          <interface-uri/>
           <has-app>0</has-app>
         </enddevice>
         <enddevice>
@@ -382,12 +353,11 @@
           <iface>eth0</iface>
           <name>vOSACA 2</name>
           <num-cores>1</num-cores>
-          <interface-uri></interface-uri>
+          <interface-uri/>
           <has-app>0</has-app>
         </enddevice>
       </enddevices>
       <switches>
-        <!-- TSN Demo Setup -->
         <switch>
           <mac>01-02-03-04-05-06</mac>
           <name>KSwitch D10 1 [TSNDemo]</name>
@@ -403,8 +373,6 @@
           <name>KSwitch D10 3 [TSNDemo]</name>
           <ports-count>8</ports-count>
         </switch>
-
-        <!-- Infrastructure -->
         <switch>
           <mac>01-02-03-04-05-09</mac>
           <name>KSwitch D10 01 [Infrastructure]</name>
