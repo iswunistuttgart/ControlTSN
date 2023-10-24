@@ -83,13 +83,6 @@ cleanup:
 int
 module_shutdown(int module_id)
 {
-    // Reset pid in datastore
-    ret = sysrepo_set_module_pid(module_id, 0);
-    if (ret) {
-        printf("[COMMON] Error resetting pid of module with ID %d in sysrepo!\n", module_id);
-        return EXIT_FAILURE;
-    }
-
     // Disconnect from sysrepo connection and stop listening
     int rc = sysrepo_disconnect();
 
