@@ -15,41 +15,6 @@
 // Subscriptions
 sr_subscription_ctx_t *_subscriptions = NULL;
 
-/*
-static int
-_test_print_mask(uint32_t mask) {
-    if (mask & EVENT_STREAM_REQUESTED) {
-        printf("EVENT_STREAM_REQUESTED | ");
-    }
-    if (mask & EVENT_STREAM_CONFIGURED) {
-        printf("EVENT_STREAM_CONFIGURED | ");
-    }
-    if (mask & EVENT_MODULE_ADDED) {
-        printf("EVENT_MODULE_ADDED | ");
-    }
-    if (mask & EVENT_MODULE_REGISTERED) {
-        printf("EVENT_MODULE_REGISTERED | ");
-    }
-    if (mask & EVENT_MODULE_DATA_UPDATED) {
-        printf("EVENT_MODULE_DATA_UPDATED | ");
-    }
-    if (mask & EVENT_MODULE_UNREGISTERED) {
-        printf("EVENT_MODULE_UNREGISTERED | ");
-    }
-    if (mask & EVENT_MODULE_DELETED) {
-        printf("EVENT_MODULE_DELETED | ");
-    }
-    if (mask & EVENT_TOPOLOGY_DISCOVERY_REQUESTED) {
-        printf("EVENT_TOPOLOGY_DISCOVERY_REQUESTED | ");
-    }
-    if (mask & EVENT_TOPOLOGY_DISCOVERED) {
-        printf("EVENT_TOPOLOGY_DISCOVERED | ");
-    }
-
-    printf("\n");
-}
-*/
-
 static int
 //_send_notification(sr_session_ctx_t *session, uint32_t event_id, char *entry_id, char *msg)
 _send_notification(sr_session_ctx_t *session, uint64_t event_id, char *entry_id, char *msg)
@@ -157,6 +122,7 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
     bool was_stream_related = false;
     bool is_joining_listener = false;
     bool is_leaving_listener = false;
+    bool was_stream_configured = false;
 
     rc = sr_get_changes_iter(session, "//.", &iter);
     if (rc != SR_ERR_OK)
@@ -186,7 +152,7 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
         {
             was_stream_related = true;
             // Deleted
-            if ((strstr(val->xpath, "/stream-id") != NULL) &&
+            if ((!strcmp(val->xpath + strlen(val->xpath) - strlen("/stream-id"), "/stream-id")) &&
                 (op == SR_OP_DELETED))
             {
                 if ((already_send_mask & EVENT_STREAM_DELETED) == 0)
@@ -255,6 +221,7 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
                 if ((already_send_mask & EVENT_STREAM_CONFIGURED) == 0)
                 {
                     char *key = _extract_key(val->xpath, "stream-id");
+                    was_stream_configured = true;
                     rc = _send_notification(session, EVENT_STREAM_CONFIGURED, key, "stream configuration completed");
                     if (rc == EXIT_FAILURE)
                     {
@@ -410,7 +377,7 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
     // because in the loop it cannot be distringuished between them
     // (At least i cannot think of a nice method for it)
     // TODO: find a nicer solution
-    if (was_stream_related) {
+    if (was_stream_related && !was_stream_configured) {
         // Check if the whole stream was deleted
         if ((already_send_mask & EVENT_STREAM_DELETED) == 0) {
             if ((already_send_mask & EVENT_STREAM_REQUESTED) == 0) {
@@ -455,32 +422,6 @@ cleanup:
 }
 
 // -------------------------------------------------------- //
-//  RPC Callbacks
-// -------------------------------------------------------- //
-/*
-static int
-_rpc_trigger_topology_discovery_cb(sr_session_ctx_t *session, uint32_t sub_id, const char *path, const sr_val_t *input, const size_t input_cnt,
-                                   sr_event_t event, uint32_t request_id, sr_val_t **output, size_t *output_cnt, void *private_data)
-{
-    (void) session;
-    (void) sub_id;
-    (void) path;
-    (void) input;
-    (void) input_cnt;
-    (void) event;
-    (void) request_id;
-    (void) output;
-    (void) output_cnt;
-    (void) private_data;
-
-    // TODO Send Notification
-
-
-    return SR_ERR_OK;
-}
-*/
-
-// -------------------------------------------------------- //
 //  Necessary Plugin Functions
 // -------------------------------------------------------- //
 int sr_plugin_init_cb(sr_session_ctx_t *session, void **private_data)
@@ -490,33 +431,6 @@ int sr_plugin_init_cb(sr_session_ctx_t *session, void **private_data)
 
     (void)private_data;
 
-    /*
-    // Check if the plugin is already running
-    rc = sr_get_item(session, "/control-tsn-uni:tsn-uni/plugin-running", 0, &val_plugin_running);
-    if (rc != SR_ERR_OK) {
-        goto error;
-    }
-
-    if (!val_plugin_running->data.bool_val) {
-        // If not running then set flag to true
-        sr_val_t val_running;
-        val_running.type = SR_BOOL_T;
-        val_running.data.bool_val = 1;
-        rc = sr_set_item(session, "/control-tsn-uni:tsn-uni/plugin-running", &val_running, 0);
-        if (rc != SR_ERR_OK) {
-            goto error;
-        }
-        rc = sr_apply_changes(session, 0, 1);
-        if (rc != SR_ERR_OK) {
-            goto error;
-        }
-
-    } else {
-        printf("[PLUGIN] A instance of the plugin is already running!\n");
-        return SR_ERR_OPERATION_FAILED;
-    }
-    */
-
     // Subscribe for module changes (also causes startup data to be copied into running and enabling the module)
     rc = sr_module_change_subscribe(session, "control-tsn-uni", NULL, _module_change_cb, NULL, 0, SR_SUBSCR_DONE_ONLY, &_subscriptions);
     if (rc != SR_ERR_OK)
@@ -524,15 +438,6 @@ int sr_plugin_init_cb(sr_session_ctx_t *session, void **private_data)
         printf("[PLUGIN] Error subscribing for module changes!\n");
         goto error;
     }
-
-    /*
-    // Subscribe for RPC: trigger topology discovery
-    rc = sr_rpc_subscribe(session, "/control-tsn-uni:rpc-trigger-topology-discovery", _rpc_trigger_topology_discovery_cb, NULL, 0, SR_SUBSCR_CTX_REUSE, &subscriptions);
-    if (rc != SR_ERR_OK) {
-        printf("[PLUGIN] Error subscribing for RPC 'trigger-topology-discovery'!\n");
-        goto error;
-    }
-    */
 
     printf("[PLUGIN] Plugin successfully initialized!\n");
     return SR_ERR_OK;

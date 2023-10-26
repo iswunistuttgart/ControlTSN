@@ -99,7 +99,6 @@ cnc_compute_requests(TSN_Streams *streams)
     request.http_verb = strdup("POST");
 
     json_t *body = NULL;
-    
 
 #if EMULATE_OPENCNC    
     body = serialize_cnc_request(streams);
@@ -109,9 +108,10 @@ cnc_compute_requests(TSN_Streams *streams)
 
     ulfius_set_json_body_request(&request, body);
 
+    printf("[CUC] Sending requests (%d) to CNC at '%s'\n", streams->count_streams, request.http_url);
     int res = ulfius_send_http_request(&request, &response);
     if (res == U_OK) {
-        printf("[CUC] Successfully sent request to CNC at '%s'\n", request.http_url);
+        printf("[CUC] Successfully sent request to CNC\n");
         // get JSON body containing the computed configuration
         json_t *json_body = ulfius_get_json_body_response(&response, NULL);
 

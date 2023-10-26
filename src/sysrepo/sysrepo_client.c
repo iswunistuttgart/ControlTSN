@@ -2712,10 +2712,10 @@ _read_streams(char *xpath, TSN_Streams **streams, uint8_t without_configured_one
         if (rc != SR_ERR_OK) {
             goto cleanup;
         }
-        if (without_configured_ones && s->configured) {
+        if (without_configured_ones && s->configured == 1) {
             continue;
         }
-        (*streams)->streams[i] = *s;
+        (*streams)->streams[count_s] = *s;
         count_s += 1;
     }
     (*streams)->count_streams = count_s;
