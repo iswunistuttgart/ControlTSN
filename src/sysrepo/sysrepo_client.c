@@ -6157,6 +6157,10 @@ sysrepo_set_topology_graph(TSN_Graph *graph)
     if (rc != SR_ERR_OK) {
         goto cleanup;
     }
+    rc = sr_apply_changes(session, 0, 1);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
 
     // Write the topology graph
     rc = _write_graph("/control-tsn-uni:tsn-uni/topology/graph", graph);

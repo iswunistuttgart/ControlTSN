@@ -295,7 +295,7 @@
           <iface>enp88s0.4003</iface>
           <name>NUC 1</name>
           <num-cores>2</num-cores>
-          <interface-uri>opc.tcp://ep01.tsnhalle.isw.local:4840</interface-uri>
+          <interface-uri>opc.tcp://10.43.8.81:4840</interface-uri>
           <has-app>1</has-app>
           <apps>
             <app>
@@ -306,9 +306,9 @@
         <enddevice>
           <mac>48-21-0b-26-3d-8a</mac>
           <iface>enp88s0.4003</iface>
-          <name>NUC 1</name>
+          <name>NUC 2</name>
           <num-cores>2</num-cores>
-          <interface-uri>opc.tcp://ep02.tsnhalle.isw.local:4840</interface-uri>
+          <interface-uri>opc.tcp://10.43.8.82:4840</interface-uri>
           <has-app>1</has-app>
           <apps>
             <app>
@@ -321,7 +321,7 @@
           <iface>eth0.4003</iface>
           <name>PCM Box</name>
           <num-cores>1</num-cores>
-          <interface-uri>opc.tcp://pcm01.tsnhalle.isw.local:4840</interface-uri>
+          <interface-uri>opc.tcp://10.43.8.52:4840</interface-uri>
           <has-app>1</has-app>
           <apps>
             <app>
@@ -437,34 +437,6 @@
     <graph>
       <connections>
         <connection>
-          <id>0</id>
-          <from-mac>48-21-0b-26-3d-8a</from-mac>
-          <from-port>0</from-port>
-          <to-mac>01-02-03-04-05-06</to-mac>
-          <to-port>0</to-port>
-        </connection>
-        <connection>
-          <id>1</id>
-          <from-mac>48-21-0b-26-3f-ed</from-mac>
-          <from-port>0</from-port>
-          <to-mac>01-02-03-04-05-08</to-mac>
-          <to-port>1</to-port>
-        </connection>
-        <connection>
-          <id>2</id>
-          <from-mac>01-02-03-04-05-06</from-mac>
-          <from-port>7</from-port>
-          <to-mac>01-02-03-04-05-07</to-mac>
-          <to-port>0</to-port>
-        </connection>
-        <connection>
-          <id>3</id>
-          <from-mac>01-02-03-04-05-07</from-mac>
-          <from-port>7</from-port>
-          <to-mac>01-02-03-04-05-08</to-mac>
-          <to-port>0</to-port>
-        </connection>
-        <connection>
           <id>4</id>
           <from-mac>01-02-03-04-05-09</from-mac>
           <from-port>1</from-port>
@@ -493,13 +465,6 @@
           <to-port>7</to-port>
         </connection>
         <connection>
-          <id>8</id>
-          <from-mac>01-02-03-04-05-09</from-mac>
-          <from-port>2</from-port>
-          <to-mac>01-02-03-04-05-07</to-mac>
-          <to-port>6</to-port>
-        </connection>
-        <connection>
           <id>9</id>
           <from-mac>90-1b-0e-d7-ae-94</from-mac>
           <from-port>0</from-port>
@@ -526,6 +491,41 @@
           <from-port>3</from-port>
           <to-mac>00-1b-21-ed-ad-07</to-mac>
           <to-port>0</to-port>
+        </connection>
+        <connection>
+          <id>13</id>
+          <from-mac>48-21-0b-26-3f-ed</from-mac>
+          <from-port>0</from-port>
+          <to-mac>01-02-03-04-05-06</to-mac>
+          <to-port>6</to-port>
+        </connection>
+        <connection>
+          <id>14</id>
+          <from-mac>01-02-03-04-05-06</from-mac>
+          <from-port>7</from-port>
+          <to-mac>01-02-03-04-05-07</to-mac>
+          <to-port>6</to-port>
+        </connection>
+        <connection>
+          <id>15</id>
+          <from-mac>01-02-03-04-05-07</from-mac>
+          <from-port>7</from-port>
+          <to-mac>01-02-03-04-05-08</to-mac>
+          <to-port>6</to-port>
+        </connection>
+        <connection>
+          <id>16</id>
+          <from-mac>01-02-03-04-05-08</from-mac>
+          <from-port>7</from-port>
+          <to-mac>48-21-0b-26-3d-8a</to-mac>
+          <to-port>0</to-port>
+        </connection>
+        <connection>
+          <id>17</id>
+          <from-mac>01-02-03-04-05-09</from-mac>
+          <from-port>2</from-port>
+          <to-mac>01-02-03-04-05-07</to-mac>
+          <to-port>1</to-port>
         </connection>
       </connections>
     </graph>

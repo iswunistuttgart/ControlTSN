@@ -826,9 +826,19 @@ deploy_communication_engineering(UA_Client *client, bool is_listener, uint16_t l
         // SourceMAC
         nodeId = UA_NODEID_NUMERIC(7, UA_TSNDEP_ID_PUBSUBENGINEERING_SOURCEMAC);
         UA_String sourceMAC;
+        //for (int i=0; i<stream->configuration->listener_list[listener_nr].interface_configuration.interface_list[0].count_config_list_entries; ++i) {
+        //    if (stream->configuration->listener_list[listener_nr].interface_configuration.interface_list[0].config_list[i].field_type == CONFIG_LIST_MAC_ADDRESSES) {
+        //        sourceMAC = UA_String_fromChars(stream->configuration->listener_list[listener_nr].interface_configuration.interface_list[0].config_list[i].ieee802_mac_addresses->source_mac_address);
+        //    }
+        //}
+
+        // #############################################################################################################################
+        // IMPORTANT: SourceMAC (or better said: the subscribed MAC address) is the MAC the subscriber listens to on received frames.
+        // That means this needs to be the same as the DestinationMAC the talker sends frames to!
+        // #############################################################################################################################
         for (int i=0; i<stream->configuration->listener_list[listener_nr].interface_configuration.interface_list[0].count_config_list_entries; ++i) {
             if (stream->configuration->listener_list[listener_nr].interface_configuration.interface_list[0].config_list[i].field_type == CONFIG_LIST_MAC_ADDRESSES) {
-                sourceMAC = UA_String_fromChars(stream->configuration->listener_list[listener_nr].interface_configuration.interface_list[0].config_list[i].ieee802_mac_addresses->source_mac_address);
+                sourceMAC = UA_String_fromChars(stream->configuration->listener_list[listener_nr].interface_configuration.interface_list[0].config_list[i].ieee802_mac_addresses->destination_mac_address);
             }
         }
         UA_Variant_setScalarCopy(variant, &sourceMAC, &UA_TYPES[UA_TYPES_STRING]);
