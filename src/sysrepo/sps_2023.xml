@@ -525,7 +525,7 @@
           <from-mac>01-02-03-04-05-09</from-mac>
           <from-port>2</from-port>
           <to-mac>01-02-03-04-05-07</to-mac>
-          <to-port>1</to-port>
+          <to-port>5</to-port>
         </connection>
       </connections>
     </graph>
