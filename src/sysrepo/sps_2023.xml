@@ -100,7 +100,7 @@
         <has-image>1</has-image>
         <image-ref>PowerConsumerImage_0.0.1</image-ref>
         <has-mac>1</has-mac>
-        <mac>48-21-0b-26-3d-8a</mac>
+        <mac>48-21-0b-26-3f-ed</mac>
         <iface>enp88s0.4003</iface>
         <parameters>
           <parameter>
@@ -149,7 +149,7 @@
         <has-image>1</has-image>
         <image-ref>PowerConsumerImage_0.0.1</image-ref>
         <has-mac>1</has-mac>
-        <mac>48-21-0b-26-3f-ed</mac>
+        <mac>48-21-0b-26-3d-8a</mac>
         <iface>enp88s0.4003</iface>
         <parameters>
           <parameter>
@@ -299,7 +299,7 @@
           <has-app>1</has-app>
           <apps>
             <app>
-              <app-ref>PowerConsumer2_0.0.1</app-ref>
+              <app-ref>PowerConsumer1_0.0.1</app-ref>
             </app>
           </apps>
         </enddevice>
@@ -312,7 +312,7 @@
           <has-app>1</has-app>
           <apps>
             <app>
-              <app-ref>PowerConsumer1_0.0.1</app-ref>
+              <app-ref>PowerConsumer2_0.0.1</app-ref>
             </app>
           </apps>
         </enddevice>
