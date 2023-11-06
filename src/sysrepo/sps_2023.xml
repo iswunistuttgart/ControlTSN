@@ -106,37 +106,37 @@
           <parameter>
             <param-name>LowerEnergyBound</param-name>
             <param-type>decimal64</param-type>
-            <param-value>2000.0000000000</param-value>
+            <param-value>0.0000000000</param-value>
             <param-desc>The lower limit of the energy value to be monitored</param-desc>
           </parameter>
           <parameter>
             <param-name>UpperEnergyBound</param-name>
             <param-type>decimal64</param-type>
-            <param-value>4000.0000000000</param-value>
+            <param-value>1000.0000000000</param-value>
             <param-desc>The upper limit of the energy value to be monitored</param-desc>
           </parameter>
           <parameter>
             <param-name>EnergyThreshold</param-name>
             <param-type>decimal64</param-type>
-            <param-value>3500.0000000000</param-value>
+            <param-value>700.0000000000</param-value>
             <param-desc>The threshold value of the energy from when a warning should be emitted</param-desc>
           </parameter>
           <parameter>
             <param-name>COMPort</param-name>
             <param-type>string</param-type>
-            <param-value>/dev/ttyACM1</param-value>
+            <param-value>/dev/ttyACM0</param-value>
             <param-desc>The COM port to be used for communication with the microcontroller</param-desc>
           </parameter>
           <parameter>
             <param-name>LEDsCount</param-name>
             <param-type>uint16</param-type>
-            <param-value>71</param-value>
+            <param-value>288</param-value>
             <param-desc>How much LEDs are on the connected Stripe</param-desc>
           </parameter>
           <parameter>
             <param-name>LEDRefreshHz</param-name>
             <param-type>uint16</param-type>
-            <param-value>100</param-value>
+            <param-value>25</param-value>
             <param-desc>How often the LEDs should be updated per second</param-desc>
           </parameter>
         </parameters>
@@ -161,31 +161,31 @@
           <parameter>
             <param-name>UpperEnergyBound</param-name>
             <param-type>decimal64</param-type>
-            <param-value>500.0000000000</param-value>
+            <param-value>1000.0000000000</param-value>
             <param-desc>The upper limit of the energy value to be monitored</param-desc>
           </parameter>
           <parameter>
             <param-name>EnergyThreshold</param-name>
             <param-type>decimal64</param-type>
-            <param-value>400.0000000000</param-value>
+            <param-value>700.0000000000</param-value>
             <param-desc>The threshold value of the energy from when a warning should be emitted</param-desc>
           </parameter>
           <parameter>
             <param-name>COMPort</param-name>
             <param-type>string</param-type>
-            <param-value>/dev/ttyUSB0</param-value>
+            <param-value>/dev/ttyACM0</param-value>
             <param-desc>The COM port to be used for communication with the microcontroller</param-desc>
           </parameter>
           <parameter>
             <param-name>LEDsCount</param-name>
             <param-type>uint16</param-type>
-            <param-value>71</param-value>
+            <param-value>288</param-value>
             <param-desc>How much LEDs are on the connected Stripe</param-desc>
           </parameter>
           <parameter>
             <param-name>LEDRefreshHz</param-name>
             <param-type>uint16</param-type>
-            <param-value>100</param-value>
+            <param-value>25</param-value>
             <param-desc>How often the LEDs should be updated per second</param-desc>
           </parameter>
         </parameters>
