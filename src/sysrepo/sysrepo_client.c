@@ -5764,6 +5764,13 @@ sysrepo_update_stream_request_remove_listeners(char *stream_id, uint16_t* listen
                 goto cleanup;
             }
         }
+
+        // Reset configured flag
+        val_configured->data.uint8_val = 0;
+        rc = sr_set_item(session, xpath_configured, val_configured, 0);
+        if (rc != SR_ERR_OK) {
+            goto cleanup;
+        }
     }
 
     // Apply the changes
