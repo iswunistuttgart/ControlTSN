@@ -5728,6 +5728,7 @@ sysrepo_update_stream_request_remove_listeners(char *stream_id, uint16_t* listen
     char *xpath_request = NULL;
     char *xpath_configuration = NULL;
     char *xpath_listeners = NULL;
+    char *xpath_listeners_conf = NULL;
     char *xpath_configured = NULL;
     sr_val_t *val_configured = NULL;
 
@@ -5754,22 +5755,15 @@ sysrepo_update_stream_request_remove_listeners(char *stream_id, uint16_t* listen
     if (val_configured->data.uint8_val == 1) {
         // Remove listeners from the stream configuration
         _create_xpath(xpath_stream_root, "/configuration", &xpath_configuration);
-        _create_xpath(xpath_configuration, "/listener-list/listener[index='%d']", &xpath_listeners);
+        _create_xpath(xpath_configuration, "/listener-list/listener[index='%d']", &xpath_listeners_conf);
         for (int i=0; i<count_listeners; ++i) {
             char *xpath_entry = NULL;
-            _create_xpath_id(xpath_listeners, listener_indices[i], &xpath_entry);
+            _create_xpath_id(xpath_listeners_conf, listener_indices[i], &xpath_entry);
             rc = sr_delete_item(session, xpath_entry, 0);
             free(xpath_entry);
             if (rc != SR_ERR_OK) {
                 goto cleanup;
             }
-        }
-
-        // Reset configured flag
-        val_configured->data.uint8_val = 0;
-        rc = sr_set_item(session, xpath_configured, val_configured, 0);
-        if (rc != SR_ERR_OK) {
-            goto cleanup;
         }
     }
 
@@ -5784,6 +5778,7 @@ cleanup:
     free(xpath_request);
     free(xpath_configured);
     free(xpath_listeners);
+    free(xpath_listeners_conf);
     sr_free_val(val_configured);
 
     return rc ? EXIT_FAILURE : EXIT_SUCCESS;
@@ -5794,6 +5789,7 @@ sysrepo_set_stream_unconfigured(char *stream_id)
 {
     char *xpath_stream_root = NULL;
     char *xpath_configured = NULL;
+    char *xpath_configuration = NULL;
 
     _create_xpath_key("/control-tsn-uni:tsn-uni/streams/stream[stream-id='%s']", stream_id, &xpath_stream_root);
 
@@ -5807,6 +5803,14 @@ sysrepo_set_stream_unconfigured(char *stream_id)
         goto cleanup;
     }
 
+    //// Remove configuration
+    //_create_xpath(xpath_stream_root, "/configuration", &xpath_configuration);
+    //rc = sr_delete_item(session, xpath_configuration, 0);
+    //if (rc != SR_ERR_OK) {
+    //    goto cleanup;
+    //}
+
+
     // Apply the changes
     rc = sr_apply_changes(session, 0, 1);
     if (rc != SR_ERR_OK) {
@@ -5816,6 +5820,7 @@ sysrepo_set_stream_unconfigured(char *stream_id)
 cleanup:
     free(xpath_stream_root);
     free(xpath_configured);
+    free(xpath_configuration);
 
     return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }
@@ -5829,8 +5834,13 @@ sysrepo_write_stream_configuration(char *stream_id, TSN_Configuration *configura
 
     _create_xpath_key("/control-tsn-uni:tsn-uni/streams/stream[stream-id='%s']", stream_id, &xpath_stream_root);
 
-    // Write configuration
+    // Remove existing configuration if there is any
     _create_xpath(xpath_stream_root, "/configuration", &xpath_configuration);
+    rc = sr_delete_item(session, xpath_configuration, 0);
+    rc = sr_apply_changes(session, 0, 1);
+
+
+    // Write configuration
     rc = _write_configuration(xpath_configuration, configuration);
     if (rc != SR_ERR_OK) {
         goto cleanup;

@@ -387,11 +387,26 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
                     sr_val_t *val_is_configured = NULL;
                     size_t size_needed = snprintf(NULL, 0, "/control-tsn-uni:tsn-uni/streams/stream[stream-id='%s']/configured", key) + 1;
                     char *xpath_configured = NULL;
+                    char *xpath_configuration = NULL;
                     xpath_configured = malloc(size_needed);
                     sprintf(xpath_configured, "/control-tsn-uni:tsn-uni/streams/stream[stream-id='%s']/configured", key);
                     rc = sr_get_item(session, xpath_configured, 0, &val_is_configured);
                     if (rc == SR_ERR_OK) {
                         if (val_is_configured->data.uint8_val == 1) {
+                            // Reset configuration
+                            //val_is_configured->data.uint8_val = 0;
+                            //rc = sr_set_item(session, xpath_configured, val_is_configured, 0);
+                            //if (rc != SR_ERR_OK) {
+                            //    printf("[PLUGIN] Error setting configured flag back to false after listener(s) %s!\n", is_joining_listener ? "joined" : "left");
+                            //}
+                            //size_needed = snprintf(NULL, 0, "/control-tsn-uni:tsn-uni/streams/stream[stream-id='%s']/configuration", key) + 1;
+                            //xpath_configuration = malloc(size_needed);
+                            //sprintf(xpath_configuration, "/control-tsn-uni:tsn-uni/streams/stream[stream-id='%s']/configuration", key);
+                            //rc = sr_delete_item(session, xpath_configuration, 0);
+                            //if (rc != SR_ERR_OK) {
+                            //    printf("[PLUGIN] Error deleting stream configuration after listener(s) %s!\n", is_joining_listener ? "joined" : "left");
+                            //}
+
                             if (is_joining_listener) {
                                 rc = _send_notification(session, EVENT_STREAM_LISTENER_JOINED, key, "listener(s) joined stream");
                                 if (rc == EXIT_FAILURE) {
@@ -411,6 +426,7 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
                         }
                     }
                     free(xpath_configured);
+                    free(xpath_configuration);
                     sr_free_val(val_is_configured);
                 }
             }

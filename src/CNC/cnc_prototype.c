@@ -174,7 +174,7 @@ _test_emulate_stream_computation(TSN_Streams *streams)
             TSN_Listener *listener = &stream->request.listener_list[i];
         
             TSN_StatusListener *status_listener = malloc(sizeof(TSN_StatusListener));
-            status_listener->index = i;
+            status_listener->index = listener->index;
             status_listener->accumulated_latency = status_talker.accumulated_latency;       // Assume the same
 
             IEEE_InterfaceConfiguration interface_configuration_listener;

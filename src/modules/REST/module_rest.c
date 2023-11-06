@@ -680,7 +680,7 @@ _api_streams_leave_listener(const struct _u_request *request, struct _u_response
     } 
 
     uint16_t count_indices = json_array_size(json_post_body);
-    uint16_t *indices = (uint16_t *) malloc(sizeof(uint16_t));
+    uint16_t *indices = (uint16_t *) malloc(sizeof(uint16_t) * count_indices);
     for (int i=0; i<count_indices; ++i) {
         json_t *index = json_array_get(json_post_body, i);
         indices[i] = json_integer_value(index);
