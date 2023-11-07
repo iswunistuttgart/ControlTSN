@@ -62,7 +62,9 @@ RUN apt-get update && \
     apt-get install -y libulfius-dev=2.5.2-4 && \
     apt-get install -y uwsc && \
     apt-get install -y sudo && \
-    apt-get install -y supervisor
+    apt-get install -y python-pip && \
+    apt-get install -y supervisor && \
+    pip install supervisor-stdout
 
 #COPY --from=build /install/lib /usr/local/lib
 #COPY --from=build /install/bin /usr/local/bin
