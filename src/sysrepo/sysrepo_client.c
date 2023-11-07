@@ -1970,8 +1970,9 @@ static int
 _write_request_join_listener(char *xpath, TSN_Listener *listener)
 {
     int rc = SR_ERR_OK;
-
     char *xpath_listener = NULL;
+
+    // Append the new listener
     _create_xpath_id(xpath, listener->index, &xpath_listener);
     rc = _write_listener(xpath_listener, listener);
     if (rc != SR_ERR_OK) {
@@ -5674,7 +5675,11 @@ sysrepo_update_stream_request_new_listeners(char *stream_id, TSN_Listener *new_l
     char *xpath_stream_root = NULL;
     char *xpath_request = NULL;
     char *xpath_listeners = NULL;
+    char *xpath_listeners_list = NULL;
+    char *xpath_talker_request = NULL;
+    char *xpath_talker_request_destination_mac = NULL;
     char *xpath_configured = NULL;
+    sr_val_t *val_listener_list = NULL;
 
     _create_xpath_key("/control-tsn-uni:tsn-uni/streams/stream[stream-id='%s']", stream_id, &xpath_stream_root);
     _create_xpath(xpath_stream_root, "/request", &xpath_request);
@@ -5686,6 +5691,39 @@ sysrepo_update_stream_request_new_listeners(char *stream_id, TSN_Listener *new_l
         if (rc != EXIT_SUCCESS) {
             goto cleanup;
         }
+    }
+
+    // If there are more than one listener, set the talkers destination MAC to broadcast
+    _create_xpath(xpath_request, "/listener-list/*", &xpath_listeners_list);
+    size_t count_current_listeners = 0;
+    rc = sr_get_items(session, xpath_listeners_list, 0, 0, &val_listener_list, &count_current_listeners);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    if (count_current_listeners > 1) {
+        TSN_Talker *talker = malloc(sizeof(TSN_Talker));
+        _create_xpath(xpath_request, "/talker", &xpath_talker_request);
+        rc = _read_talker(xpath_talker_request, &talker);
+        if (rc != SR_ERR_OK) {
+            free(talker);
+            goto cleanup;
+        }
+        // Find the ieee802-mac-addresses entry in the config list
+        for (int i=0; i<talker->count_data_frame_specifications; ++i) {
+            if (talker->data_frame_specification[i].field_type == DATA_FRAME_SPECIFICATION_MAC_ADDRESSES) {
+                _create_xpath(xpath_talker_request, "/data-frame-specification[index='%d']/ieee802-mac-addresses/destination-mac-address", &xpath_talker_request_destination_mac);
+                char *xpath_tmp = NULL;
+                _create_xpath_id(xpath_talker_request_destination_mac, talker->data_frame_specification[i].index, &xpath_tmp);
+                rc = sr_set_item_str(session, xpath_tmp, "ff-ff-ff-ff-ff-ff", NULL, 0);
+                free(xpath_tmp);
+                if (rc != SR_ERR_OK) {
+                    printf("[SYSREPO] Error updating Talkers destination MAC to broadcast after joined listener(s)!\n");
+                    goto cleanup;
+                }
+            }
+        }
+        free(talker);
+
     }
 
     //// Check if the stream was already configured
@@ -5716,6 +5754,10 @@ cleanup:
     free(xpath_request);
     free(xpath_configured);
     free(xpath_listeners);
+    free(xpath_listeners_list);
+    free(xpath_talker_request);
+    free(xpath_talker_request_destination_mac);
+    sr_free_val(val_listener_list);
 
     return rc ? EXIT_FAILURE : EXIT_SUCCESS; 
 }
@@ -5730,7 +5772,11 @@ sysrepo_update_stream_request_remove_listeners(char *stream_id, uint16_t* listen
     char *xpath_listeners = NULL;
     char *xpath_listeners_conf = NULL;
     char *xpath_configured = NULL;
+    char *xpath_listeners_list = NULL;
+    char *xpath_talker_request = NULL;
+    char *xpath_talker_request_destination_mac = NULL;
     sr_val_t *val_configured = NULL;
+    sr_val_t *val_listener_list = NULL;
 
     _create_xpath_key("/control-tsn-uni:tsn-uni/streams/stream[stream-id='%s']", stream_id, &xpath_stream_root);
     _create_xpath(xpath_stream_root, "/request", &xpath_request);
@@ -5767,6 +5813,46 @@ sysrepo_update_stream_request_remove_listeners(char *stream_id, uint16_t* listen
         }
     }
 
+
+    // If there is only one listener left then set the talkers destination MAC to the one from that listener
+     _create_xpath(xpath_request, "/listener-list/*", &xpath_listeners_list);
+    size_t count_current_listeners = 0;
+    rc = sr_get_items(session, xpath_listeners_list, 0, 0, &val_listener_list, &count_current_listeners);
+    if (rc != SR_ERR_OK) {
+        goto cleanup;
+    }
+    if (count_current_listeners == 1) {
+        TSN_Talker *talker = malloc(sizeof(TSN_Talker));
+        _create_xpath(xpath_request, "/talker", &xpath_talker_request);
+        rc = _read_talker(xpath_talker_request, &talker);
+        if (rc != SR_ERR_OK) {
+            free(talker);
+            goto cleanup;
+        }
+        // Find the ieee802-mac-addresses entry in the config list
+        for (int i=0; i<talker->count_data_frame_specifications; ++i) {
+            if (talker->data_frame_specification[i].field_type == DATA_FRAME_SPECIFICATION_MAC_ADDRESSES) {
+                TSN_Listener *l = malloc(sizeof(TSN_Listener));
+                rc = _read_listener((&val_listener_list[0])->xpath, &l);
+                if (rc != SR_ERR_OK) {
+                    free(l);
+                    goto cleanup;
+                }
+                _create_xpath(xpath_talker_request, "/data-frame-specification[index='%d']/ieee802-mac-addresses/destination-mac-address", &xpath_talker_request_destination_mac);
+                char *xpath_tmp = NULL;
+                _create_xpath_id(xpath_talker_request_destination_mac, talker->data_frame_specification[i].index, &xpath_tmp);
+                rc = sr_set_item_str(session, xpath_tmp, l->end_station_interfaces[0].mac_address,NULL, 0);
+                free(l);
+                free(xpath_tmp);
+                if (rc != SR_ERR_OK) {
+                    goto cleanup;
+                }
+            }
+        }
+        free(talker);
+    }
+
+
     // Apply the changes
     rc = sr_apply_changes(session, 0, 1);
     if (rc != SR_ERR_OK) {
@@ -5779,6 +5865,10 @@ cleanup:
     free(xpath_configured);
     free(xpath_listeners);
     free(xpath_listeners_conf);
+    free(xpath_listeners_list);
+    free(xpath_talker_request);
+    free(xpath_talker_request_destination_mac);
+    sr_free_val(val_listener_list);
     sr_free_val(val_configured);
 
     return rc ? EXIT_FAILURE : EXIT_SUCCESS;
