@@ -556,7 +556,7 @@ _write_stream_sendreceive_flag(const TSN_Enddevice *enddevice, bool enable)
 
     variant = UA_Variant_new();
 
-    if (!enddevice->interface_uri || strlen(enddevice->interface_uri) <= 1) {
+    if (!enddevice->interface_uri) {
         printf("[COMMON][OPCUA][ERROR] No configuration interface specified for enddevice %s!\n", enddevice->name);
         goto cleanup;
     }
@@ -600,7 +600,9 @@ _read_stream_sendreceive_flag(const TSN_Enddevice *enddevice)
     UA_Variant *value;
     value = UA_Variant_new();
 
-    if (!enddevice->interface_uri || strlen(enddevice->interface_uri) <= 1) {
+    UA_Boolean enabled = UA_FALSE;
+
+    if (!enddevice->interface_uri) {
         printf("[COMMON][OPCUA][ERROR] No configuration interface specified for enddevice %s!\n", enddevice->name);
         goto cleanup;
     }
@@ -623,7 +625,7 @@ _read_stream_sendreceive_flag(const TSN_Enddevice *enddevice)
         goto cleanup;
     }
 
-    UA_Boolean enabled = *(UA_Boolean *)value->data;
+    enabled = *(UA_Boolean *)value->data;
 
 cleanup:
     UA_Variant_delete(value);
@@ -808,7 +810,7 @@ bool configuration_stream_get_sendreceive(char *stream_id)
     // Now that we have all enddevices we can start getting the stream flag
 
     // For indicating a enabled stream all apps must have the flag set to true
-    bool e;
+    bool e = true;
     for (int i=0; i<count_listeners; ++i) {
         e = _read_stream_sendreceive_flag(listenerDevices[i]);
         is_enabled = is_enabled && e;
@@ -895,7 +897,7 @@ _write_app_parameters(const TSN_Enddevice *enddevice, TSN_App *app)
 
     variant = UA_Variant_new();
 
-    if (!enddevice->interface_uri || strlen(enddevice->interface_uri) <= 1) {
+    if (!enddevice->interface_uri) {
         printf("[COMMON][OPCUA][ERROR] No configuration interface specified for enddevice %s!\n", enddevice->name);
         goto cleanup;
     }
