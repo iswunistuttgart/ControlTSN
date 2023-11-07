@@ -357,7 +357,7 @@ static void configuration_deploy_app_par(const struct configuration_parameter *p
     UA_Variant out;
 
     // If no URI provided, nothing works
-    if (!parameter || !enddevice->interface_uri || !parameter->app_id)
+    if (!parameter || !enddevice->interface_uri || !parameter->app_id || strlen(enddevice->interface_uri) <= 1)
     {
         log("Missing parameters for deploying configuration to Application!");
         return;

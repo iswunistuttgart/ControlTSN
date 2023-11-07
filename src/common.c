@@ -556,7 +556,7 @@ _write_stream_sendreceive_flag(const TSN_Enddevice *enddevice, bool enable)
 
     variant = UA_Variant_new();
 
-    if (!enddevice->interface_uri) {
+    if (!enddevice->interface_uri || strlen(enddevice->interface_uri) <= 1) {
         printf("[COMMON][OPCUA][ERROR] No configuration interface specified for enddevice %s!\n", enddevice->name);
         goto cleanup;
     }
@@ -600,7 +600,7 @@ _read_stream_sendreceive_flag(const TSN_Enddevice *enddevice)
     UA_Variant *value;
     value = UA_Variant_new();
 
-    if (!enddevice->interface_uri) {
+    if (!enddevice->interface_uri || strlen(enddevice->interface_uri) <= 1) {
         printf("[COMMON][OPCUA][ERROR] No configuration interface specified for enddevice %s!\n", enddevice->name);
         goto cleanup;
     }
@@ -895,7 +895,7 @@ _write_app_parameters(const TSN_Enddevice *enddevice, TSN_App *app)
 
     variant = UA_Variant_new();
 
-    if (!enddevice->interface_uri) {
+    if (!enddevice->interface_uri || strlen(enddevice->interface_uri) <= 1) {
         printf("[COMMON][OPCUA][ERROR] No configuration interface specified for enddevice %s!\n", enddevice->name);
         goto cleanup;
     }

@@ -895,7 +895,7 @@ deploy_configuration(TSN_Enddevice *enddevice, bool is_listener, uint16_t listen
     UA_Client *client;
 
     // Check if the enddevice has a interface URI
-    if (!enddevice || !enddevice->interface_uri) {
+    if (!enddevice || !enddevice->interface_uri || strlen(enddevice->interface_uri) <= 1) {
         printf("[CUC][ERROR] Could not deploy stream configuration to enddevice (%s) because of missing interface URI!\n", enddevice->mac);
         // Send an error notification
         char *notif_msg = (char *) malloc(strlen("[CUC] Could not deploy stream configuration to enddevice () because of missing interface URI!") + strlen(enddevice->mac));
