@@ -64,6 +64,7 @@ RUN apt-get update && \
     apt-get install -y sudo && \
     apt-get install -y python3-pip && \
     apt-get install -y supervisor && \
+    apt-get install -y git && \
     pip install git+https://github.com/coderanger/supervisor-stdout
 
 #COPY --from=build /install/lib /usr/local/lib
