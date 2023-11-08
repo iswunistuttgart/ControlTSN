@@ -238,4 +238,13 @@ print_app(TSN_App app)
     for (int i=0; i<app.stream_mapping.count_ingress; ++i) {
         printf("      %s\n", app.stream_mapping.ingress[i]);
     }
+    printf("Associated Communication Flows:\n");
+    printf("   Egress (%d):\n", app.communication_flow_mapping.count_egress);
+    for (int i=0; i<app.communication_flow_mapping.count_egress; ++i) {
+        printf("      %d\n", app.communication_flow_mapping.egress[i]);
+    }
+    printf("   Ingress (%d):\n", app.communication_flow_mapping.count_ingress);
+    for (int i=0; i<app.communication_flow_mapping.count_ingress; ++i) {
+        printf("      %d\n", app.communication_flow_mapping.ingress[i]);
+    }
 }

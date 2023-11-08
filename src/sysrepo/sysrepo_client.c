@@ -290,7 +290,7 @@ cleanup:
 static int
 _read_interface_id(char *xpath, IEEE_InterfaceId **interface_id)
 {
-    int rc;
+    int rc = SR_ERR_OK;
     sr_val_t *val_mac_address = NULL;
     sr_val_t *val_interface_name = NULL;
     char *xpath_mac_address = NULL;
@@ -350,7 +350,7 @@ cleanup:
 static int
 _read_ieee802_mac_addresses(char *xpath, IEEE_MacAddresses **ma)
 {
-    int rc;
+    int rc = SR_ERR_OK;
     sr_val_t *val_destination_mac_address = NULL;
     sr_val_t *val_source_mac_address = NULL;
     char *xpath_destination_mac_address = NULL;
@@ -410,7 +410,7 @@ cleanup:
 static int
 _read_ieee802_vlan_tag(char *xpath, IEEE_VlanTag **vt)
 {
-    int rc;
+    int rc = SR_ERR_OK;
     sr_val_t *val_priority_code_point = NULL;
     sr_val_t *val_vlan_id = NULL;
     char *xpath_priority_code_point = NULL;
@@ -476,7 +476,7 @@ cleanup:
 static int
 _read_ipv4_tuple(char *xpath, IEEE_IPv4Tuple **ipv4)
 {
-    int rc;
+    int rc = SR_ERR_OK;
     sr_val_t *val_source_ip_address = NULL;
     sr_val_t *val_destination_ip_address = NULL;
     sr_val_t *val_dscp = NULL;
@@ -628,7 +628,7 @@ cleanup:
 static int
 _read_ipv6_tuple(char *xpath, IEEE_IPv6Tuple **ipv6)
 {
-    int rc;
+    int rc = SR_ERR_OK;
     sr_val_t *val_source_ip_address = NULL;
     sr_val_t *val_destination_ip_address = NULL;
     sr_val_t *val_dscp = NULL;
@@ -780,7 +780,7 @@ cleanup:
 static int
 _read_user_to_network_requirements(char *xpath, IEEE_UserToNetworkRequirements **utnr)
 {
-    int rc;
+    int rc = SR_ERR_OK;
     sr_val_t *val_num_seamless_trees = NULL;
     sr_val_t *val_max_latency = NULL;
     char *xpath_num_seamless_trees = NULL;
@@ -846,7 +846,7 @@ cleanup:
 static int
 _read_interface_capabilities(char *xpath, IEEE_InterfaceCapabilities **ic)
 {
-    int rc;
+    int rc = SR_ERR_OK;
     sr_val_t *val_vlan_tag_capable = NULL;
     sr_val_t *val_cb_stream_iden_type_list = NULL;
     sr_val_t *val_cb_sequence_type_list = NULL;
@@ -953,7 +953,7 @@ cleanup:
 static int
 _read_stream_rank(char *xpath, IEEE_StreamRank **sr)
 {
-    int rc;
+    int rc = SR_ERR_OK;
     sr_val_t *val_rank = NULL;
     char *xpath_rank = NULL;
 
@@ -995,7 +995,7 @@ cleanup:
 static int
 _read_data_frame_specification(char *xpath, IEEE_DataFrameSpecification **dfs)
 {
-    int rc;
+    int rc = SR_ERR_OK;
     sr_val_t *val_index = NULL;
     sr_val_t *val_root = NULL;
     char *xpath_index = NULL;
@@ -1139,7 +1139,7 @@ cleanup:
 static int
 _read_interval(char *xpath, IEEE_Interval **in)
 {
-    int rc;
+    int rc = SR_ERR_OK;
     sr_val_t *val_numerator = NULL;
     sr_val_t *val_denominator = NULL;
     char *xpath_numerator = NULL;
@@ -1205,7 +1205,7 @@ cleanup:
 static int
 _read_time_aware(char *xpath, IEEE_TimeAware **ta)
 {
-    int rc;
+    int rc = SR_ERR_OK;
     sr_val_t *val_earliest_transmit_offset = NULL;
     sr_val_t *val_latest_transmit_offset = NULL;
     sr_val_t *val_jitter = NULL;
@@ -1294,7 +1294,7 @@ cleanup:
 static int
 _read_traffic_specification(char *xpath, IEEE_TrafficSpecification **ts)
 {
-    int rc;
+    int rc = SR_ERR_OK;
     sr_val_t *val_max_frames_per_interval = NULL;
     sr_val_t *val_max_frame_size = NULL;
     sr_val_t *val_transmission_selection = NULL;
@@ -1421,7 +1421,7 @@ cleanup:
 static int
 _read_talker(char *xpath, TSN_Talker **talker)
 {
-    int rc;
+    int rc = SR_ERR_OK;
     sr_val_t *val_end_station_interfaces = NULL;
     sr_val_t *val_data_frame_specification = NULL;
     char *xpath_stream_rank = NULL;
@@ -1582,7 +1582,7 @@ cleanup:
 static int
 _read_listener(char *xpath, TSN_Listener **listener)
 {
-    int rc;
+    int rc = SR_ERR_OK;
     sr_val_t *val_index = NULL;
     sr_val_t *val_end_station_interfaces = NULL;
     char *xpath_index = NULL;
@@ -4209,7 +4209,7 @@ static int _write_app_stream_mapping(char *xpath, TSN_App_StreamMapping *mapping
 {
     char *xpath_egress = NULL;
     char *xpath_ingress = NULL;
-    int rc;
+    int rc = SR_ERR_OK;
 
     _create_xpath(xpath, "/egress", &xpath_egress);
     for (int i=0; i<mapping->count_egress; ++i) {
@@ -4238,7 +4238,7 @@ static int _write_app_communication_flow_mapping(char *xpath, TSN_App_Communicat
 {
     char *xpath_egress = NULL;
     char *xpath_ingress = NULL;
-    int rc;
+    int rc = SR_ERR_OK;
 
     _create_xpath(xpath, "/egress", &xpath_egress);
     for (int i=0; i<mapping->count_egress; ++i) {
