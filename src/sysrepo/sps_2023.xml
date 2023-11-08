@@ -91,6 +91,12 @@
         <has-mac>1</has-mac>
         <mac>d6-37-4d-15-83-17</mac>
         <iface>eth0.4003</iface>
+        <communication-flow-mapping>
+          <egress>5</egress>
+          <egress>19</egress>
+          <egress>20</egress>
+          <ingress>2</ingress>
+        </communication-flow-mapping>
       </app>
       <app>
         <id>PowerConsumer1_0.0.1</id>
@@ -102,6 +108,9 @@
         <has-mac>1</has-mac>
         <mac>48-21-0b-26-3f-ed</mac>
         <iface>enp88s0.4003</iface>
+        <communication-flow-mapping>
+          <ingress>3</ingress>
+        </communication-flow-mapping>
         <parameters>
           <parameter>
             <param-name>LowerEnergyBound</param-name>
@@ -151,6 +160,9 @@
         <has-mac>1</has-mac>
         <mac>48-21-0b-26-3d-8a</mac>
         <iface>enp88s0.4003</iface>
+        <communication-flow-mapping>
+          <ingress>4</ingress>
+        </communication-flow-mapping>
         <parameters>
           <parameter>
             <param-name>LowerEnergyBound</param-name>
@@ -205,16 +217,8 @@
         </stream-mapping>
       </app>
       <app>
-        <id>vOSACA02_0.0.1</id>
-        <name>vOSACA02</name>
-        <desc>The machine interface of the vOSACA 01</desc>
-        <version>0.0.1</version>
-        <has-image>0</has-image>
-        <has-mac>0</has-mac>
-      </app>
-      <app>
         <id>vOSACA_CTRL_0.0.1</id>
-        <name>vOSACA_CTRL</name>
+        <name>vOSACA CTRL</name>
         <desc>The controller of the vOSACAs</desc>
         <version>0.0.1</version>
         <has-image>0</has-image>
@@ -242,7 +246,7 @@
       </app>
       <app>
         <id>Panda_CTRL_0.0.1</id>
-        <name>Panda_CTRL</name>
+        <name>Panda CTRL</name>
         <desc>The controller of the Panda</desc>
         <version>0.0.1</version>
         <has-image>0</has-image>
@@ -255,6 +259,166 @@
         </stream-mapping>
       </app>
       <app>
+        <id>OPCUA_Server_Panda_0.0.1</id>
+        <name>OPCUA Server Panda</name>
+        <desc>An OPC UA Server of the Panda</desc>
+        <version>0.0.1</version>
+        <has-image>0</has-image>
+        <has-mac>1</has-mac>
+        <iface>enp8s0.4003</iface>
+        <mac>00-80-82-b7-92-a2</mac>
+        <communication-flow-mapping>
+          <egress>6</egress>
+          <egress>17</egress>
+          <egress>18</egress>
+        </communication-flow-mapping>
+      </app>
+      <app>
+        <id>OPCUA_Server_FiveX_0.0.1</id>
+        <name>OPCUA Server FiveX</name>
+        <desc>An OPC UA Server of the FiveX</desc>
+        <version>0.0.1</version>
+        <has-image>0</has-image>
+        <has-mac>1</has-mac>
+        <iface>eth0</iface>
+        <mac>00-00-00-00-00-07</mac>
+        <communication-flow-mapping>
+          <egress>8</egress>
+          <egress>13</egress>
+          <egress>14</egress>
+        </communication-flow-mapping>
+      </app>
+      <app>
+        <id>OPCUA_Client_MR_0.0.1</id>
+        <name>OPCUA Client MR</name>
+        <desc>An OPC UA Client for Mixed Reality</desc>
+        <version>0.0.1</version>
+        <has-image>0</has-image>
+        <has-mac>1</has-mac>
+        <iface>eth0</iface>
+        <mac>00-00-00-00-00-08</mac>
+        <communication-flow-mapping>
+          <ingress>12</ingress>
+          <ingress>14</ingress>
+          <ingress>16</ingress>
+          <ingress>18</ingress>
+          <ingress>20</ingress>
+        </communication-flow-mapping>
+      </app>
+      <app>
+        <id>OPCUA_Client_GS_0.0.1</id>
+        <name>OPCUA Client GS</name>
+        <desc>An OPC UA Client for the Simulation</desc>
+        <version>0.0.1</version>
+        <has-image>0</has-image>
+        <has-mac>1</has-mac>
+        <iface>eth0</iface>
+        <mac>00-00-00-00-00-09</mac>
+        <communication-flow-mapping>
+          <ingress>11</ingress>
+          <ingress>13</ingress>
+          <ingress>15</ingress>
+          <ingress>17</ingress>
+          <ingress>19</ingress>
+        </communication-flow-mapping>
+      </app>
+      <app>
+        <id>OPCUA_Server_LarA_0.0.1</id>
+        <name>OPCUA Server LarA</name>
+        <desc>An OPC UA Server of the LarA</desc>
+        <version>0.0.1</version>
+        <has-image>0</has-image>
+        <has-mac>1</has-mac>
+        <iface>eth0</iface>
+        <mac>00-00-00-00-00-12</mac>
+        <communication-flow-mapping>
+          <egress>7</egress>
+          <egress>15</egress>
+          <egress>16</egress>
+        </communication-flow-mapping>
+      </app>
+      <app>
+        <id>OPCUA_Server_OSACA_0.0.1</id>
+        <name>OPCUA Server OSACA</name>
+        <desc>An OPC UA Server of the OSCACA</desc>
+        <version>0.0.1</version>
+        <has-image>0</has-image>
+        <has-mac>1</has-mac>
+        <iface>eth0</iface>
+        <mac>00-00-00-00-00-10</mac>
+        <communication-flow-mapping>
+          <egress>9</egress>
+          <egress>11</egress>
+          <egress>12</egress>
+        </communication-flow-mapping>
+      </app>
+      <app>
+        <id>EDC_0.0.1</id>
+        <name>EDC</name>
+        <desc>Eclipse Dataspace Connector</desc>
+        <version>0.0.1</version>
+        <has-image>0</has-image>
+        <has-mac>1</has-mac>
+        <iface>eth0</iface>
+        <mac>00-00-00-00-00-10</mac>
+        <communication-flow-mapping>
+          <egress>10</egress>
+        </communication-flow-mapping>
+      </app>
+      <app>
+        <id>AAS_Server_0.0.1</id>
+        <name>AAS Server</name>
+        <desc>Asset Administration Shell</desc>
+        <version>0.0.1</version>
+        <has-image>0</has-image>
+        <has-mac>1</has-mac>
+        <iface>eth0</iface>
+        <mac>00-00-00-00-00-11</mac>
+        <communication-flow-mapping>
+          <ingress>10</ingress>
+        </communication-flow-mapping>
+      </app>
+      <app>
+        <id>StubCNC_0.0.1</id>
+        <name>Stub CNC</name>
+        <desc>Prototypical CNC</desc>
+        <version>0.0.1</version>
+        <has-image>0</has-image>
+        <has-mac>1</has-mac>
+        <iface>enp8s0.4003</iface>
+        <mac>00-80-82-b7-92-a2</mac>
+        <communication-flow-mapping>
+          <ingress>1</ingress>
+        </communication-flow-mapping>
+      </app>
+      <app>
+        <id>DataCollection_0.0.1</id>
+        <name>Data Collection</name>
+        <desc>Collects and stores Data from several Sources</desc>
+        <version>0.0.1</version>
+        <has-image>0</has-image>
+        <has-mac>1</has-mac>
+        <iface>eth0</iface>
+        <mac>00-00-00-00-00-11</mac>
+        <communication-flow-mapping>
+          <ingress>5</ingress>
+          <ingress>6</ingress>
+          <ingress>7</ingress>
+          <ingress>8</ingress>
+          <ingress>9</ingress>
+        </communication-flow-mapping>
+      </app>
+      <app>
+        <id>Dashboard_0.0.1</id>
+        <name>Dashboard</name>
+        <desc>Dashboard of the Stuttgarter Maschinenfabrik</desc>
+        <version>0.0.1</version>
+        <has-image>0</has-image>
+        <has-mac>1</has-mac>
+        <iface>eth0</iface>
+        <mac>00-00-00-00-00-11</mac>
+      </app>
+      <app>
         <id>EngineeringFramework_0.0.1</id>
         <name>EngineeringFramework</name>
         <desc>The engineering framework for orchestrating and configuring the applications and network</desc>
@@ -264,6 +428,12 @@
         <has-mac>1</has-mac>
         <mac>00-00-00-00-00-01</mac>
         <iface>enp8s0.4003</iface>
+        <communication-flow-mapping>
+          <egress>1</egress>
+          <egress>2</egress>
+          <egress>3</egress>
+          <egress>4</egress>
+        </communication-flow-mapping>
       </app>
     </apps>
     <images>
@@ -341,7 +511,13 @@
               <app-ref>EngineeringFramework_0.0.1</app-ref>
             </app>
             <app>
+              <app-ref>StubCNC_0.0.1</app-ref>
+            </app>
+            <app>
               <app-ref>Panda_CTRL_0.0.1</app-ref>
+            </app>
+            <app>
+              <app-ref>OPCUA_Server_Panda_0.0.1</app-ref>
             </app>
           </apps>
         </enddevice>
@@ -393,12 +569,91 @@
           </apps>
         </enddevice>
         <enddevice>
-          <mac>00-00-00-00-00-06</mac>
+          <mac>00-00-00-00-00-07</mac>
           <iface>eth0</iface>
-          <name>vOSACA 2</name>
+          <name>FiveX</name>
           <num-cores>1</num-cores>
+          <has-app>1</has-app>
           <interface-uri/>
-          <has-app>0</has-app>
+          <apps>
+            <app>
+              <app-ref>OPCUA_Server_FiveX_0.0.1</app-ref>
+            </app>
+          </apps>
+        </enddevice>
+        <enddevice>
+          <mac>00-00-00-00-00-08</mac>
+          <iface>eth0</iface>
+          <name>Mixed Reality</name>
+          <num-cores>1</num-cores>
+          <has-app>1</has-app>
+          <interface-uri/>
+          <apps>
+            <app>
+              <app-ref>OPCUA_Client_MR_0.0.1</app-ref>
+            </app>
+          </apps>
+        </enddevice>
+         <enddevice>
+          <mac>00-00-00-00-00-09</mac>
+          <iface>eth0</iface>
+          <name>Gesamtsimulation</name>
+          <num-cores>1</num-cores>
+          <has-app>1</has-app>
+          <interface-uri/>
+          <apps>
+            <app>
+              <app-ref>OPCUA_Client_GS_0.0.1</app-ref>
+            </app>
+          </apps>
+        </enddevice>
+         <enddevice>
+          <mac>00-00-00-00-00-10</mac>
+          <iface>eth0</iface>
+          <name>OSACA</name>
+          <num-cores>1</num-cores>
+          <has-app>1</has-app>
+          <interface-uri/>
+          <apps>
+            <app>
+              <app-ref>EDC_0.0.1</app-ref>
+            </app>
+            <app>
+              <app-ref>OPCUA_Server_OSACA_0.0.1</app-ref>
+            </app>
+          </apps>
+        </enddevice>
+        <enddevice>
+          <mac>00-00-00-00-00-11</mac>
+          <iface>eth0</iface>
+          <name>Cloud</name>
+          <num-cores>1</num-cores>
+          <has-app>1</has-app>
+          <interface-uri/>
+          <apps>
+            <app>
+              <app-ref>AAS_Server_0.0.1</app-ref>
+            </app>
+            <app>
+              <app-ref>DataCollection_0.0.1</app-ref>
+            </app>
+            <app>
+              <app-ref>Dashboard_0.0.1</app-ref>
+            </app>
+          </apps>
+        </enddevice>
+        <enddevice>
+          <mac>00-00-00-00-00-12</mac>
+          <iface>eth0</iface>
+          <name>LarA</name>
+          <num-cores>1</num-cores>
+          <has-app>1</has-app>
+          <interface-uri/>
+          <apps>
+            <app>
+              <app-ref>OPCUA_Server_LarA_0.0.1</app-ref>
+            </app>
+          </apps>
         </enddevice>
       </enddevices>
       <switches>
@@ -437,13 +692,6 @@
     <graph>
       <connections>
         <connection>
-          <id>4</id>
-          <from-mac>01-02-03-04-05-09</from-mac>
-          <from-port>1</from-port>
-          <to-mac>00-00-00-00-00-03</to-mac>
-          <to-port>0</to-port>
-        </connection>
-        <connection>
           <id>5</id>
           <from-mac>01-02-03-04-05-09</from-mac>
           <from-port>3</from-port>
@@ -470,13 +718,6 @@
           <from-port>0</from-port>
           <to-mac>01-02-03-04-05-09</to-mac>
           <to-port>4</to-port>
-        </connection>
-        <connection>
-          <id>10</id>
-          <from-mac>01-02-03-04-05-11</from-mac>
-          <from-port>6</from-port>
-          <to-mac>01-02-03-04-05-09</to-mac>
-          <to-port>0</to-port>
         </connection>
         <connection>
           <id>11</id>
@@ -526,6 +767,62 @@
           <from-port>2</from-port>
           <to-mac>01-02-03-04-05-07</to-mac>
           <to-port>5</to-port>
+        </connection>
+        <connection>
+          <id>18</id>
+          <from-mac>01-02-03-04-05-09</from-mac>
+          <from-port>0</from-port>
+          <to-mac>01-02-03-04-05-11</to-mac>
+          <to-port>7</to-port>
+        </connection>
+        <connection>
+          <id>19</id>
+          <from-mac>00-00-00-00-00-03</from-mac>
+          <from-port>0</from-port>
+          <to-mac>01-02-03-04-05-11</to-mac>
+          <to-port>1</to-port>
+        </connection>
+        <connection>
+          <id>20</id>
+          <from-mac>00-00-00-00-00-11</from-mac>
+          <from-port>0</from-port>
+          <to-mac>01-02-03-04-05-11</to-mac>
+          <to-port>3</to-port>
+        </connection>
+        <connection>
+          <id>21</id>
+          <from-mac>00-00-00-00-00-08</from-mac>
+          <from-port>0</from-port>
+          <to-mac>01-02-03-04-05-11</to-mac>
+          <to-port>0</to-port>
+        </connection>
+        <connection>
+          <id>22</id>
+          <from-mac>00-00-00-00-00-09</from-mac>
+          <from-port>0</from-port>
+          <to-mac>01-02-03-04-05-11</to-mac>
+          <to-port>2</to-port>
+        </connection>
+        <connection>
+          <id>23</id>
+          <from-mac>00-00-00-00-00-10</from-mac>
+          <from-port>0</from-port>
+          <to-mac>01-02-03-04-05-11</to-mac>
+          <to-port>4</to-port>
+        </connection>
+        <connection>
+          <id>24</id>
+          <from-mac>00-00-00-00-00-07</from-mac>
+          <from-port>0</from-port>
+          <to-mac>01-02-03-04-05-11</to-mac>
+          <to-port>6</to-port>
+        </connection>
+        <connection>
+          <id>25</id>
+          <from-mac>01-02-03-04-05-11</from-mac>
+          <from-port>5</from-port>
+          <to-mac>00-00-00-00-00-12</to-mac>
+          <to-port>0</to-port>
         </connection>
       </connections>
     </graph>
@@ -1037,4 +1334,126 @@
       </configuration>
     </stream>
   </streams>
+  <communication-flows>
+    <communication-flow>
+      <id>1</id>
+      <traffic-class>0</traffic-class>
+      <payload-size>0</payload-size>
+      <ethertype>2048</ethertype>
+    </communication-flow>
+    <communication-flow>
+      <id>2</id>
+      <traffic-class>3</traffic-class>
+      <payload-size>0</payload-size>
+      <ethertype>2048</ethertype>
+    </communication-flow>
+    <communication-flow>
+      <id>3</id>
+      <traffic-class>3</traffic-class>
+      <payload-size>0</payload-size>
+      <ethertype>2048</ethertype>
+    </communication-flow>
+    <communication-flow>
+      <id>4</id>
+      <traffic-class>3</traffic-class>
+      <payload-size>0</payload-size>
+      <ethertype>2048</ethertype>
+    </communication-flow>
+    <communication-flow>
+      <id>5</id>
+      <traffic-class>0</traffic-class>
+      <payload-size>0</payload-size>
+      <ethertype>2048</ethertype>
+    </communication-flow>
+    <communication-flow>
+      <id>6</id>
+      <traffic-class>0</traffic-class>
+      <payload-size>0</payload-size>
+      <ethertype>2048</ethertype>
+    </communication-flow>
+    <communication-flow>
+      <id>7</id>
+      <traffic-class>0</traffic-class>
+      <payload-size>0</payload-size>
+      <ethertype>2048</ethertype>
+    </communication-flow>
+    <communication-flow>
+      <id>8</id>
+      <traffic-class>0</traffic-class>
+      <payload-size>0</payload-size>
+      <ethertype>2048</ethertype>
+    </communication-flow>
+    <communication-flow>
+      <id>9</id>
+      <traffic-class>0</traffic-class>
+      <payload-size>0</payload-size>
+      <ethertype>2048</ethertype>
+    </communication-flow>
+    <communication-flow>
+      <id>10</id>
+      <traffic-class>0</traffic-class>
+      <payload-size>0</payload-size>
+      <ethertype>2048</ethertype>
+    </communication-flow>
+    <communication-flow>
+      <id>11</id>
+      <traffic-class>0</traffic-class>
+      <payload-size>0</payload-size>
+      <ethertype>2048</ethertype>
+    </communication-flow>
+    <communication-flow>
+      <id>12</id>
+      <traffic-class>0</traffic-class>
+      <payload-size>0</payload-size>
+      <ethertype>2048</ethertype>
+    </communication-flow>
+    <communication-flow>
+      <id>13</id>
+      <traffic-class>0</traffic-class>
+      <payload-size>0</payload-size>
+      <ethertype>2048</ethertype>
+    </communication-flow>
+    <communication-flow>
+      <id>14</id>
+      <traffic-class>0</traffic-class>
+      <payload-size>0</payload-size>
+      <ethertype>2048</ethertype>
+    </communication-flow>
+    <communication-flow>
+      <id>15</id>
+      <traffic-class>0</traffic-class>
+      <payload-size>0</payload-size>
+      <ethertype>2048</ethertype>
+    </communication-flow>
+    <communication-flow>
+      <id>16</id>
+      <traffic-class>0</traffic-class>
+      <payload-size>0</payload-size>
+      <ethertype>2048</ethertype>
+    </communication-flow>
+    <communication-flow>
+      <id>17</id>
+      <traffic-class>0</traffic-class>
+      <payload-size>0</payload-size>
+      <ethertype>2048</ethertype>
+    </communication-flow>
+    <communication-flow>
+      <id>18</id>
+      <traffic-class>0</traffic-class>
+      <payload-size>0</payload-size>
+      <ethertype>2048</ethertype>
+    </communication-flow>
+    <communication-flow>
+      <id>19</id>
+      <traffic-class>0</traffic-class>
+      <payload-size>0</payload-size>
+      <ethertype>2048</ethertype>
+    </communication-flow>
+    <communication-flow>
+      <id>20</id>
+      <traffic-class>0</traffic-class>
+      <payload-size>0</payload-size>
+      <ethertype>2048</ethertype>
+    </communication-flow>
+  </communication-flows>
 </tsn-uni>
