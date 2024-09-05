@@ -139,7 +139,7 @@
           <parameter>
             <param-name>LEDsCount</param-name>
             <param-type>uint16</param-type>
-            <param-value>282</param-value>
+            <param-value>288</param-value>
             <param-desc>How much LEDs are on the connected Stripe</param-desc>
           </parameter>
           <parameter>
@@ -191,7 +191,7 @@
           <parameter>
             <param-name>LEDsCount</param-name>
             <param-type>uint16</param-type>
-            <param-value>282</param-value>
+            <param-value>288</param-value>
             <param-desc>How much LEDs are on the connected Stripe</param-desc>
           </parameter>
           <parameter>

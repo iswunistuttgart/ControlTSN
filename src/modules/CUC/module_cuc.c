@@ -117,7 +117,6 @@ cnc_compute_requests(TSN_Streams *streams)
 
         // Write Configurations back to sysrepo
         if (json_body != NULL) {
-            printf("[CUC] Received response from CNC\n");
 
 #if EMULATE_OPENCNC
             TSN_Streams *streams = deserialize_cnc_response(json_body);
@@ -128,8 +127,6 @@ cnc_compute_requests(TSN_Streams *streams)
                 rc = stream_set_computed(streams->streams[i].stream_id, streams->streams[i].configuration);
                 if (rc != EXIT_SUCCESS) {
                     printf("[CUC] Error writing stream (ID: %s) configuration to the datastore!\n", streams->streams[i].stream_id);
-                } else {
-                    printf("[CUC] Successfully written stream (ID: %s) configuration to datastore!\n", streams->streams[i].stream_id);
                 }
             }
         }
@@ -691,9 +688,6 @@ cleanup:
 static void
 deploy_communication_engineering(UA_Client *client, bool is_listener, uint16_t listener_nr, TSN_Stream *stream, TSN_Enddevice *enddevice)
 {
-    printf("################# deploy_comm_engineering\n");
-    printf("----------------------> Trying to deploy configuration to '%s'\n", enddevice->name);
-
     int rc;
     UA_StatusCode ret;
     UA_Variant *variant;
@@ -733,14 +727,10 @@ deploy_communication_engineering(UA_Client *client, bool is_listener, uint16_t l
         UA_String interface;
         // Find the Talker App to get the specified interface
         for (int i=0; i<all_apps->count_apps; ++i) {
-            for (int k=0; k<enddevice->count_apps; k++) {
-                if (strcmp(enddevice->apps[k].app_ref, all_apps->apps[i].id) == 0) {
-                    for (int j=0; j<all_apps->apps[i].stream_mapping.count_egress; ++j) {
-                        if (strcmp(all_apps->apps[i].stream_mapping.egress[j], stream->stream_id) == 0) {
-                            app_talker = &all_apps->apps[i];
-                            interface = UA_String_fromChars(app_talker->iface);
-                        }
-                    }
+            for (int j=0; j<all_apps->apps[i].stream_mapping.count_egress; ++j) {
+                if (strcmp(all_apps->apps[i].stream_mapping.egress[j], stream->stream_id) == 0) {
+                    app_talker = &all_apps->apps[i];
+                    interface = UA_String_fromChars(app_talker->iface);
                 }
             }
         }
@@ -888,19 +878,8 @@ deploy_communication_engineering(UA_Client *client, bool is_listener, uint16_t l
         printf("[CUC][ERROR] Could not trigger re-configuration!\n");
     }
 
-    if (is_listener) {
-        if (app_listener != NULL) {
-            printf("[CUC] Engineering parameters written to app '%s' [%s]. Waiting for START signal...\n\n", !is_listener ? app_talker->name : app_listener->name, !is_listener ? "TALKER" : "LISTENER");
-        } else {
-            printf("[CUC] Engineering parameters written to Listener on '%s' (used fallback interface, because app was not found). Waiting for START signal...\n\n", enddevice->name);
-        }
-    } else {
-        if (app_talker != NULL) {
-            printf("[CUC] Engineering parameters written to app '%s' [%s]. Waiting for START signal...\n\n", !is_listener ? app_talker->name : app_listener->name, !is_listener ? "TALKER" : "LISTENER");
-        } else {
-            printf("[CUC] Engineering parameters written to Talker on '%s' (used fallback interface, because app was not found). Waiting for START signal...\n\n", enddevice->name);
-        }
-    }
+    printf("[CUC] Engineering parameters written to app '%s' [%s]. Waiting for START signal...\n\n", !is_listener ? app_talker->name : app_listener->name, !is_listener ? "TALKER" : "LISTENER");
+
 cleanup:
     UA_Variant_delete(variant);
     free(all_apps);
@@ -916,13 +895,12 @@ deploy_configuration(TSN_Enddevice *enddevice, bool is_listener, uint16_t listen
     UA_Client *client;
 
     // Check if the enddevice has a interface URI
-    if (!enddevice || enddevice->interface_uri == NULL || strlen(enddevice->interface_uri) == 0) {
+    if (!enddevice || !enddevice->interface_uri) {
         printf("[CUC][ERROR] Could not deploy stream configuration to enddevice (%s) because of missing interface URI!\n", enddevice->mac);
         // Send an error notification
         char *notif_msg = (char *) malloc(strlen("[CUC] Could not deploy stream configuration to enddevice () because of missing interface URI!") + strlen(enddevice->mac));
         sprintf(notif_msg, "[CUC] Could not deploy stream configuration to enddevice (%s) because of missing interface URI!", enddevice->mac);
         rc = sysrepo_send_notification(EVENT_ERROR, NULL, notif_msg);
-        return EXIT_FAILURE;
     }
 
     // Connect to the server
@@ -939,7 +917,7 @@ deploy_configuration(TSN_Enddevice *enddevice, bool is_listener, uint16_t listen
         rc = sysrepo_send_notification(EVENT_ERROR, NULL, notif_msg);
         
         UA_Client_delete(client);
-        printf("[CUC] OPC UA client closed with error\n");
+        printf("[CUC] OPC UA client closed\n");
         return EXIT_FAILURE;
     }
 
@@ -953,6 +931,7 @@ deploy_configuration(TSN_Enddevice *enddevice, bool is_listener, uint16_t listen
 cleanup:
 
     UA_Client_delete(client);
+    printf("[CUC] OPC UA client closed\n");
 
     return EXIT_SUCCESS;
 }

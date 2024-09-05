@@ -165,7 +165,6 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
                     }
                     else
                     {
-                        printf("[PLUGIN] Successfully sent notification 'EVENT_STREAM_DELETED'!\n");
                         already_send_mask |= EVENT_STREAM_DELETED;
                     }
                 }
@@ -201,7 +200,6 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
                         }
                         else
                         {
-                            printf("[PLUGIN] Successfully sent notification 'EVENT_STREAM_REQUESTED'!\n");
                             already_send_mask |= EVENT_STREAM_REQUESTED;
                         }
                     }
@@ -231,7 +229,6 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
                     }
                     else
                     {
-                        printf("[PLUGIN] Successfully sent notification 'EVENT_STREAM_CONFIGURED'!\n");
                         already_send_mask |= EVENT_STREAM_CONFIGURED;
                     }
                 }
@@ -257,7 +254,6 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
                     }
                     else
                     {
-                        printf("[PLUGIN] Successfully sent notification 'EVENT_MODULE_ADDED'!\n");
                         already_send_mask |= EVENT_MODULE_ADDED;
                     }
                 }
@@ -278,7 +274,6 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
                 }
                 else
                 {
-                    printf("[PLUGIN] Successfully sent notification '%s'!\n", (registered ? "EVENT_MODULE_REGISTERED" : "EVENT_MODULE_UNREGISTERED"));
                     already_send_mask |= (registered ? EVENT_MODULE_REGISTERED : EVENT_MODULE_UNREGISTERED);
                 }
             }
@@ -296,7 +291,6 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
                     }
                     else
                     {
-                        printf("[PLUGIN] Successfully sent notification 'EVENT_MODULE_DATA_UPDATED'!\n");
                         already_send_mask |= EVENT_MODULE_DATA_UPDATED;
                     }
                 }
@@ -315,7 +309,6 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
                     }
                     else
                     {
-                        printf("[PLUGIN] Successfully sent notification 'EVENT_MODULE_DELETED'!\n");
                         already_send_mask |= EVENT_MODULE_DELETED;
                     }
                 }
@@ -340,7 +333,6 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
                     }
                     else
                     {
-                        printf("[PLUGIN] Successfully sent notification 'EVENT_TOPOLOGY_DISCOVERED'!\n");
                         already_send_mask |= EVENT_TOPOLOGY_DISCOVERED;
                     }
 
@@ -373,7 +365,6 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
                         if (rc == EXIT_FAILURE) {
                             printf("[PLUGIN] Failed to send notification '%s'!\n", "EVENT_CONFIGURATION_CHANGED");
                         } else {
-                            printf("[PLUGIN] Successfully sent notification 'EVENT_CONFIGURATION_CHANGED'!\n");
                             already_send_mask |= EVENT_CONFIGURATION_CHANGED;
                         }
                     }
@@ -421,7 +412,6 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
                                 if (rc == EXIT_FAILURE) {
                                     printf("[PLUGIN] Failed to send notification 'EVENT_STREAM_LISTENER_JOINED'!\n");
                                 } else {
-                                    printf("[PLUGIN] Successfully sent notification 'EVENT_STREAM_LISTENER_JOINED'!\n");
                                     already_send_mask |= EVENT_STREAM_LISTENER_JOINED;
                                 }
 
@@ -430,7 +420,6 @@ _module_change_cb(sr_session_ctx_t *session, const char *module_name, const char
                                 if (rc == EXIT_FAILURE) {
                                     printf("[PLUGIN] Failed to send notification 'EVENT_STREAM_LISTENER_LEFT'!\n");
                                 } else {
-                                    printf("[PLUGIN] Successfully sent notification 'EVENT_STREAM_LISTENER_LEFT'!\n");
                                     already_send_mask |= EVENT_STREAM_LISTENER_LEFT;
                                 }
                             }
