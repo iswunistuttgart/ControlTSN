@@ -554,13 +554,12 @@ _write_stream_sendreceive_flag(const TSN_Enddevice *enddevice, bool enable)
     UA_Client *client;
     UA_Variant *variant;
 
-    variant = UA_Variant_new();
-
-    if (!enddevice->interface_uri) {
+    if (enddevice->interface_uri == NULL || strlen(enddevice->interface_uri) == 0) {
         printf("[COMMON][OPCUA][ERROR] No configuration interface specified for enddevice %s!\n", enddevice->name);
-        goto cleanup;
+        return EXIT_FAILURE;
     }
 
+    variant = UA_Variant_new();
     // Connect to the server
     client = UA_Client_new();
     UA_ClientConfig *config = UA_Client_getConfig(client);
@@ -568,7 +567,7 @@ _write_stream_sendreceive_flag(const TSN_Enddevice *enddevice, bool enable)
     
     ret = UA_Client_connect(client, enddevice->interface_uri);
     if (ret != UA_STATUSCODE_GOOD) {
-        printf("[COMMON][OPCUA][ERROR] Could not connect to OPC UA Server '%s'\n", enddevice->interface_uri);
+        printf("[COMMON][OPCUA][ERROR] Could not connect to OPC UA Server '%s' of '%s'\n", enddevice->interface_uri, enddevice->name);
         goto cleanup;
     }
 
@@ -598,14 +597,15 @@ _read_stream_sendreceive_flag(const TSN_Enddevice *enddevice)
     UA_StatusCode ret;
     UA_Client *client;
     UA_Variant *value;
-    value = UA_Variant_new();
 
     UA_Boolean enabled = UA_FALSE;
 
-    if (!enddevice->interface_uri) {
+    if (enddevice->interface_uri == NULL || strlen(enddevice->interface_uri) == 0) {
         printf("[COMMON][OPCUA][ERROR] No configuration interface specified for enddevice %s!\n", enddevice->name);
-        goto cleanup;
+        return false;
     }
+
+    value = UA_Variant_new();
 
     // Connect to the server
     client = UA_Client_new();
@@ -614,7 +614,7 @@ _read_stream_sendreceive_flag(const TSN_Enddevice *enddevice)
     
     ret = UA_Client_connect(client, enddevice->interface_uri);
     if (ret != UA_STATUSCODE_GOOD) {
-        printf("[COMMON][OPCUA][ERROR] Could not connect to OPC UA Server '%s'\n", enddevice->interface_uri);
+        printf("[COMMON][OPCUA][ERROR] Could not connect to OPC UA Server '%s' of '%s'\n", enddevice->interface_uri, enddevice->name);
         goto cleanup;
     }
 
@@ -895,12 +895,13 @@ _write_app_parameters(const TSN_Enddevice *enddevice, TSN_App *app)
     UA_Client *client;
     UA_Variant *variant;
 
-    variant = UA_Variant_new();
 
-    if (!enddevice->interface_uri) {
+    if (enddevice->interface_uri == NULL || strlen(enddevice->interface_uri) == 0) {
         printf("[COMMON][OPCUA][ERROR] No configuration interface specified for enddevice %s!\n", enddevice->name);
-        goto cleanup;
+        return EXIT_FAILURE;
     }
+
+    variant = UA_Variant_new();
 
     // Connect to the server
     client = UA_Client_new();
@@ -909,8 +910,10 @@ _write_app_parameters(const TSN_Enddevice *enddevice, TSN_App *app)
     
     ret = UA_Client_connect(client, enddevice->interface_uri);
     if (ret != UA_STATUSCODE_GOOD) {
-        printf("[COMMON][OPCUA][ERROR] Could not connect to OPC UA Server '%s'\n", enddevice->interface_uri);
-        goto cleanup;
+        printf("[COMMON][OPCUA][ERROR] Could not connect to OPC UA Server '%s' of '%s'\n", enddevice->interface_uri, enddevice->name);
+        UA_Variant_delete(variant);
+        UA_Client_delete(client);
+        return EXIT_FAILURE;
     }
 
     #define APP_PARAMS_ROOT_FOLDER_NAMESPACE_INDEX 8
@@ -944,7 +947,6 @@ _write_app_parameters(const TSN_Enddevice *enddevice, TSN_App *app)
         for (int i=0; i<response.resultsSize; i++) {
             if (response.results[i].statusCode == UA_STATUSCODE_GOOD) {
                 UA_NodeId nodeId = response.results[i].targets[0].targetId.nodeId;
-                printf("Response #%d:  %d\n", i, nodeId.identifier.numeric);
 
                 // Write param value to node
                 // Convert param type to OPC UA Type...

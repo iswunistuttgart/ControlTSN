@@ -5,7 +5,7 @@
     </NamespaceUris>
     <Models>
         <Model ModelUri="http://isw.uni-stuttgart.de/UA/TSN_DEP" PublicationDate="2023-03-20T12:47:59Z" Version="1.0.0">
-            <RequiredModel ModelUri="http://opcfoundation.org/UA/" PublicationDate="2022-11-01T00:00:00Z" Version="1.05.02"/>
+            <RequiredModel ModelUri="http://opcfoundation.org/UA/" PublicationDate="2022-01-24T00:00:00Z" Version="1.05.01"/>
         </Model>
     </Models>
     <Aliases>
@@ -27,7 +27,7 @@
     </Aliases>
     <Extensions>
         <Extension>
-            <ua:ModelInfo Tool="UaModeler" Hash="gXvbS35KaI/Eq4//B1yV9g==" Version="1.6.9"/>
+            <ua:ModelInfo Tool="UaModeler" Hash="Itkv/4Rc6uOn7WtLE0O1lw==" Version="1.6.7"/>
         </Extension>
     </Extensions>
     <UAObjectType NodeId="ns=1;i=1003" BrowseName="1:TSNEngineeringType">
@@ -42,6 +42,7 @@
             <Reference ReferenceType="HasComponent">ns=1;i=6023</Reference>
             <Reference ReferenceType="HasComponent">ns=1;i=6020</Reference>
             <Reference ReferenceType="HasComponent">ns=1;i=6021</Reference>
+            <Reference ReferenceType="HasComponent">ns=1;i=6042</Reference>
             <Reference ReferenceType="HasComponent">ns=1;i=6002</Reference>
             <Reference ReferenceType="HasComponent">ns=1;i=6026</Reference>
             <Reference ReferenceType="HasComponent">ns=1;i=6006</Reference>
@@ -52,14 +53,15 @@
             <Reference ReferenceType="HasComponent">ns=1;i=6030</Reference>
             <Reference ReferenceType="HasComponent">ns=1;i=7001</Reference>
             <Reference ReferenceType="HasSubtype" IsForward="false">i=58</Reference>
+            <Reference ReferenceType="HasComponent">ns=1;i=6044</Reference>
         </References>
     </UAObjectType>
     <UAVariable DataType="UInt64" ParentNodeId="ns=1;i=1003" NodeId="ns=1;i=6001" BrowseName="1:BaseTime" AccessLevel="3">
         <DisplayName>BaseTime</DisplayName>
         <Description>UNIX timestamp as start time for execution [ns]</Description>
         <References>
-            <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
             <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1003</Reference>
         </References>
     </UAVariable>
@@ -67,8 +69,8 @@
         <DisplayName>CycleTime</DisplayName>
         <Description>The duration of a single cycle [µs]</Description>
         <References>
-            <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
             <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1003</Reference>
         </References>
         <Value>
@@ -79,8 +81,8 @@
         <DisplayName>DestinationMAC</DisplayName>
         <Description>The destination MAC where the frame should be sent to [XX-XX-XX-XX-XX-XX]</Description>
         <References>
-            <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
             <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1003</Reference>
         </References>
         <Value>
@@ -91,8 +93,8 @@
         <DisplayName>DestinationUdpAddress</DisplayName>
         <Description>The destination UDP-Address inkluding Port-Number where the frame should be sent to [XXX.XXX.XXX.XXX:PORT]</Description>
         <References>
-            <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
             <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1003</Reference>
         </References>
         <Value>
@@ -103,8 +105,8 @@
         <DisplayName>Interface</DisplayName>
         <Description>The name of the network interface to use</Description>
         <References>
-            <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
             <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1003</Reference>
         </References>
         <Value>
@@ -114,8 +116,8 @@
     <UAVariable DataType="UInt16" ParentNodeId="ns=1;i=1003" NodeId="ns=1;i=6022" BrowseName="1:ListenerDataSetWriterId" AccessLevel="3">
         <DisplayName>ListenerDataSetWriterId</DisplayName>
         <References>
-            <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
             <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1003</Reference>
         </References>
     </UAVariable>
@@ -123,33 +125,45 @@
         <DisplayName>ListenerId</DisplayName>
         <Description>Subscriber Id (numeric)</Description>
         <References>
-            <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
             <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1003</Reference>
         </References>
     </UAVariable>
     <UAVariable DataType="UInt16" ParentNodeId="ns=1;i=1003" NodeId="ns=1;i=6020" BrowseName="1:ListenerPublisherId" AccessLevel="3">
         <DisplayName>ListenerPublisherId</DisplayName>
         <References>
-            <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
             <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1003</Reference>
         </References>
     </UAVariable>
     <UAVariable DataType="UInt16" ParentNodeId="ns=1;i=1003" NodeId="ns=1;i=6021" BrowseName="1:ListenerWriterGroupId" AccessLevel="3">
         <DisplayName>ListenerWriterGroupId</DisplayName>
         <References>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
+            <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1003</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="Byte" ParentNodeId="ns=1;i=1003" NodeId="ns=1;i=6042" BrowseName="1:PCP" AccessLevel="3">
+        <DisplayName>PCP</DisplayName>
+        <Description>PCP field for the Q-Header</Description>
+        <References>
             <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
             <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1003</Reference>
         </References>
+        <Value>
+            <uax:Byte>0</uax:Byte>
+        </Value>
     </UAVariable>
     <UAVariable DataType="UInt32" ParentNodeId="ns=1;i=1003" NodeId="ns=1;i=6002" BrowseName="1:QbvOffset" AccessLevel="3">
         <DisplayName>QbvOffset</DisplayName>
         <Description>The offset to the interval start at which the frame is to be sent (cf. IEEE 802.1Qbv) [µs]</Description>
         <References>
-            <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
             <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1003</Reference>
         </References>
         <Value>
@@ -160,8 +174,8 @@
         <DisplayName>SendReceiveEnabled</DisplayName>
         <Description>Whether the endpoint is sending (and/or receiving) data or not</Description>
         <References>
-            <Reference ReferenceType="HasModellingRule">i=78</Reference>
             <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
             <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1003</Reference>
         </References>
         <Value>
@@ -172,8 +186,8 @@
         <DisplayName>SocketPriority</DisplayName>
         <Description>The priority of the socket to use</Description>
         <References>
-            <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
             <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1003</Reference>
         </References>
         <Value>
@@ -184,8 +198,8 @@
         <DisplayName>SourceMAC</DisplayName>
         <Description>The source MAC where the frame should be sent from [XX-XX-XX-XX-XX-XX]</Description>
         <References>
-            <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
             <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1003</Reference>
         </References>
         <Value>
@@ -196,8 +210,8 @@
         <DisplayName>SourceUdpAddress</DisplayName>
         <Description>The source UDP-Address inkluding Port-Number where the frame should be sent from [XXX.XXX.XXX.XXX:PORT]</Description>
         <References>
-            <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
             <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1003</Reference>
         </References>
         <Value>
@@ -207,8 +221,8 @@
     <UAVariable DataType="UInt16" ParentNodeId="ns=1;i=1003" NodeId="ns=1;i=6031" BrowseName="1:TalkerDataSetWriterId" AccessLevel="3">
         <DisplayName>TalkerDataSetWriterId</DisplayName>
         <References>
-            <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
             <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1003</Reference>
         </References>
     </UAVariable>
@@ -216,8 +230,8 @@
         <DisplayName>TalkerId</DisplayName>
         <Description>Publisher Id (numeric)</Description>
         <References>
-            <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
             <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1003</Reference>
         </References>
         <Value>
@@ -227,8 +241,8 @@
     <UAVariable DataType="UInt16" ParentNodeId="ns=1;i=1003" NodeId="ns=1;i=6030" BrowseName="1:TalkerWriterGroupId" AccessLevel="3">
         <DisplayName>TalkerWriterGroupId</DisplayName>
         <References>
-            <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
             <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1003</Reference>
         </References>
     </UAVariable>
@@ -239,6 +253,18 @@
             <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1003</Reference>
         </References>
     </UAMethod>
+    <UAVariable DataType="UInt16" ParentNodeId="ns=1;i=1003" NodeId="ns=1;i=6044" BrowseName="1:VLANId" AccessLevel="3">
+        <DisplayName>VLANId</DisplayName>
+        <Description>VLAN ID to use</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1003</Reference>
+        </References>
+        <Value>
+            <uax:UInt16>1</uax:UInt16>
+        </Value>
+    </UAVariable>
     <UAObject EventNotifier="1" NodeId="ns=1;i=5001" BrowseName="1:PubSubEngineering">
         <DisplayName>PubSubEngineering</DisplayName>
         <References>
@@ -252,6 +278,7 @@
             <Reference ReferenceType="HasComponent">ns=1;i=6025</Reference>
             <Reference ReferenceType="HasComponent">ns=1;i=6027</Reference>
             <Reference ReferenceType="HasComponent">ns=1;i=6029</Reference>
+            <Reference ReferenceType="HasComponent">ns=1;i=6043</Reference>
             <Reference ReferenceType="Organizes" IsForward="false">i=85</Reference>
             <Reference ReferenceType="HasComponent">ns=1;i=6032</Reference>
             <Reference ReferenceType="HasComponent">ns=1;i=6034</Reference>
@@ -262,6 +289,7 @@
             <Reference ReferenceType="HasComponent">ns=1;i=6039</Reference>
             <Reference ReferenceType="HasComponent">ns=1;i=6040</Reference>
             <Reference ReferenceType="HasComponent">ns=1;i=7002</Reference>
+            <Reference ReferenceType="HasComponent">ns=1;i=6045</Reference>
         </References>
     </UAObject>
     <UAVariable DataType="UInt64" ParentNodeId="ns=1;i=5001" NodeId="ns=1;i=6007" BrowseName="1:BaseTime" AccessLevel="3">
@@ -344,6 +372,17 @@
             <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
             <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=5001</Reference>
         </References>
+    </UAVariable>
+    <UAVariable DataType="Byte" ParentNodeId="ns=1;i=5001" NodeId="ns=1;i=6043" BrowseName="1:PCP" AccessLevel="3">
+        <DisplayName>PCP</DisplayName>
+        <Description>PCP field for the Q-Header</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
+            <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=5001</Reference>
+        </References>
+        <Value>
+            <uax:Byte>0</uax:Byte>
+        </Value>
     </UAVariable>
     <UAVariable DataType="UInt32" ParentNodeId="ns=1;i=5001" NodeId="ns=1;i=6032" BrowseName="1:QbvOffset" AccessLevel="3">
         <DisplayName>QbvOffset</DisplayName>
@@ -431,6 +470,17 @@
             <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=5001</Reference>
         </References>
     </UAMethod>
+    <UAVariable DataType="UInt16" ParentNodeId="ns=1;i=5001" NodeId="ns=1;i=6045" BrowseName="1:VLANId" AccessLevel="3">
+        <DisplayName>VLANId</DisplayName>
+        <Description>VLAN ID to use</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
+            <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=5001</Reference>
+        </References>
+        <Value>
+            <uax:UInt16>1</uax:UInt16>
+        </Value>
+    </UAVariable>
     <UAObject SymbolicName="http___isw_uni_stuttgart_de_UA_TSN_DEP" NodeId="ns=1;i=5002" BrowseName="1:http://isw.uni-stuttgart.de/UA/TSN_DEP">
         <DisplayName>http://isw.uni-stuttgart.de/UA/TSN_DEP</DisplayName>
         <References>

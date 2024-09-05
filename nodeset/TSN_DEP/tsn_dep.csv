@@ -42,5 +42,9 @@ PubSubEngineering_TalkerDataSetWriterId,6038,Variable
 PubSubEngineering_TalkerId,6039,Variable
 PubSubEngineering_TalkerWriterGroupId,6040,Variable
 TSNEngineeringType_DestinationUdpAddress,6041,Variable
+TSNEngineeringType_PCP,6042,Variable
+PubSubEngineering_PCP,6043,Variable
+TSNEngineeringType_VLANId,6044,Variable
+PubSubEngineering_VLANId,6045,Variable
 TSNEngineeringType_triggerConfiguration,7001,Method
 PubSubEngineering_triggerConfiguration,7002,Method

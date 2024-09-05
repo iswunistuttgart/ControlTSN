@@ -56,6 +56,8 @@ _cb_event(TSN_Event_CB_Data data)
 
         if (ulfius_websocket_send_message(_websocket_manager, U_WEBSOCKET_OPCODE_TEXT, strlen(msg_dump), msg_dump) != U_OK) {
             printf("[REST][WS]: Error sending websocket message\n");
+        } else {
+            printf("[REST][WS] Successfully sent websocket message:\n%s\n)\n", msg_dump);
         }
     }
 
